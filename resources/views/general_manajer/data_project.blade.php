@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <!-- Notyf CSS/JS untuk Toast Notification -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -171,11 +174,6 @@
         .status-dibatalkan {
             background-color: rgba(239, 68, 68, 0.15);
             color: #991b1b;
-        }
-        
-        .status-Selesai {
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #065f46;
         }
         
         /* Custom styles untuk transisi */
@@ -511,6 +509,164 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .notification-bell:hover {
+            transform: scale(1.05);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            right: 0;
+            top: 45px;
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
+            z-index: 50;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .notification-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification-header h4 {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        
+        .mark-all-read {
+            font-size: 12px;
+            color: #3b82f6;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
+        .mark-all-read:hover {
+            text-decoration: underline;
+        }
+        
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+        
+        .notification-item.unread {
+            background: #eff6ff;
+        }
+        
+        .notification-item.unread:hover {
+            background: #dbeafe;
+        }
+        
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        
+        .notification-message {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .notification-time {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        
+        .notification-empty {
+            padding: 32px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        
+        /* Animasi untuk toast */
+        .notyf {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Warna expired (merah) untuk notifikasi */
+        .notyf__toast--danger {
+            background: #ef4444 !important;
+        }
+        
+        /* Warna warning (oranye) untuk notifikasi yang akan berakhir */
+        .notyf__toast--warning {
+            background: #f59e0b !important;
+        }
     </style>
 </head>
 
@@ -524,23 +680,47 @@
             <main class="flex-1 flex flex-col bg-background-light">
                 <div class="flex-1 p-3 sm:p-8">
 
-                    <h2 class="text-xl sm:text-3xl font-bold mb-4 sm:mb-8">Data Project - Penetapan Penanggung Jawab</h2>
+                    <!-- Header with Title and Notification Bell -->
+                    <div class="flex justify-between items-center mb-4 sm:mb-8">
+                        <h2 class="text-xl sm:text-3xl font-bold">Data Project - Penetapan Penanggung Jawab</h2>
+                        
+                        <!-- NOTIFICATION BELL -->
+                        <div class="relative">
+                            <div id="notificationBell" class="notification-bell">
+                                <span class="material-icons-outlined text-gray-600 text-2xl">notifications_none</span>
+                                <span id="notifBadge" class="notification-badge hidden">0</span>
+                            </div>
+                            
+                            <div id="notificationDropdown" class="notification-dropdown">
+                                <div class="notification-header">
+                                    <h4>Notifikasi</h4>
+                                    <button class="mark-all-read" onclick="markAllNotificationsRead()">Tandai semua dibaca</button>
+                                </div>
+                                <div id="notificationList">
+                                    <div class="notification-empty">
+                                        <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
+                                        <p>Tidak ada notifikasi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-    <form method="GET" action="{{ route('general_manajer.data_project') }}" class="relative w-full md:w-1/3">
-        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-            search
-        </span>
-        <input
-            id="searchInput"
-            name="search"
-            value="{{ request('search') }}"
-            class="w-full pl-10 pr-4 py-2 bg-white border border-border-light rounded-lg focus:ring-2 focus:ring-primary focus:border-primary form-input"
-            placeholder="Cari nama project, penanggung jawab..."
-            type="text"
-        />
-    </form>
-</div>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <form method="GET" action="{{ route('general_manajer.data_project') }}" class="relative w-full md:w-1/3">
+                            <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                search
+                            </span>
+                            <input
+                                id="searchInput"
+                                name="search"
+                                value="{{ request('search') }}"
+                                class="w-full pl-10 pr-4 py-2 bg-white border border-border-light rounded-lg focus:ring-2 focus:ring-primary focus:border-primary form-input"
+                                placeholder="Cari nama project, penanggung jawab..."
+                                type="text"
+                            />
+                        </form>
+                    </div>
                     
                     <!-- Data Table Panel -->
                     <div class="panel">
@@ -587,6 +767,23 @@
                                         </thead>
                                         <tbody id="desktopTableBody">
                                             @foreach($projects as $index => $item)
+                                                @php
+                                                    // Hitung sisa hari periode pengerjaan
+                                                    $sisaHari = null;
+                                                    $statusDeadline = 'normal';
+                                                    $warnaDeadline = '';
+                                                    if($item->tanggal_selesai_pengerjaan) {
+                                                        $tglSelesai = \Carbon\Carbon::parse($item->tanggal_selesai_pengerjaan);
+                                                        $sisaHari = floor(\Carbon\Carbon::now()->diffInDays($tglSelesai, false));
+                                                        if($sisaHari < 0) {
+                                                            $statusDeadline = 'expired';
+                                                            $warnaDeadline = 'text-red-600 font-semibold';
+                                                        } elseif($sisaHari <= 30) {
+                                                            $statusDeadline = 'warning';
+                                                            $warnaDeadline = 'text-orange-500 font-semibold';
+                                                        }
+                                                    }
+                                                @endphp
                                                 <tr>
                                                     <td style="min-width: 60px;">{{ ($projects->currentPage() - 1) * $projects->perPage() + $index + 1 }}</td>
                                                     <td style="min-width: 200px;">{{ $item->nama }}</td>
@@ -594,7 +791,17 @@
                                                         {{ Str::limit($item->deskripsi, 40) }}
                                                     </td>
                                                     <td style="min-width: 120px;">{{ $item->harga }}</td>
-                                                    <td style="min-width: 180px;">{{ $item->tanggal_mulai_pengerjaan ? $item->tanggal_mulai_pengerjaan->format('Y-m-d') : '-' }} — {{ $item->tanggal_selesai_pengerjaan ? $item->tanggal_selesai_pengerjaan->format('Y-m-d') : '-' }}</td>
+                                                    <td style="min-width: 180px;">
+                                                        <div>
+                                                            {{ $item->tanggal_mulai_pengerjaan ? $item->tanggal_mulai_pengerjaan->format('Y-m-d') : '-' }} — 
+                                                            <span class="{{ $warnaDeadline }}">{{ $item->tanggal_selesai_pengerjaan ? $item->tanggal_selesai_pengerjaan->format('Y-m-d') : '-' }}</span>
+                                                        </div>
+                                                        @if($statusDeadline == 'warning' && $sisaHari >= 0)
+                                                            <span class="text-xs text-orange-500">⏰ Sisa {{ $sisaHari }} hari</span>
+                                                        @elseif($statusDeadline == 'expired')
+                                                            <span class="text-xs text-red-500">⚠️ Lewat {{ abs($sisaHari) }} hari</span>
+                                                        @endif
+                                                    </td>
                                                     <td style="min-width: 180px;">
                                                         @php
                                                             $managerIds = collect($item->penanggung_jawab_ids ?? [])
@@ -767,8 +974,6 @@
                         <input type="hidden" name="nama" id="editNama">
                     </div>
                     
-                   
-                    
                     <!-- Field untuk mengubah penanggung jawab -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-500 mb-2">Pilih Manager Divisi (Bisa Lebih dari 1)</label>
@@ -848,435 +1053,718 @@
         </button>
     </div>
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Modal elements
-        const editModal = document.getElementById('editModal');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toastMessage');
+        // ============================
+        // NOTIFICATION SYSTEM
+        // ============================
         
-        // Buttons
-        const closeModals = document.querySelectorAll('.close-modal');
-        const closeToastBtn = document.getElementById('closeToast');
-        
-        // Forms
-        const editForm = document.getElementById('editForm');
-        
-        // Close modals
-        closeModals.forEach(btn => {
-            btn.addEventListener('click', function() {
-                editModal.classList.add('hidden');
-            });
+        // Inisialisasi Notyf untuk toast notification
+        const notyf = new Notyf({
+            duration: 6000,
+            position: { x: 'right', y: 'top' },
+            ripple: true,
+            dismissible: true,
+            types: [
+                {
+                    type: 'warning',
+                    background: '#f59e0b',
+                    icon: '<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'danger',
+                    background: '#ef4444',
+                    icon: '<i class="fas fa-circle-exclamation" style="margin-right: 8px;"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'info',
+                    background: '#3b82f6',
+                    icon: '<i class="fas fa-bell" style="margin-right: 8px;"></i>'
+                }
+            ]
         });
+
+        // Data notifikasi deadline dari server
+        let deadlineNotifications = [];
         
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            if (event.target === editModal) {
-                editModal.classList.add('hidden');
+        // Fungsi untuk memainkan suara notifikasi
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.2;
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                audioContext.resume();
+            } catch(e) {
+                console.log('Audio tidak didukung');
             }
-        });
-        
-        // Handle edit form submission with AJAX
-        editForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        }
 
-            const selectedManagerIds = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]:checked'))
-                .map(input => input.value)
-                .filter(Boolean);
+        // Queue untuk notifikasi berurutan
+        let notifQueue = [];
+        let isPlaying = false;
 
-            if (selectedManagerIds.length === 0) {
-                showToast('Pilih minimal 1 manager divisi.', 'error');
+        function showToastNotification(message, type) {
+            if (type === 'expired' || type === 'danger') {
+                notyf.open({
+                    type: 'danger',
+                    message: message
+                });
+            } else if (type === 'warning') {
+                notyf.open({
+                    type: 'warning',
+                    message: message
+                });
+            } else {
+                notyf.success({
+                    message: message
+                });
+            }
+            playNotificationSound();
+        }
+
+        function processNotificationQueue() {
+            if (notifQueue.length === 0) {
+                isPlaying = false;
                 return;
             }
-
-            const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
-            if (primaryManagerInput) {
-                primaryManagerInput.value = selectedManagerIds[0];
-            }
-            if (typeof window.syncPrimaryKaryawanSelection === 'function') {
-                window.syncPrimaryKaryawanSelection();
-            }
             
-            const formData = new FormData(editForm);
-            const id = document.getElementById('editId').value;
+            isPlaying = true;
+            const notif = notifQueue.shift();
+            showToastNotification(notif.message, notif.type);
             
-            fetch(`/general_manajer/data_project/${id}`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-HTTP-Method-Override': 'PUT'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        const error = new Error('Server responded with an error status');
-                        error.response = response;
-                        error.data = errorData;
-                        throw error;
-                    }).catch(() => {
-                        const error = new Error('Server responded with an error status');
-                        error.response = response;
-                        throw error;
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showToast('Penanggung jawab berhasil ditetapkan!', 'success');
-                    editModal.classList.add('hidden');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    showToast(data.message || 'Terjadi kesalahan yang tidak diketahui.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Fetch Error:', error);
-                handleFetchError(error);
-            });
-        });
-        
-        // Close toast notification
-        closeToastBtn.addEventListener('click', function() {
-            toast.classList.add('translate-y-20', 'opacity-0');
-        });
-        
-        // Function to show toast notification
-        function showToast(message, type = 'success') {
-            toastMessage.textContent = message;
-            
-            // Change background color based on type
-            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform transition-transform duration-300 flex items-center`;
-            if (type === 'error') {
-                toast.classList.add('bg-red-500', 'text-white');
-            } else {
-                toast.classList.add('bg-green-500', 'text-white');
-            }
-            
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            
-            // Auto hide after 5 seconds for error messages
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, type === 'error' ? 5000 : 3000);
+            setTimeout(processNotificationQueue, 2500);
         }
-        
-        // Function to handle fetch errors
-        function handleFetchError(error) {
-            if (error.response) {
-                if (error.response.status === 422) {
-                    let errorMessages = '';
-                    if (error.data && error.data.errors) {
-                        const errors = error.data.errors;
-                        for (const field in errors) {
-                            errorMessages += errors[field].join(', ') + ' ';
-                        }
-                        showToast('Validasi gagal: ' + errorMessages.trim(), 'error');
-                    } else {
-                        showToast('Data yang dimasukkan tidak valid.', 'error');
+
+        function addNotificationToQueue(message, type) {
+            notifQueue.push({ message: message, type: type });
+            if (!isPlaying) {
+                processNotificationQueue();
+            }
+        }
+
+        // Kumpulkan notifikasi deadline dari data projects
+        function collectDeadlineNotifications() {
+            const notifications = [];
+            const projectsData = @json($projects->items());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            projectsData.forEach(project => {
+                if (project.tanggal_selesai_pengerjaan) {
+                    const endDate = new Date(project.tanggal_selesai_pengerjaan);
+                    endDate.setHours(0, 0, 0, 0);
+                    const diffTime = endDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays < 0) {
+                        // Sudah lewat
+                        notifications.push({
+                            id: project.id,
+                            nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
+                            status: 'expired',
+                            message: `🔴 Periode pengerjaan proyek "${project.nama}" telah berakhir ${Math.abs(diffDays)} hari yang lalu (${project.tanggal_selesai_pengerjaan})`
+                        });
+                    } else if (diffDays <= 30) {
+                        // Akan berakhir dalam 30 hari
+                        notifications.push({
+                            id: project.id,
+                            nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
+                            status: 'warning',
+                            message: `⚠️ Periode pengerjaan proyek "${project.nama}" akan berakhir dalam ${diffDays} hari (${project.tanggal_selesai_pengerjaan})`
+                        });
                     }
-                } else if (error.response.status === 401) {
-                    showToast('Anda belum login. Sesi mungkin telah habis.', 'error');
-                } else if (error.response.status === 403) {
-                    showToast('Anda tidak memiliki izin untuk melakukan aksi ini.', 'error');
-                } else if (error.response.status === 404) {
-                    showToast('Data tidak ditemukan atau endpoint tidak valid.', 'error');
-                } else if (error.response.status >= 500) {
-                    showToast('Terjadi kesalahan pada server. Periksa konsol browser untuk detail.', 'error');
-                } else {
-                    showToast(`Terjadi kesalahan (Status: ${error.response.status}).`, 'error');
                 }
-            } else if (error.request) {
-                showToast('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', 'error');
-            } else {
-                showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
-            }
+            });
+            
+            return notifications;
         }
 
-        const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
-        const karyawanList = document.getElementById('karyawanDivisiList');
-        const managerPrimaryInput = document.getElementById('editPenanggungJawabPrimary');
-        const karyawanPrimaryInput = document.getElementById('editKaryawanPenanggungJawabPrimary');
-        const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
-        const managerSearchInput = document.getElementById('managerSearchInput');
-        const karyawanSearchInput = document.getElementById('karyawanSearchInput');
-        const managerSearchEmpty = document.getElementById('managerSearchEmpty');
-        const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
-
-        function getCheckedValues(selector) {
-            return Array.from(document.querySelectorAll(selector))
-                .filter(input => input.checked)
-                .map(input => input.value)
-                .filter(Boolean);
+        // Tampilkan notifikasi awal saat halaman dibuka
+        function showInitialNotifications() {
+            const notifications = collectDeadlineNotifications();
+            
+            // Urutkan berdasarkan sisa hari (terkecil/terdekat dulu)
+            notifications.sort((a, b) => {
+                if (a.status === 'expired' && b.status !== 'expired') return 1;
+                if (a.status !== 'expired' && b.status === 'expired') return -1;
+                return Math.abs(a.sisaHari) - Math.abs(b.sisaHari);
+            });
+            
+            notifications.forEach(notif => {
+                const type = notif.status === 'expired' ? 'expired' : 'warning';
+                addNotificationToQueue(notif.message, type);
+            });
+            
+            // Simpan untuk dropdown notifikasi
+            deadlineNotifications = notifications;
+            updateNotificationDropdown();
+            updateNotificationBadge();
         }
 
-        function getSelectedManagerIds() {
-            return getCheckedValues('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
-        }
-
-        function getSelectedKaryawanIds() {
-            return getCheckedValues('#karyawanDivisiList input[name="karyawan_penanggung_jawab_ids[]"]');
-        }
-
-        function syncPrimaryKaryawan() {
-            if (!karyawanPrimaryInput) return;
-            const selectedKaryawanIds = getSelectedKaryawanIds();
-            karyawanPrimaryInput.value = selectedKaryawanIds.length > 0 ? selectedKaryawanIds[0] : '';
-        }
-
-        function applySearchFilter(itemSelector, keyword, emptyElement) {
-            const normalizedKeyword = String(keyword || '').toLowerCase().trim();
-            const items = Array.from(document.querySelectorAll(itemSelector));
-
-            if (items.length === 0) {
-                if (emptyElement) emptyElement.classList.add('hidden');
+        // Update dropdown notifikasi
+        function updateNotificationDropdown() {
+            const listContainer = document.getElementById('notificationList');
+            if (!listContainer) return;
+            
+            const allNotifications = [...deadlineNotifications];
+            
+            if (allNotifications.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="notification-empty">
+                        <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
+                        <p>Tidak ada notifikasi deadline</p>
+                        <p class="text-xs mt-1">Semua periode pengerjaan aman</p>
+                    </div>
+                `;
                 return;
             }
-
-            let visibleCount = 0;
-            items.forEach(item => {
-                const text = (item.textContent || '').toLowerCase();
-                const isVisible = normalizedKeyword === '' || text.includes(normalizedKeyword);
-                item.classList.toggle('hidden', !isVisible);
-                if (isVisible) visibleCount++;
+            
+            let html = '';
+            allNotifications.forEach(notif => {
+                const isExpired = notif.status === 'expired';
+                const icon = isExpired ? 'warning' : 'schedule';
+                const iconColor = isExpired ? 'text-red-500' : 'text-orange-500';
+                const bgClass = isExpired ? 'bg-red-50' : 'bg-orange-50';
+                const statusText = isExpired ? 'Sudah Lewat' : 'Akan Berakhir';
+                
+                html += `
+                    <div class="notification-item ${bgClass}" onclick="markNotificationRead(${notif.id})">
+                        <div class="flex gap-3">
+                            <div class="notification-icon ${iconColor}">
+                                <span class="material-icons-outlined text-sm">${icon}</span>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${statusText} - ${notif.nama}</div>
+                                <div class="notification-message">${notif.message}</div>
+                                <div class="notification-time">Deadline: ${notif.tanggalSelesai}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
+            
+            listContainer.innerHTML = html;
+        }
 
-            if (emptyElement) {
-                emptyElement.classList.toggle('hidden', visibleCount > 0 || normalizedKeyword === '');
+        // Update badge notifikasi
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            
+            const unreadCount = deadlineNotifications.length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
             }
         }
 
-        function renderKaryawanMessage(message) {
-            if (!karyawanList) return;
-            karyawanList.innerHTML = '';
+        // Tandai notifikasi dibaca
+        function markNotificationRead(id) {
+            deadlineNotifications = deadlineNotifications.filter(n => n.id !== id);
+            updateNotificationDropdown();
+            updateNotificationBadge();
+        }
+
+        // Tandai semua notifikasi dibaca
+        function markAllNotificationsRead() {
+            deadlineNotifications = [];
+            updateNotificationDropdown();
+            updateNotificationBadge();
+        }
+
+        // Toggle dropdown notifikasi
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        // ============================
+        // MODAL FUNCTIONS
+        // ============================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tampilkan notifikasi awal
+            setTimeout(() => {
+                showInitialNotifications();
+            }, 500);
+            
+            // Notification bell click handler
+            const bell = document.getElementById('notificationBell');
+            if (bell) {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleNotificationDropdown();
+                });
+            }
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                const dropdown = document.getElementById('notificationDropdown');
+                const bell = document.getElementById('notificationBell');
+                if (dropdown && bell && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            
+            // Modal elements
+            const editModal = document.getElementById('editModal');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Buttons
+            const closeModals = document.querySelectorAll('.close-modal');
+            const closeToastBtn = document.getElementById('closeToast');
+            
+            // Forms
+            const editForm = document.getElementById('editForm');
+            
+            // Close modals
+            closeModals.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editModal.classList.add('hidden');
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === editModal) {
+                    editModal.classList.add('hidden');
+                }
+            });
+            
+            // Handle edit form submission with AJAX
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const selectedManagerIds = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]:checked'))
+                        .map(input => input.value)
+                        .filter(Boolean);
+
+                    if (selectedManagerIds.length === 0) {
+                        showToastMessage('Pilih minimal 1 manager divisi.', 'error');
+                        return;
+                    }
+
+                    const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
+                    if (primaryManagerInput) {
+                        primaryManagerInput.value = selectedManagerIds[0];
+                    }
+                    if (typeof window.syncPrimaryKaryawanSelection === 'function') {
+                        window.syncPrimaryKaryawanSelection();
+                    }
+                    
+                    const formData = new FormData(editForm);
+                    const id = document.getElementById('editId').value;
+                    
+                    fetch(`/general_manajer/data_project/${id}`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-HTTP-Method-Override': 'PUT'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                const error = new Error('Server responded with an error status');
+                                error.response = response;
+                                error.data = errorData;
+                                throw error;
+                            }).catch(() => {
+                                const error = new Error('Server responded with an error status');
+                                error.response = response;
+                                throw error;
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showToastMessage('Penanggung jawab berhasil ditetapkan!', 'success');
+                            editModal.classList.add('hidden');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showToastMessage(data.message || 'Terjadi kesalahan yang tidak diketahui.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch Error:', error);
+                        handleFetchError(error);
+                    });
+                });
+            }
+            
+            // Close toast notification
+            if (closeToastBtn) {
+                closeToastBtn.addEventListener('click', function() {
+                    if (toast) toast.classList.add('translate-y-20', 'opacity-0');
+                });
+            }
+            
+            // Function to show toast notification
+            function showToastMessage(message, type = 'success') {
+                if (toast && toastMessage) {
+                    toastMessage.textContent = message;
+                    
+                    // Change background color based on type
+                    toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform transition-transform duration-300 flex items-center`;
+                    if (type === 'error') {
+                        toast.classList.add('bg-red-500', 'text-white');
+                    } else {
+                        toast.classList.add('bg-green-500', 'text-white');
+                    }
+                    
+                    toast.classList.remove('translate-y-20', 'opacity-0');
+                    
+                    // Auto hide after 5 seconds for error messages
+                    setTimeout(() => {
+                        toast.classList.add('translate-y-20', 'opacity-0');
+                    }, type === 'error' ? 5000 : 3000);
+                } else {
+                    // Fallback ke notyf
+                    if (type === 'error') {
+                        notyf.error(message);
+                    } else {
+                        notyf.success(message);
+                    }
+                }
+            }
+            
+            // Function to handle fetch errors
+            function handleFetchError(error) {
+                if (error.response) {
+                    if (error.response.status === 422) {
+                        let errorMessages = '';
+                        if (error.data && error.data.errors) {
+                            const errors = error.data.errors;
+                            for (const field in errors) {
+                                errorMessages += errors[field].join(', ') + ' ';
+                            }
+                            showToastMessage('Validasi gagal: ' + errorMessages.trim(), 'error');
+                        } else {
+                            showToastMessage('Data yang dimasukkan tidak valid.', 'error');
+                        }
+                    } else if (error.response.status === 401) {
+                        showToastMessage('Anda belum login. Sesi mungkin telah habis.', 'error');
+                    } else if (error.response.status === 403) {
+                        showToastMessage('Anda tidak memiliki izin untuk melakukan aksi ini.', 'error');
+                    } else if (error.response.status === 404) {
+                        showToastMessage('Data tidak ditemukan atau endpoint tidak valid.', 'error');
+                    } else if (error.response.status >= 500) {
+                        showToastMessage('Terjadi kesalahan pada server. Periksa konsol browser untuk detail.', 'error');
+                    } else {
+                        showToastMessage(`Terjadi kesalahan (Status: ${error.response.status}).`, 'error');
+                    }
+                } else if (error.request) {
+                    showToastMessage('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', 'error');
+                } else {
+                    showToastMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');
+                }
+            }
+
+            const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
+            const karyawanList = document.getElementById('karyawanDivisiList');
+            const managerPrimaryInput = document.getElementById('editPenanggungJawabPrimary');
+            const karyawanPrimaryInput = document.getElementById('editKaryawanPenanggungJawabPrimary');
+            const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
+            const managerSearchInput = document.getElementById('managerSearchInput');
+            const karyawanSearchInput = document.getElementById('karyawanSearchInput');
+            const managerSearchEmpty = document.getElementById('managerSearchEmpty');
+            const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
+
+            function getCheckedValues(selector) {
+                return Array.from(document.querySelectorAll(selector))
+                    .filter(input => input.checked)
+                    .map(input => input.value)
+                    .filter(Boolean);
+            }
+
+            function getSelectedManagerIds() {
+                return getCheckedValues('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
+            }
+
+            function getSelectedKaryawanIds() {
+                return getCheckedValues('#karyawanDivisiList input[name="karyawan_penanggung_jawab_ids[]"]');
+            }
+
+            function syncPrimaryKaryawan() {
+                if (!karyawanPrimaryInput) return;
+                const selectedKaryawanIds = getSelectedKaryawanIds();
+                karyawanPrimaryInput.value = selectedKaryawanIds.length > 0 ? selectedKaryawanIds[0] : '';
+            }
+
+            function applySearchFilter(itemSelector, keyword, emptyElement) {
+                const normalizedKeyword = String(keyword || '').toLowerCase().trim();
+                const items = Array.from(document.querySelectorAll(itemSelector));
+
+                if (items.length === 0) {
+                    if (emptyElement) emptyElement.classList.add('hidden');
+                    return;
+                }
+
+                let visibleCount = 0;
+                items.forEach(item => {
+                    const text = (item.textContent || '').toLowerCase();
+                    const isVisible = normalizedKeyword === '' || text.includes(normalizedKeyword);
+                    item.classList.toggle('hidden', !isVisible);
+                    if (isVisible) visibleCount++;
+                });
+
+                if (emptyElement) {
+                    emptyElement.classList.toggle('hidden', visibleCount > 0 || normalizedKeyword === '');
+                }
+            }
+
+            function renderKaryawanMessage(message) {
+                if (!karyawanList) return;
+                karyawanList.innerHTML = '';
+                if (karyawanSearchEmpty) {
+                    karyawanSearchEmpty.classList.add('hidden');
+                }
+                const text = document.createElement('p');
+                text.className = 'text-sm text-gray-500';
+                text.textContent = message;
+                karyawanList.appendChild(text);
+            }
+
+            async function loadKaryawanByManagers(managerIds, selectedKaryawanIds = []) {
+                if (!Array.isArray(managerIds) || managerIds.length === 0) {
+                    if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
+                    if (karyawanList) karyawanList.innerHTML = '';
+                    if (karyawanPrimaryInput) karyawanPrimaryInput.value = '';
+                    if (karyawanSearchEmpty) karyawanSearchEmpty.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const selectedIds = Array.isArray(selectedKaryawanIds)
+                        ? selectedKaryawanIds.map(id => String(id)).filter(Boolean)
+                        : [];
+
+                    const responses = await Promise.all(managerIds.map(async (managerId) => {
+                        const response = await fetch(`/general_manajer/data_project/karyawan-by-manager/${managerId}`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await response.json();
+                        if (!data.success || !Array.isArray(data.data)) {
+                            return [];
+                        }
+                        return data.data;
+                    }));
+
+                    const uniqueKaryawansMap = new Map();
+                    responses.flat().forEach((karyawan) => {
+                        if (!karyawan || !karyawan.id) {
+                            return;
+                        }
+                        const key = String(karyawan.id);
+                        if (!uniqueKaryawansMap.has(key)) {
+                            uniqueKaryawansMap.set(key, karyawan);
+                        }
+                    });
+
+                    const uniqueKaryawans = Array.from(uniqueKaryawansMap.values());
+                    if (karyawanList) {
+                        karyawanList.innerHTML = '';
+                        if (uniqueKaryawans.length > 0) {
+                            uniqueKaryawans.forEach(karyawan => {
+                                const label = document.createElement('label');
+                                label.className = 'karyawan-item flex items-start gap-2 cursor-pointer';
+
+                                const input = document.createElement('input');
+                                input.type = 'checkbox';
+                                input.name = 'karyawan_penanggung_jawab_ids[]';
+                                input.value = String(karyawan.id);
+                                input.className = 'karyawan-checkbox mt-1 rounded border-gray-300 text-primary focus:ring-primary';
+                                input.checked = selectedIds.includes(String(karyawan.id));
+
+                                const text = document.createElement('span');
+                                text.className = 'text-sm text-gray-700';
+                                text.textContent = karyawan.name + (karyawan.email ? ` (${karyawan.email})` : '');
+
+                                label.appendChild(input);
+                                label.appendChild(text);
+                                karyawanList.appendChild(label);
+                            });
+                        } else {
+                            renderKaryawanMessage('Tidak ada karyawan di divisi manager terpilih');
+                        }
+                    }
+
+                    if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
+                    syncPrimaryKaryawan();
+                    applySearchFilter(
+                        '#karyawanDivisiList .karyawan-item',
+                        karyawanSearchInput ? karyawanSearchInput.value : '',
+                        karyawanSearchEmpty
+                    );
+                } catch (err) {
+                    console.error('Error load karyawan:', err);
+                    if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
+                    renderKaryawanMessage('Gagal memuat karyawan');
+                    if (karyawanPrimaryInput) karyawanPrimaryInput.value = '';
+                }
+            }
+
+            function syncPrimaryManagerAndKaryawan(selectedKaryawanIds = []) {
+                const selectedManagerIds = getSelectedManagerIds();
+                if (managerPrimaryInput) {
+                    managerPrimaryInput.value = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
+                }
+                loadKaryawanByManagers(selectedManagerIds, selectedKaryawanIds);
+            }
+
+            managerCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    syncPrimaryManagerAndKaryawan();
+                });
+            });
+
+            if (managerSearchInput) {
+                managerSearchInput.addEventListener('input', function() {
+                    applySearchFilter(
+                        '#editPenanggungJawabList .manager-item',
+                        managerSearchInput.value,
+                        managerSearchEmpty
+                    );
+                });
+            }
+
+            if (karyawanSearchInput) {
+                karyawanSearchInput.addEventListener('input', function() {
+                    applySearchFilter(
+                        '#karyawanDivisiList .karyawan-item',
+                        karyawanSearchInput.value,
+                        karyawanSearchEmpty
+                    );
+                });
+            }
+
+            if (karyawanList) {
+                karyawanList.addEventListener('change', function(event) {
+                    if (event.target && event.target.matches('input[name="karyawan_penanggung_jawab_ids[]"]')) {
+                        syncPrimaryKaryawan();
+                    }
+                });
+            }
+
+            window.loadKaryawanBySelectedManagers = loadKaryawanByManagers;
+            window.syncPrimaryKaryawanSelection = syncPrimaryKaryawan;
+        });
+
+        // Open edit modal with data - untuk menetapkan penanggung jawab
+        function openEditModal(id, nama, deskripsi, harga, tanggalMulaiPengerjaan, tanggalSelesaiPengerjaan, tanggalMulaiKerjasama, tanggalSelesaiKerjasama, statusPengerjaan, statusKerjasama, progres, penanggungJawabId, karyawanPenanggungJawabId = null, penanggungJawabIds = [], karyawanPenanggungJawabIds = []) {
+            document.getElementById('editId').value = id;
+            
+            // Tampilkan info project (readonly)
+            document.getElementById('editNamaDisplay').value = nama;
+            document.getElementById('editNama').value = nama;
+            
+            // Set minimal hidden fields yang diperlukan
+            document.getElementById('editDeskripsi').value = deskripsi;
+            document.getElementById('editStatusKerjasama').value = statusKerjasama || 'aktif';
+
+            const managerSearchInput = document.getElementById('managerSearchInput');
+            const karyawanSearchInput = document.getElementById('karyawanSearchInput');
+            const managerSearchEmpty = document.getElementById('managerSearchEmpty');
+            const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
+            if (managerSearchInput) {
+                managerSearchInput.value = '';
+            }
+            if (karyawanSearchInput) {
+                karyawanSearchInput.value = '';
+            }
+            if (managerSearchEmpty) {
+                managerSearchEmpty.classList.add('hidden');
+            }
             if (karyawanSearchEmpty) {
                 karyawanSearchEmpty.classList.add('hidden');
             }
-            const text = document.createElement('p');
-            text.className = 'text-sm text-gray-500';
-            text.textContent = message;
-            karyawanList.appendChild(text);
-        }
 
-        async function loadKaryawanByManagers(managerIds, selectedKaryawanIds = []) {
-            if (!Array.isArray(managerIds) || managerIds.length === 0) {
-                if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
-                if (karyawanList) karyawanList.innerHTML = '';
-                if (karyawanPrimaryInput) karyawanPrimaryInput.value = '';
-                if (karyawanSearchEmpty) karyawanSearchEmpty.classList.add('hidden');
-                return;
+            document.querySelectorAll('#editPenanggungJawabList .manager-item').forEach(item => {
+                item.classList.remove('hidden');
+            });
+            
+            // Set penanggung jawab manager (checkbox)
+            const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
+            const managerIds = Array.isArray(penanggungJawabIds)
+                ? penanggungJawabIds.map(String).filter(Boolean)
+                : [];
+            if (managerIds.length === 0 && penanggungJawabId && penanggungJawabId !== 'null') {
+                managerIds.push(String(penanggungJawabId));
             }
 
-            try {
-                const selectedIds = Array.isArray(selectedKaryawanIds)
-                    ? selectedKaryawanIds.map(id => String(id)).filter(Boolean)
-                    : [];
+            const karyawanIds = Array.isArray(karyawanPenanggungJawabIds)
+                ? karyawanPenanggungJawabIds.map(String).filter(Boolean)
+                : [];
+            if (karyawanIds.length === 0 && karyawanPenanggungJawabId && karyawanPenanggungJawabId !== 'null') {
+                karyawanIds.push(String(karyawanPenanggungJawabId));
+            }
 
-                const responses = await Promise.all(managerIds.map(async (managerId) => {
-                    const response = await fetch(`/general_manajer/data_project/karyawan-by-manager/${managerId}`, {
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    const data = await response.json();
-                    if (!data.success || !Array.isArray(data.data)) {
-                        return [];
-                    }
-                    return data.data;
-                }));
-
-                const uniqueKaryawansMap = new Map();
-                responses.flat().forEach((karyawan) => {
-                    if (!karyawan || !karyawan.id) {
-                        return;
-                    }
-                    const key = String(karyawan.id);
-                    if (!uniqueKaryawansMap.has(key)) {
-                        uniqueKaryawansMap.set(key, karyawan);
-                    }
+            if (managerCheckboxes.length > 0) {
+                managerCheckboxes.forEach(checkbox => {
+                    checkbox.checked = managerIds.includes(String(checkbox.value));
                 });
 
-                const uniqueKaryawans = Array.from(uniqueKaryawansMap.values());
-                if (karyawanList) {
-                    karyawanList.innerHTML = '';
-                    if (uniqueKaryawans.length > 0) {
-                        uniqueKaryawans.forEach(karyawan => {
-                            const label = document.createElement('label');
-                            label.className = 'karyawan-item flex items-start gap-2 cursor-pointer';
-
-                            const input = document.createElement('input');
-                            input.type = 'checkbox';
-                            input.name = 'karyawan_penanggung_jawab_ids[]';
-                            input.value = String(karyawan.id);
-                            input.className = 'karyawan-checkbox mt-1 rounded border-gray-300 text-primary focus:ring-primary';
-                            input.checked = selectedIds.includes(String(karyawan.id));
-
-                            const text = document.createElement('span');
-                            text.className = 'text-sm text-gray-700';
-                            text.textContent = karyawan.name + (karyawan.email ? ` (${karyawan.email})` : '');
-
-                            label.appendChild(input);
-                            label.appendChild(text);
-                            karyawanList.appendChild(label);
-                        });
-                    } else {
-                        renderKaryawanMessage('Tidak ada karyawan di divisi manager terpilih');
-                    }
+                const selectedManagerIds = managerCheckboxes
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value)
+                    .filter(Boolean);
+                const primaryManagerId = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
+                const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
+                if (primaryManagerInput) {
+                    primaryManagerInput.value = primaryManagerId;
                 }
 
-                if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
-                syncPrimaryKaryawan();
-                applySearchFilter(
-                    '#karyawanDivisiList .karyawan-item',
-                    karyawanSearchInput ? karyawanSearchInput.value : '',
-                    karyawanSearchEmpty
-                );
-            } catch (err) {
-                console.error('Error load karyawan:', err);
-                if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
-                renderKaryawanMessage('Gagal memuat karyawan');
-                if (karyawanPrimaryInput) karyawanPrimaryInput.value = '';
-            }
-        }
-
-        function syncPrimaryManagerAndKaryawan(selectedKaryawanIds = []) {
-            const selectedManagerIds = getSelectedManagerIds();
-            if (managerPrimaryInput) {
-                managerPrimaryInput.value = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
-            }
-            loadKaryawanByManagers(selectedManagerIds, selectedKaryawanIds);
-        }
-
-        managerCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                syncPrimaryManagerAndKaryawan();
-            });
-        });
-
-        if (managerSearchInput) {
-            managerSearchInput.addEventListener('input', function() {
-                applySearchFilter(
-                    '#editPenanggungJawabList .manager-item',
-                    managerSearchInput.value,
-                    managerSearchEmpty
-                );
-            });
-        }
-
-        if (karyawanSearchInput) {
-            karyawanSearchInput.addEventListener('input', function() {
-                applySearchFilter(
-                    '#karyawanDivisiList .karyawan-item',
-                    karyawanSearchInput.value,
-                    karyawanSearchEmpty
-                );
-            });
-        }
-
-        if (karyawanList) {
-            karyawanList.addEventListener('change', function(event) {
-                if (event.target && event.target.matches('input[name="karyawan_penanggung_jawab_ids[]"]')) {
-                    syncPrimaryKaryawan();
+                if (typeof window.loadKaryawanBySelectedManagers === 'function') {
+                    window.loadKaryawanBySelectedManagers(selectedManagerIds, karyawanIds);
+                } else {
+                    const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
+                    const karyawanList = document.getElementById('karyawanDivisiList');
+                    if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
+                    if (karyawanList) karyawanList.innerHTML = '';
                 }
-            });
-        }
-
-        window.loadKaryawanBySelectedManagers = loadKaryawanByManagers;
-        window.syncPrimaryKaryawanSelection = syncPrimaryKaryawan;
-    });
-
-    // Open edit modal with data - untuk menetapkan penanggung jawab
-    function openEditModal(id, nama, deskripsi, harga, tanggalMulaiPengerjaan, tanggalSelesaiPengerjaan, tanggalMulaiKerjasama, tanggalSelesaiKerjasama, statusPengerjaan, statusKerjasama, progres, penanggungJawabId, karyawanPenanggungJawabId = null, penanggungJawabIds = [], karyawanPenanggungJawabIds = []) {
-        document.getElementById('editId').value = id;
-        
-        // Tampilkan info project (readonly)
-        document.getElementById('editNamaDisplay').value = nama;
-        document.getElementById('editNama').value = nama;
-        
-        // Set minimal hidden fields yang diperlukan
-        document.getElementById('editDeskripsi').value = deskripsi;
-        document.getElementById('editStatusKerjasama').value = statusKerjasama || 'aktif';
-
-        const managerSearchInput = document.getElementById('managerSearchInput');
-        const karyawanSearchInput = document.getElementById('karyawanSearchInput');
-        const managerSearchEmpty = document.getElementById('managerSearchEmpty');
-        const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
-        if (managerSearchInput) {
-            managerSearchInput.value = '';
-        }
-        if (karyawanSearchInput) {
-            karyawanSearchInput.value = '';
-        }
-        if (managerSearchEmpty) {
-            managerSearchEmpty.classList.add('hidden');
-        }
-        if (karyawanSearchEmpty) {
-            karyawanSearchEmpty.classList.add('hidden');
-        }
-
-        document.querySelectorAll('#editPenanggungJawabList .manager-item').forEach(item => {
-            item.classList.remove('hidden');
-        });
-        
-        // Set penanggung jawab manager (checkbox)
-        const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
-        const managerIds = Array.isArray(penanggungJawabIds)
-            ? penanggungJawabIds.map(String).filter(Boolean)
-            : [];
-        if (managerIds.length === 0 && penanggungJawabId && penanggungJawabId !== 'null') {
-            managerIds.push(String(penanggungJawabId));
-        }
-
-        const karyawanIds = Array.isArray(karyawanPenanggungJawabIds)
-            ? karyawanPenanggungJawabIds.map(String).filter(Boolean)
-            : [];
-        if (karyawanIds.length === 0 && karyawanPenanggungJawabId && karyawanPenanggungJawabId !== 'null') {
-            karyawanIds.push(String(karyawanPenanggungJawabId));
-        }
-
-        if (managerCheckboxes.length > 0) {
-            managerCheckboxes.forEach(checkbox => {
-                checkbox.checked = managerIds.includes(String(checkbox.value));
-            });
-
-            const selectedManagerIds = managerCheckboxes
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value)
-                .filter(Boolean);
-            const primaryManagerId = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
-            const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
-            if (primaryManagerInput) {
-                primaryManagerInput.value = primaryManagerId;
             }
-
-            if (typeof window.loadKaryawanBySelectedManagers === 'function') {
-                window.loadKaryawanBySelectedManagers(selectedManagerIds, karyawanIds);
-            } else {
-                const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
-                const karyawanList = document.getElementById('karyawanDivisiList');
-                if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
-                if (karyawanList) karyawanList.innerHTML = '';
-            }
+            
+            // Update form action
+            const editForm = document.getElementById('editForm');
+            editForm.action = `/general_manajer/data_project/${id}`;
+            
+            // Focus ke checkbox pertama saat modal terbuka
+            document.getElementById('editModal').classList.remove('hidden');
+            setTimeout(() => {
+                const firstManagerCheckbox = document.querySelector('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
+                if (firstManagerCheckbox) {
+                    firstManagerCheckbox.focus();
+                }
+            }, 100);
         }
-        
-        // Update form action
-        const editForm = document.getElementById('editForm');
-        editForm.action = `/general_manajer/data_project/${id}`;
-        
-        // Focus ke checkbox pertama saat modal terbuka
-        document.getElementById('editModal').classList.remove('hidden');
-        setTimeout(() => {
-            const firstManagerCheckbox = document.querySelector('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
-            if (firstManagerCheckbox) {
-                firstManagerCheckbox.focus();
-            }
-        }, 100);
-    }
     </script>
-    
-    <!-- Add CSRF token meta tag -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
 </body>
 </html>

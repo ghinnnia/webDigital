@@ -16,21 +16,26 @@
         foreach ($project as $item) {
             // Cek sisa hari Periode Pengerjaan
             if ($item->tanggal_selesai_pengerjaan) {
-                $tglSelesai = Carbon::parse($item->tanggal_selesai_pengerjaan);
-                // 🔥 PAKAI diffInDays dengan floor (bulatkan ke bawah)
-                $sisaHari = floor($hariIni->diffInDays($tglSelesai, false));
+                $tglSelesaiPengerjaan = Carbon::parse($item->tanggal_selesai_pengerjaan);
+                $sisaHariPengerjaan = floor($hariIni->diffInDays($tglSelesaiPengerjaan, false));
 
-                // Jika H-3 sampai hari-H dan belum lewat
-                if ($sisaHari >= 0 && $sisaHari <= 3) {
-                    $pesan = ($sisaHari == 0) 
-                        ? "Project '{$item->nama}' deadline HARI INI untuk pengerjaan!" 
-                        : "Project '{$item->nama}' tersisa {$sisaHari} hari menuju deadline pengerjaan!";
+                // Notifikasi jika <= 30 hari (termasuk yang sudah lewat)
+                if ($sisaHariPengerjaan <= 30) {
+                    if ($sisaHariPengerjaan < 0) {
+                        $pesan = "⚠️ Periode PENGERJAAN proyek '{$item->nama}' telah berakhir " . abs($sisaHariPengerjaan) . " hari yang lalu";
+                        $jenisNotif = 'expired_pengerjaan';
+                    } else {
+                        $pesan = "⚠️ Periode PENGERJAAN proyek '{$item->nama}' akan berakhir dalam {$sisaHariPengerjaan} hari";
+                        $jenisNotif = 'pengerjaan';
+                    }
                     
                     $notifProyek[] = [
                         'pesan' => $pesan,
-                        'jenis' => 'pengerjaan',
-                        'tanggal' => $tglSelesai->format('d-m-Y'),
-                        'is_read' => false
+                        'jenis' => $jenisNotif,
+                        'tanggal' => $tglSelesaiPengerjaan->format('d-m-Y'),
+                        'sisa_hari' => $sisaHariPengerjaan,
+                        'is_read' => false,
+                        'kategori' => 'Pengerjaan'
                     ];
                 }
             }
@@ -38,19 +43,25 @@
             // Cek Periode Kerjasama
             if ($item->tanggal_selesai_kerjasama) {
                 $tglSelesaiKerjasama = Carbon::parse($item->tanggal_selesai_kerjasama);
-                // 🔥 PAKAI diffInDays dengan floor (bulatkan ke bawah)
                 $sisaHariKerjasama = floor($hariIni->diffInDays($tglSelesaiKerjasama, false));
                 
-                if ($sisaHariKerjasama >= 0 && $sisaHariKerjasama <= 3) {
-                    $pesan = ($sisaHariKerjasama == 0)
-                        ? "Project '{$item->nama}' deadline HARI INI untuk kerjasama!"
-                        : "Project '{$item->nama}' tersisa {$sisaHariKerjasama} hari menuju deadline kerjasama!";
+                // Notifikasi jika <= 30 hari (termasuk yang sudah lewat)
+                if ($sisaHariKerjasama <= 30) {
+                    if ($sisaHariKerjasama < 0) {
+                        $pesan = "⚠️ Periode KERJA SAMA dengan '{$item->nama}' telah berakhir " . abs($sisaHariKerjasama) . " hari yang lalu";
+                        $jenisNotif = 'expired_kerjasama';
+                    } else {
+                        $pesan = "⚠️ Periode KERJA SAMA dengan '{$item->nama}' akan berakhir dalam {$sisaHariKerjasama} hari";
+                        $jenisNotif = 'kerjasama';
+                    }
                     
                     $notifProyek[] = [
                         'pesan' => $pesan,
-                        'jenis' => 'kerjasama',
+                        'jenis' => $jenisNotif,
                         'tanggal' => $tglSelesaiKerjasama->format('d-m-Y'),
-                        'is_read' => false
+                        'sisa_hari' => $sisaHariKerjasama,
+                        'is_read' => false,
+                        'kategori' => 'Kerja Sama'
                     ];
                 }
             }
@@ -97,110 +108,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Notyf -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script>
-        // ============================
-// POP UP NOTIFICATION (Toast)
-// ============================
-
-let lastNotifCount = 0;
-let popupShownForIds = [];
-
-function showPopupNotification(message, type = 'warning') {
-    // Buat elemen popup
-    const popup = document.createElement('div');
-    popup.className = 'fixed bottom-20 right-4 bg-white rounded-lg shadow-xl border-l-4 border-orange-500 p-4 z-50 transform transition-all duration-300 translate-x-full opacity-0';
-    popup.style.minWidth = '300px';
-    popup.style.maxWidth = '400px';
-    
-    const icon = type === 'warning' ? '<i class="fa-solid fa-triangle-exclamation text-orange-500"></i>' : (type === 'danger' ? '<i class="fa-solid fa-circle-exclamation text-red-500"></i>' : '<i class="fa-solid fa-bell text-blue-500"></i>');
-    const bgColor = type === 'warning' ? 'border-orange-500' : (type === 'danger' ? 'border-red-500' : 'border-blue-500');
-    
-    popup.innerHTML = `
-        <div class="flex items-start gap-3">
-            <div class="text-xl">${icon}</div>
-            <div class="flex-1">
-                <p class="text-sm font-semibold text-gray-800">Notifikasi Deadline</p>
-                <p class="text-sm text-gray-600 mt-1">${message}</p>
-                <p class="text-xs text-gray-400 mt-2">${new Date().toLocaleTimeString('id-ID')}</p>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
-                <span class="material-icons-outlined text-sm">close</span>
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-    
-    // Animasi masuk
-    setTimeout(() => {
-        popup.classList.remove('translate-x-full', 'opacity-0');
-        popup.classList.add('translate-x-0', 'opacity-100');
-    }, 100);
-    
-    // Auto hilang setelah 8 detik
-    setTimeout(() => {
-        popup.classList.remove('translate-x-0', 'opacity-100');
-        popup.classList.add('translate-x-full', 'opacity-0');
-        setTimeout(() => {
-            if (popup.parentNode) popup.remove();
-        }, 300);
-    }, 8000);
-}
-
-function checkForNewNotifications(notifications) {
-    // Hitung notifikasi yang belum dibaca dan belum muncul popupnya
-    const newNotifs = notifications.filter(n => !n.is_read && !popupShownForIds.includes(n.id));
-    
-    if (newNotifs.length > 0) {
-        // Tampilkan popup untuk setiap notifikasi baru
-        newNotifs.forEach(notif => {
-            const icon = notif.type === 'pengerjaan' ? '<i class="fa-solid fa-triangle-exclamation text-orange-500"></i>' : '<i class="fa-solid fa-bell text-blue-500"></i>';
-            const title = notif.type === 'pengerjaan' ? 'Deadline Pengerjaan' : 'Deadline Kerjasama';
-            showPopupNotification(`${icon} ${title}: ${notif.message}`, 'warning');
-            popupShownForIds.push(notif.id);
-        });
-        
-        // Mainkan suara notifikasi (opsional)
-        try {
-            const audio = new Audio('/sounds/notification.mp3');
-            audio.play().catch(e => console.log('Audio not supported'));
-        } catch(e) {}
-        
-        // Tampilkan toast browser jika diizinkan
-        if (Notification.permission === 'granted') {
-            newNotifs.forEach(notif => {
-                new Notification('Notifikasi Deadline Project', {
-                    body: notif.message,
-                    icon: '/favicon.ico'
-                });
-            });
-        }
-    }
-    
-    lastNotifCount = notifications.filter(n => !n.is_read).length;
-}
-
-// Minta izin notifikasi browser
-if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-    Notification.requestPermission();
-}
-
-// Update fungsi fetchProjectNotifications
-const originalFetchNotif = fetchProjectNotifications;
-fetchProjectNotifications = function() {
-    originalFetchNotif();
-    // Tambahan: cek notifikasi baru setiap 30 detik
-    setTimeout(() => {
-        originalFetchNotif();
-    }, 30000);
-};
-
-// Update fungsi updateNotifUI untuk mengecek notifikasi baru
-const originalUpdateUI = updateNotifUI;
-updateNotifUI = function(notifications) {
-    originalUpdateUI(notifications);
-    checkForNewNotifications(notifications);
-};
         tailwind.config = {
             theme: {
                 extend: {
@@ -650,6 +565,39 @@ updateNotifUI = function(notifications) {
         .notification-item:hover {
             background-color: #f3f4f6;
         }
+
+        /* Custom Toast Animation */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-8px); }
+        }
+
+        .toast-notification {
+            animation: slideInRight 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), bounce 0.5s ease 0.3s;
+        }
+        
+        .text-expired {
+            color: #ef4444 !important;
+        }
+        
+        .text-pengerjaan {
+            color: #f59e0b !important;
+        }
+        
+        .text-kerjasama {
+            color: #10b981 !important;
+        }
     </style>
 </head>
 
@@ -686,8 +634,14 @@ updateNotifUI = function(notifications) {
                                         <div class="p-3 border-b border-gray-100 hover:bg-gray-50 transition notification-item {{ !$notif['is_read'] ? 'bg-blue-50' : '' }}" 
                                              onclick="markNotifAsRead({{ $notif['id'] ?? 0 }})">
                                             <div class="flex gap-2">
-                                                <span class="material-icons-outlined text-{{ $notif['jenis'] == 'pengerjaan' ? 'orange' : 'green' }}-500">
-                                                    {{ $notif['jenis'] == 'pengerjaan' ? 'construction' : 'handshake' }}
+                                                <span class="material-icons-outlined 
+                                                    @if(str_contains($notif['jenis'], 'expired')) text-red-500
+                                                    @elseif(str_contains($notif['jenis'], 'pengerjaan')) text-orange-500
+                                                    @elseif(str_contains($notif['jenis'], 'kerjasama')) text-green-500
+                                                    @else text-gray-500 @endif">
+                                                    @if(str_contains($notif['jenis'], 'pengerjaan')) construction
+                                                    @elseif(str_contains($notif['jenis'], 'kerjasama')) handshake
+                                                    @else warning @endif
                                                 </span>
                                                 <div class="flex-1">
                                                     <p class="text-sm text-gray-800">{{ $notif['pesan'] }}</p>
@@ -826,6 +780,28 @@ updateNotifUI = function(notifications) {
                                         </thead>
                                         <tbody id="desktopTableBody">
                                             @foreach ($project as $index => $item)
+                                            @php
+                                                $isPengerjaanExpired = false;
+                                                $isKerjasamaExpired = false;
+                                                $warnaPengerjaan = 'text-orange-600';
+                                                $warnaKerjasama = 'text-green-600';
+                                                
+                                                if($item->tanggal_selesai_pengerjaan) {
+                                                    $tglPengerjaan = Carbon::parse($item->tanggal_selesai_pengerjaan);
+                                                    if($tglPengerjaan->isPast()) {
+                                                        $isPengerjaanExpired = true;
+                                                        $warnaPengerjaan = 'text-red-600';
+                                                    }
+                                                }
+                                                
+                                                if($item->tanggal_selesai_kerjasama) {
+                                                    $tglKerjasama = Carbon::parse($item->tanggal_selesai_kerjasama);
+                                                    if($tglKerjasama->isPast()) {
+                                                        $isKerjasamaExpired = true;
+                                                        $warnaKerjasama = 'text-red-600';
+                                                    }
+                                                }
+                                            @endphp
                                             <tr>
                                                 <td style="min-width: 60px;">
                                                     {{ ($project->currentPage() - 1) * $project->perPage() + $index + 1 }}
@@ -852,30 +828,40 @@ updateNotifUI = function(notifications) {
                                                     @endif
                                                 </td>
                                                 <td style="min-width: 200px;">
-                                                    @php
-                                                        $startPengerjaan = $item->tanggal_mulai_pengerjaan ? $item->tanggal_mulai_pengerjaan->format('Y-m-d') : null;
-                                                        $endPengerjaan = $item->tanggal_selesai_pengerjaan ? $item->tanggal_selesai_pengerjaan->format('Y-m-d') : null;
-                                                    @endphp
-                                                    @if ($startPengerjaan && $endPengerjaan)
-                                                        {{ $startPengerjaan }} &mdash; {{ $endPengerjaan }}
-                                                    @elseif ($startPengerjaan)
-                                                        {{ $startPengerjaan }}
-                                                    @else
-                                                        <span class="text-gray-400">-</span>
-                                                    @endif
+                                                    <div class="text-xs">
+                                                        @if ($item->tanggal_mulai_pengerjaan && $item->tanggal_selesai_pengerjaan)
+                                                            <span class="font-semibold text-blue-600">Mulai:</span> 
+                                                            <span>{{ $item->tanggal_mulai_pengerjaan->format('d-m-Y') }}</span><br>
+                                                            <span class="font-semibold {{ $warnaPengerjaan }}">Selesai:</span> 
+                                                            <span class="{{ $warnaPengerjaan }}">{{ $item->tanggal_selesai_pengerjaan->format('d-m-Y') }}</span>
+                                                            @if($isPengerjaanExpired)
+                                                                <span class="text-red-500 text-xs ml-1">(LEWAT)</span>
+                                                            @endif
+                                                        @elseif ($item->tanggal_mulai_pengerjaan)
+                                                            <span class="font-semibold text-blue-600">Mulai:</span> 
+                                                            <span>{{ $item->tanggal_mulai_pengerjaan->format('d-m-Y') }}</span>
+                                                        @else
+                                                            <span class="text-gray-400">-</span>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                                 <td style="min-width: 200px;">
-                                                    @php
-                                                        $startKerjasama = $item->tanggal_mulai_kerjasama ? $item->tanggal_mulai_kerjasama->format('Y-m-d') : null;
-                                                        $endKerjasama = $item->tanggal_selesai_kerjasama ? $item->tanggal_selesai_kerjasama->format('Y-m-d') : null;
-                                                    @endphp
-                                                    @if ($startKerjasama && $endKerjasama)
-                                                        {{ $startKerjasama }} &mdash; {{ $endKerjasama }}
-                                                    @elseif ($startKerjasama)
-                                                        {{ $startKerjasama }}
-                                                    @else
-                                                        <span class="text-gray-400">-</span>
-                                                    @endif
+                                                    <div class="text-xs">
+                                                        @if ($item->tanggal_mulai_kerjasama && $item->tanggal_selesai_kerjasama)
+                                                            <span class="font-semibold text-blue-600">Mulai:</span> 
+                                                            <span>{{ $item->tanggal_mulai_kerjasama->format('d-m-Y') }}</span><br>
+                                                            <span class="font-semibold {{ $warnaKerjasama }}">Selesai:</span> 
+                                                            <span class="{{ $warnaKerjasama }}">{{ $item->tanggal_selesai_kerjasama->format('d-m-Y') }}</span>
+                                                            @if($isKerjasamaExpired)
+                                                                <span class="text-red-500 text-xs ml-1">(LEWAT)</span>
+                                                            @endif
+                                                        @elseif ($item->tanggal_mulai_kerjasama)
+                                                            <span class="font-semibold text-blue-600">Mulai:</span> 
+                                                            <span>{{ $item->tanggal_mulai_kerjasama->format('d-m-Y') }}</span>
+                                                        @else
+                                                            <span class="text-gray-400">-</span>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                                 <td style="min-width: 120px;">
                                                     <span class="status-badge status-{{ str_replace('_', '-', $item->status_pengerjaan) }}">
@@ -885,7 +871,7 @@ updateNotifUI = function(notifications) {
                                                 <td style="min-width: 120px;">
                                                     @php
                                                         $tglSelesaiKerjasama = $item->tanggal_selesai_kerjasama ? \Carbon\Carbon::parse($item->tanggal_selesai_kerjasama) : null;
-                                                        $isCloseToDeadline = $tglSelesaiKerjasama && now()->diffInDays($tglSelesaiKerjasama, false) <= 3 && now()->diffInDays($tglSelesaiKerjasama, false) >= 0;
+                                                        $isCloseToDeadline = $tglSelesaiKerjasama && now()->diffInDays($tglSelesaiKerjasama, false) <= 30 && now()->diffInDays($tglSelesaiKerjasama, false) >= 0 && !$tglSelesaiKerjasama->isPast();
                                                     @endphp
                                                     <span class="status-badge status-{{ $item->status_kerjasama }} flex items-center gap-1 justify-center">
                                                         @if($isCloseToDeadline)
@@ -930,6 +916,28 @@ updateNotifUI = function(notifications) {
                             <!-- Mobile Card View -->
                             <div class="mobile-cards space-y-4" id="mobile-cards">
                                 @foreach ($project as $item)
+                                @php
+                                    $isPengerjaanExpired = false;
+                                    $isKerjasamaExpired = false;
+                                    $warnaPengerjaan = 'text-orange-600';
+                                    $warnaKerjasama = 'text-green-600';
+                                    
+                                    if($item->tanggal_selesai_pengerjaan) {
+                                        $tglPengerjaan = Carbon::parse($item->tanggal_selesai_pengerjaan);
+                                        if($tglPengerjaan->isPast()) {
+                                            $isPengerjaanExpired = true;
+                                            $warnaPengerjaan = 'text-red-600';
+                                        }
+                                    }
+                                    
+                                    if($item->tanggal_selesai_kerjasama) {
+                                        $tglKerjasama = Carbon::parse($item->tanggal_selesai_kerjasama);
+                                        if($tglKerjasama->isPast()) {
+                                            $isKerjasamaExpired = true;
+                                            $warnaKerjasama = 'text-red-600';
+                                        }
+                                    }
+                                @endphp
                                     <div class="bg-white rounded-lg border border-border-light p-4 shadow-sm">
                                         <div class="flex justify-between items-start mb-3">
                                             <div>
@@ -938,7 +946,7 @@ updateNotifUI = function(notifications) {
                                                     @if ($item->invoice)
                                                         Invoice #{{ $item->invoice->id }}<br>
                                                     @endif
-                                                    Mulai: {{ optional($item->tanggal_mulai_pengerjaan)->format('Y-m-d') ?? '-' }}
+                                                    Mulai: {{ optional($item->tanggal_mulai_pengerjaan)->format('d-m-Y') ?? '-' }}
                                                 </p>
                                             </div>
                                             <div class="flex gap-2">
@@ -981,6 +989,20 @@ updateNotifUI = function(notifications) {
                                                     style="width: {{ $item->progres }}%"></div>
                                             </div>
                                             <p class="text-xs text-gray-600 mt-1">{{ $item->progres }}%</p>
+                                        </div>
+                                        <div class="mt-3 text-xs">
+                                            <p class="text-text-muted-light">Periode Pengerjaan:</p>
+                                            <p class="{{ $warnaPengerjaan }}">
+                                                {{ optional($item->tanggal_mulai_pengerjaan)->format('d-m-Y') ?? '-' }} → 
+                                                {{ optional($item->tanggal_selesai_pengerjaan)->format('d-m-Y') ?? '-' }}
+                                                @if($isPengerjaanExpired) <span class="text-red-500">(LEWAT)</span> @endif
+                                            </p>
+                                            <p class="text-text-muted-light mt-1">Periode Kerjasama:</p>
+                                            <p class="{{ $warnaKerjasama }}">
+                                                {{ optional($item->tanggal_mulai_kerjasama)->format('d-m-Y') ?? '-' }} → 
+                                                {{ optional($item->tanggal_selesai_kerjasama)->format('d-m-Y') ?? '-' }}
+                                                @if($isKerjasamaExpired) <span class="text-red-500">(LEWAT)</span> @endif
+                                            </p>
                                         </div>
                                         <div class="mt-3">
                                             <p class="text-text-muted-light">Harga</p>
@@ -1300,20 +1322,154 @@ updateNotifUI = function(notifications) {
 
     <script>
         // ============================
-        // NOTIFICATION FUNCTIONS
+        // TOAST NOTIFICATION SYSTEM
         // ============================
         
+        // Inisialisasi Notyf
+        const notyf = new Notyf({
+            duration: 6000,
+            position: { x: 'right', y: 'top' },
+            ripple: true,
+            dismissible: true,
+            types: [
+                {
+                    type: 'warning',
+                    background: '#f59e0b',
+                    icon: '<i class="fas fa-exclamation-triangle"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'danger',
+                    background: '#ef4444',
+                    icon: '<i class="fas fa-circle-exclamation"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'info',
+                    background: '#3b82f6',
+                    icon: '<i class="fas fa-bell"></i>'
+                }
+            ]
+        });
+
+        // Fungsi untuk memainkan suara notifikasi
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.3;
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                audioContext.resume();
+            } catch(e) {
+                console.log('Audio tidak didukung');
+            }
+        }
+
+        // Queue untuk notifikasi berurutan
+        let notifQueue = [];
+        let isPlaying = false;
+
+        function showToastNotification(message, type) {
+            if (type === 'expired_pengerjaan' || type === 'expired_kerjasama' || type === 'danger') {
+                notyf.error({
+                    message: message,
+                    icon: '<i class="fas fa-circle-exclamation"></i>'
+                });
+            } else if (type === 'warning' || type === 'pengerjaan' || type === 'kerjasama') {
+                notyf.open({
+                    type: 'warning',
+                    message: message
+                });
+            } else {
+                notyf.success({
+                    message: message,
+                    icon: '<i class="fas fa-info-circle"></i>'
+                });
+            }
+            
+            playNotificationSound();
+        }
+
+        function processNotificationQueue() {
+            if (notifQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+            
+            isPlaying = true;
+            const notif = notifQueue.shift();
+            showToastNotification(notif.message, notif.type);
+            
+            setTimeout(processNotificationQueue, 2000);
+        }
+
+        function addNotificationToQueue(message, type) {
+            notifQueue.push({ message: message, type: type });
+            if (!isPlaying) {
+                processNotificationQueue();
+            }
+        }
+
+        // Data notifikasi dari server
+        var serverNotifications = [];
+        @if(count($notifProyek) > 0)
+            serverNotifications = @json($notifProyek);
+        @endif
+        
+        function showInitialNotifications() {
+            var warningNotifs = [];
+            var expiredNotifs = [];
+            
+            for(var i = 0; i < serverNotifications.length; i++) {
+                var notif = serverNotifications[i];
+                if(notif.sisa_hari >= 0 && notif.sisa_hari <= 30) {
+                    warningNotifs.push(notif);
+                } else if(notif.sisa_hari < 0) {
+                    expiredNotifs.push(notif);
+                }
+            }
+            
+            warningNotifs.sort(function(a, b) {
+                return a.sisa_hari - b.sisa_hari;
+            });
+            
+            for(var w = 0; w < warningNotifs.length; w++) {
+                var notif = warningNotifs[w];
+                addNotificationToQueue(notif.pesan, notif.jenis);
+            }
+            
+            for(var e = 0; e < expiredNotifs.length; e++) {
+                var notif = expiredNotifs[e];
+                addNotificationToQueue(notif.pesan, notif.jenis);
+            }
+        }
+
         function formatNotifDate(dateString) {
-            let date = new Date(dateString);
+            var date = new Date(dateString);
             return date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
 
         function getNotifIcon(type) {
-            return type === 'pengerjaan' ? 'construction' : 'handshake';
+            if(type === 'pengerjaan' || type === 'expired_pengerjaan') return 'construction';
+            if(type === 'kerjasama' || type === 'expired_kerjasama') return 'handshake';
+            return 'warning';
         }
 
         function getNotifColor(type) {
-            return type === 'pengerjaan' ? 'text-orange-500' : 'text-green-500';
+            if(type === 'pengerjaan') return 'text-orange-500';
+            if(type === 'kerjasama') return 'text-green-500';
+            if(type === 'expired_pengerjaan' || type === 'expired_kerjasama') return 'text-red-500';
+            return 'text-gray-500';
         }
 
         function fetchProjectNotifications() {
@@ -1323,19 +1479,27 @@ updateNotifUI = function(notifications) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
                 if (data.success && data.data) {
                     updateNotifUI(data.data);
                 }
             })
-            .catch(error => console.error('Error fetching notifications:', error));
+            .catch(function(error) {
+                console.error('Error fetching notifications:', error);
+            });
         }
 
         function updateNotifUI(notifications) {
-            const unreadCount = notifications.filter(n => !n.is_read).length;
-            const badge = document.getElementById('notifBadge');
-            const listContainer = document.getElementById('notifList');
+            var unreadCount = 0;
+            for(var i = 0; i < notifications.length; i++) {
+                if(!notifications[i].is_read) unreadCount++;
+            }
+            
+            var badge = document.getElementById('notifBadge');
+            var listContainer = document.getElementById('notifList');
             
             if (unreadCount > 0) {
                 badge.classList.remove('hidden');
@@ -1346,36 +1510,51 @@ updateNotifUI = function(notifications) {
                 badge.classList.remove('flex');
             }
             
-            if (notifications.length === 0) {
+            var allNotifs = [];
+            for(var n = 0; n < notifications.length; n++) {
+                allNotifs.push(notifications[n]);
+            }
+            for(var s = 0; s < serverNotifications.length; s++) {
+                allNotifs.push({
+                    id: null,
+                    message: serverNotifications[s].pesan,
+                    type: serverNotifications[s].jenis,
+                    created_at: serverNotifications[s].tanggal,
+                    is_read: false
+                });
+            }
+            
+            if (allNotifs.length === 0) {
                 listContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Belum ada notifikasi</div>';
                 return;
             }
             
-            let html = '';
-            notifications.slice(0, 10).forEach(notif => {
-                const isUnread = !notif.is_read;
-                const bgClass = isUnread ? 'bg-blue-50' : '';
-                const icon = getNotifIcon(notif.type);
-                const color = getNotifColor(notif.type);
+            var html = '';
+            var maxItems = Math.min(10, allNotifs.length);
+            for(var item = 0; item < maxItems; item++) {
+                var notif = allNotifs[item];
+                var isUnread = !notif.is_read;
+                var bgClass = isUnread ? 'bg-blue-50' : '';
+                var icon = getNotifIcon(notif.type);
+                var color = getNotifColor(notif.type);
+                var notifId = notif.id ? notif.id : 0;
                 
-                html += `
-                    <div class="p-3 border-b border-gray-100 ${bgClass} cursor-pointer hover:bg-gray-50 transition notification-item" onclick="markNotifAsRead(${notif.id})">
-                        <div class="flex gap-2">
-                            <span class="material-icons-outlined ${color}">${icon}</span>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-800">${escapeNotifHtml(notif.message)}</p>
-                                <p class="text-xs text-gray-400 mt-1">${formatNotifDate(notif.created_at)}</p>
-                                ${isUnread ? '<span class="text-xs text-blue-500 mt-1 inline-block">● Baru</span>' : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+                html += '<div class="p-3 border-b border-gray-100 ' + bgClass + ' cursor-pointer hover:bg-gray-50 transition notification-item" onclick="markNotifAsRead(' + notifId + ')">';
+                html += '<div class="flex gap-2">';
+                html += '<span class="material-icons-outlined ' + color + '">' + icon + '</span>';
+                html += '<div class="flex-1">';
+                html += '<p class="text-sm text-gray-800">' + escapeNotifHtml(notif.message) + '</p>';
+                html += '<p class="text-xs text-gray-400 mt-1">' + formatNotifDate(notif.created_at) + '</p>';
+                if(isUnread) {
+                    html += '<span class="text-xs text-blue-500 mt-1 inline-block">● Baru</span>';
+                }
+                html += '</div></div></div>';
+            }
             
-            if (notifications.length > 10) {
-                html += `<div class="p-2 text-center border-t border-gray-100">
-                            <span class="text-xs text-gray-400">+ ${notifications.length - 10} notifikasi lainnya</span>
-                        </div>`;
+            if (allNotifs.length > 10) {
+                html += '<div class="p-2 text-center border-t border-gray-100">';
+                html += '<span class="text-xs text-gray-400">+ ' + (allNotifs.length - 10) + ' notifikasi lainnya</span>';
+                html += '</div>';
             }
             
             listContainer.innerHTML = html;
@@ -1383,19 +1562,18 @@ updateNotifUI = function(notifications) {
 
         function escapeNotifHtml(text) {
             if (!text) return '';
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
         function markNotifAsRead(id) {
             if (!id || id === 0) {
-                // Jika id null atau 0 (notifikasi manual), refresh saja
                 location.reload();
                 return;
             }
             
-            fetch(`/admin/project/notifications/${id}/read`, {
+            fetch('/admin/project/notifications/' + id + '/read', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1403,11 +1581,15 @@ updateNotifUI = function(notifications) {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(() => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function() {
                 location.reload();
             })
-            .catch(error => console.error('Error marking as read:', error));
+            .catch(function(error) {
+                console.error('Error marking as read:', error);
+            });
         }
 
         function markAllNotifAsRead() {
@@ -1419,11 +1601,15 @@ updateNotifUI = function(notifications) {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(() => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function() {
                 location.reload();
             })
-            .catch(error => console.error('Error marking all as read:', error));
+            .catch(function(error) {
+                console.error('Error marking all as read:', error);
+            });
         }
 
         function refreshNotifications() {
@@ -1435,23 +1621,30 @@ updateNotifUI = function(notifications) {
         // ============================
         
         function closeAllModals() {
-            document.getElementById('tambahModal')?.classList.add('hidden');
-            document.getElementById('detailModal')?.classList.add('hidden');
-            document.getElementById('editModal')?.classList.add('hidden');
-            document.getElementById('deleteModal')?.classList.add('hidden');
+            var tambahModal = document.getElementById('tambahModal');
+            var detailModal = document.getElementById('detailModal');
+            var editModal = document.getElementById('editModal');
+            var deleteModal = document.getElementById('deleteModal');
+            
+            if(tambahModal) tambahModal.classList.add('hidden');
+            if(detailModal) detailModal.classList.add('hidden');
+            if(editModal) editModal.classList.add('hidden');
+            if(deleteModal) deleteModal.classList.add('hidden');
         }
 
         function openDetailModal(id) {
-            const modal = document.getElementById('detailModal');
+            var modal = document.getElementById('detailModal');
             if (!modal) return;
             
-            fetch(`/admin/project/${id}`, {
+            fetch('/admin/project/' + id, {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
                 if (data.success && data.data) {
-                    const p = data.data;
+                    var p = data.data;
                     document.getElementById('detailId').textContent = '#' + p.id;
                     document.getElementById('detailNama').textContent = p.nama || '-';
                     document.getElementById('detailDeskripsi').textContent = p.deskripsi || '-';
@@ -1463,28 +1656,32 @@ updateNotifUI = function(notifications) {
                     document.getElementById('detailTanggalMulaiKerjasama').textContent = p.tanggal_mulai_kerjasama || '-';
                     document.getElementById('detailTanggalSelesaiKerjasama').textContent = p.tanggal_selesai_kerjasama || '-';
                     
-                    const statusP = p.status_pengerjaan || 'pending';
-                    const statusK = p.status_kerjasama || 'aktif';
-                    document.getElementById('detailStatusPengerjaan').innerHTML = `<span class="status-badge status-${statusP.replace('_', '-')}">${statusP.replace('_', ' ')}</span>`;
-                    document.getElementById('detailStatusKerjasama').innerHTML = `<span class="status-badge status-${statusK}">${statusK}</span>`;
+                    var statusP = p.status_pengerjaan || 'pending';
+                    var statusK = p.status_kerjasama || 'aktif';
+                    document.getElementById('detailStatusPengerjaan').innerHTML = '<span class="status-badge status-' + statusP.replace('_', '-') + '">' + statusP.replace('_', ' ') + '</span>';
+                    document.getElementById('detailStatusKerjasama').innerHTML = '<span class="status-badge status-' + statusK + '">' + statusK + '</span>';
                     
                     modal.classList.remove('hidden');
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(function(error) {
+                console.error('Error:', error);
+            });
         }
 
         function openEditModal(id) {
-            const modal = document.getElementById('editModal');
+            var modal = document.getElementById('editModal');
             if (!modal) return;
             
-            fetch(`/admin/project/${id}`, {
+            fetch('/admin/project/' + id, {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
                 if (data.success && data.data) {
-                    const p = data.data;
+                    var p = data.data;
                     document.getElementById('editId').value = p.id;
                     document.getElementById('editNama').value = p.nama || '';
                     document.getElementById('editDeskripsi').value = p.deskripsi || '';
@@ -1494,36 +1691,44 @@ updateNotifUI = function(notifications) {
                     document.getElementById('editTanggalSelesaiKerjasama').value = p.tanggal_selesai_kerjasama || '';
                     document.getElementById('editStatusKerjasama').value = p.status_kerjasama || 'aktif';
                     
-                    const editForm = document.getElementById('editForm');
-                    editForm.action = `/admin/project/${id}`;
+                    var editForm = document.getElementById('editForm');
+                    editForm.action = '/admin/project/' + id;
                     modal.classList.remove('hidden');
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(function(error) {
+                console.error('Error:', error);
+            });
         }
 
         function openDeleteModal(id, nama) {
-            const modal = document.getElementById('deleteModal');
+            var modal = document.getElementById('deleteModal');
             if (!modal) return;
             
             document.getElementById('deleteId').value = id;
             document.getElementById('deleteNama').textContent = nama;
-            const deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = `/admin/project/${id}`;
+            var deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = '/admin/project/' + id;
             modal.classList.remove('hidden');
         }
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
+        function showToast(message, type) {
+            var toast = document.getElementById('toast');
+            var toastMessage = document.getElementById('toastMessage');
             
             if (!toast) return;
             
             toastMessage.textContent = message;
-            toast.style.backgroundColor = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#f59e0b');
+            if(type === 'success') {
+                toast.style.backgroundColor = '#10b981';
+            } else if(type === 'error') {
+                toast.style.backgroundColor = '#ef4444';
+            } else {
+                toast.style.backgroundColor = '#f59e0b';
+            }
             toast.classList.remove('translate-y-20', 'opacity-0');
             
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
         }
@@ -1532,157 +1737,184 @@ updateNotifUI = function(notifications) {
         // INVOICE AUTO-FILL
         // ============================
         
-        document.getElementById('tambahInvoice')?.addEventListener('change', function() {
-            const selected = this.options[this.selectedIndex];
-            if (selected.value) {
-                document.getElementById('tambahNama').value = selected.getAttribute('data-nama') || '';
-                document.getElementById('tambahDeskripsi').value = selected.getAttribute('data-deskripsi') || '';
-                document.getElementById('tambahHarga').value = selected.getAttribute('data-harga') || '';
-                document.getElementById('tambahTanggalMulaiKerjasama').value = selected.getAttribute('data-tanggal-mulai') || '';
-                document.getElementById('tambahTanggalSelesaiKerjasama').value = selected.getAttribute('data-tanggal-selesai') || '';
-            }
-        });
+        var tambahInvoice = document.getElementById('tambahInvoice');
+        if(tambahInvoice) {
+            tambahInvoice.addEventListener('change', function() {
+                var selected = this.options[this.selectedIndex];
+                if (selected.value) {
+                    var namaInput = document.getElementById('tambahNama');
+                    var deskripsiInput = document.getElementById('tambahDeskripsi');
+                    var hargaInput = document.getElementById('tambahHarga');
+                    var tanggalMulaiInput = document.getElementById('tambahTanggalMulaiKerjasama');
+                    var tanggalSelesaiInput = document.getElementById('tambahTanggalSelesaiKerjasama');
+                    
+                    if(namaInput) namaInput.value = selected.getAttribute('data-nama') || '';
+                    if(deskripsiInput) deskripsiInput.value = selected.getAttribute('data-deskripsi') || '';
+                    if(hargaInput) hargaInput.value = selected.getAttribute('data-harga') || '';
+                    if(tanggalMulaiInput) tanggalMulaiInput.value = selected.getAttribute('data-tanggal-mulai') || '';
+                    if(tanggalSelesaiInput) tanggalSelesaiInput.value = selected.getAttribute('data-tanggal-selesai') || '';
+                }
+            });
+        }
         
         // ============================
         // FORM SUBMISSIONS
         // ============================
         
-        document.getElementById('tambahForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    closeAllModals();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.message || 'Gagal menyimpan', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Terjadi kesalahan', 'error');
+        var tambahForm = document.getElementById('tambahForm');
+        if(tambahForm) {
+            tambahForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        closeAllModals();
+                        setTimeout(function() { location.reload(); }, 1500);
+                    } else {
+                        showToast(data.message || 'Gagal menyimpan', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan', 'error');
+                });
             });
-        });
+        }
         
-        document.getElementById('editForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editId').value;
-            const formData = new FormData(this);
-            
-            fetch(`/admin/project/${id}`, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    closeAllModals();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.message || 'Gagal update', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Terjadi kesalahan', 'error');
+        var editForm = document.getElementById('editForm');
+        if(editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var id = document.getElementById('editId').value;
+                var formData = new FormData(this);
+                
+                fetch('/admin/project/' + id, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        closeAllModals();
+                        setTimeout(function() { location.reload(); }, 1500);
+                    } else {
+                        showToast(data.message || 'Gagal update', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan', 'error');
+                });
             });
-        });
+        }
         
-        document.getElementById('deleteForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('deleteId').value;
-            
-            fetch(`/admin/project/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    closeAllModals();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.message || 'Gagal hapus', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Terjadi kesalahan', 'error');
+        var deleteForm = document.getElementById('deleteForm');
+        if(deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var id = document.getElementById('deleteId').value;
+                
+                fetch('/admin/project/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        closeAllModals();
+                        setTimeout(function() { location.reload(); }, 1500);
+                    } else {
+                        showToast(data.message || 'Gagal hapus', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan', 'error');
+                });
             });
-        });
+        }
         
         // ============================
         // DOM EVENT LISTENERS
         // ============================
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Tambah Project button
-            const tambahBtn = document.getElementById('tambahProjectBtn');
-            const tambahModal = document.getElementById('tambahModal');
-            tambahBtn?.addEventListener('click', () => {
-                tambahModal.classList.remove('hidden');
-                document.getElementById('tambahForm')?.reset();
-                document.getElementById('tambahProgresValue').textContent = '0%';
-            });
+            setTimeout(function() {
+                showInitialNotifications();
+            }, 500);
             
-            // Progres slider
-            const progresSlider = document.getElementById('tambahProgres');
-            const progresValue = document.getElementById('tambahProgresValue');
-            progresSlider?.addEventListener('input', function() {
-                if (progresValue) progresValue.textContent = this.value + '%';
-            });
+            var tambahBtn = document.getElementById('tambahProjectBtn');
+            var tambahModal = document.getElementById('tambahModal');
+            if(tambahBtn) {
+                tambahBtn.addEventListener('click', function() {
+                    if(tambahModal) tambahModal.classList.remove('hidden');
+                    var tambahFormEl = document.getElementById('tambahForm');
+                    if(tambahFormEl) tambahFormEl.reset();
+                    var progresValueSpan = document.getElementById('tambahProgresValue');
+                    if(progresValueSpan) progresValueSpan.textContent = '0%';
+                });
+            }
             
-            // Close modals
-            document.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', closeAllModals);
-            });
+            var progresSlider = document.getElementById('tambahProgres');
+            var progresValue = document.getElementById('tambahProgresValue');
+            if(progresSlider) {
+                progresSlider.addEventListener('input', function() {
+                    if(progresValue) progresValue.textContent = this.value + '%';
+                });
+            }
             
-            // Click outside modal
+            var closeButtons = document.querySelectorAll('.close-modal');
+            for(var c = 0; c < closeButtons.length; c++) {
+                closeButtons[c].addEventListener('click', closeAllModals);
+            }
+            
             window.addEventListener('click', function(event) {
-                if (event.target.classList.contains('modal')) {
+                if (event.target.classList && event.target.classList.contains('modal')) {
                     event.target.classList.add('hidden');
                 }
             });
             
-            // Notification bell
-            const bell = document.getElementById('notificationBell');
-            const dropdown = document.getElementById('notifDropdown');
+            var bell = document.getElementById('notificationBell');
+            var dropdown = document.getElementById('notifDropdown');
             
-            bell?.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-                fetchProjectNotifications();
-            });
+            if(bell) {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if(dropdown) dropdown.classList.toggle('hidden');
+                    fetchProjectNotifications();
+                });
+            }
             
-            // Close notification dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (bell && dropdown && !bell.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.classList.add('hidden');
                 }
             });
             
-            // Initial fetch notifications
             fetchProjectNotifications();
-            
-            // Refresh notifications every 60 seconds
             setInterval(fetchProjectNotifications, 60000);
         });
         
-        // Make functions global
         window.openDetailModal = openDetailModal;
         window.openEditModal = openEditModal;
         window.openDeleteModal = openDeleteModal;
