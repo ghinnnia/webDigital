@@ -1,5 +1,4 @@
 <?php
-// app/Models/TunjanganKaryawan.php
 
 namespace App\Models;
 
@@ -15,27 +14,46 @@ class TunjanganKaryawan extends Model
     protected $fillable = [
         'karyawan_id',
         'tunjangan_id',
+        'nominal',
         'bulan',
         'tahun',
-        'nominal',
-        'catatan',
         'diberikan'
     ];
 
     protected $casts = [
         'nominal' => 'decimal:2',
-        'diberikan' => 'boolean'
+        'bulan' => 'integer',
+        'tahun' => 'integer',
+        'diberikan' => 'boolean',
     ];
+
+    // Relasi ke Karyawan (bukan User langsung)
+    public function karyawan()
+    {
+        return $this->belongsTo(Karyawan::class, 'karyawan_id');
+    }
+    
+    // Relasi ke User melalui Karyawan
+    public function user()
+    {
+        return $this->hasOneThrough(User::class, Karyawan::class, 'id', 'id', 'karyawan_id', 'user_id');
+    }
 
     // Relasi ke TunjanganMaster
     public function tunjanganMaster()
     {
         return $this->belongsTo(TunjanganMaster::class, 'tunjangan_id');
     }
-
-    // Relasi ke User (Karyawan)
-    public function karyawan()
+    
+    // Scope untuk filter bulan/tahun
+    public function scopePeriode($query, $bulan, $tahun)
     {
-        return $this->belongsTo(User::class, 'karyawan_id');
+        return $query->where('bulan', $bulan)->where('tahun', $tahun);
+    }
+    
+    // Scope untuk tunjangan yang diberikan
+    public function scopeDiberikan($query)
+    {
+        return $query->where('diberikan', true);
     }
 }

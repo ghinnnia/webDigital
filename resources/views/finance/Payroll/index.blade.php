@@ -183,20 +183,14 @@
                                     'approved' => 'bg-emerald-100 text-emerald-700',
                                     'paid' => 'bg-amber-100 text-amber-700'
                                 ];
-                                $statusIcons = [
-                                    'draft' => '📝',
-                                    'processed' => '🔄',
-                                    'approved' => '✅',
-                                    'paid' => '💰'
-                                ];
-                                $statusLabel = [
+                                $statusLabels = [
                                     'draft' => 'Draft',
                                     'processed' => 'Diproses',
                                     'approved' => 'Disetujui',
                                     'paid' => 'Dibayar'
-                                ][$period->status] ?? ucfirst($period->status);
+                                ];
                                 $statusColor = $statusStyles[$period->status] ?? 'bg-slate-100 text-slate-600';
-                                $statusIcon = $statusIcons[$period->status] ?? '📋';
+                                $statusLabel = $statusLabels[$period->status] ?? ucfirst($period->status);
                             @endphp
                             <tr class="hover:bg-slate-50 transition-all duration-150">
                                 <td class="px-6 py-5">
@@ -206,11 +200,10 @@
                                     <div class="font-bold text-slate-800">{{ $period->nama_periode }}</div>
                                     <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ $period->tahun }}</div>
                                 </td>
-                                <td class="px-6 py-5 text-center text-slate-600">{{ $period->tanggal_mulai->format('d/m/Y') }}</td>
-                                <td class="px-6 py-5 text-center text-slate-600">{{ $period->tanggal_selesai->format('d/m/Y') }}</td>
+                                <td class="px-6 py-5 text-center text-slate-600">{{ \Carbon\Carbon::parse($period->tanggal_mulai)->format('d/m/Y') }}</td>
+                                <td class="px-6 py-5 text-center text-slate-600">{{ \Carbon\Carbon::parse($period->tanggal_selesai)->format('d/m/Y') }}</td>
                                 <td class="px-6 py-5 text-center">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold {{ $statusColor }}">
-                                        <span>{{ $statusIcon }}</span>
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
@@ -262,7 +255,7 @@
                             Menampilkan <span class="font-semibold">{{ $periods->firstItem() ?? 0 }}</span> - <span class="font-semibold">{{ $periods->lastItem() ?? 0 }}</span> dari <span class="font-semibold">{{ $periods->total() }}</span> periode
                         </p>
                         <div class="flex items-center gap-2">
-                            {{ $periods->links() }}
+                            {{ $periods->links('pagination::tailwind') }}
                         </div>
                     </div>
                 </div>
@@ -306,15 +299,14 @@
     }
     
     /* Pagination Styling */
-    .finance-pagination nav {
+    .pagination {
         display: flex;
         gap: 4px;
     }
-    .finance-pagination nav .relative {
+    .pagination .page-item {
         display: inline-flex;
     }
-    .finance-pagination nav a, 
-    .finance-pagination nav span {
+    .pagination .page-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -325,16 +317,25 @@
         font-size: 13px;
         font-weight: 500;
         transition: all 0.2s;
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
     }
-    .finance-pagination nav a:hover {
+    .pagination .page-link:hover {
         background-color: #eef2ff;
         color: #4f46e5;
+        border-color: #4f46e5;
     }
-    .finance-pagination nav .bg-indigo-600 {
+    .pagination .active .page-link {
         background-color: #4f46e5 !important;
         color: white !important;
+        border-color: #4f46e5;
     }
-    .finance-pagination nav svg {
+    .pagination .disabled .page-link {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .pagination svg {
         width: 16px;
         height: 16px;
     }

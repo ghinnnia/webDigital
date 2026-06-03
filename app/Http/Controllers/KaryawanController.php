@@ -16,8 +16,11 @@ use App\Models\Cuti;
 use App\Models\Project;
 use App\Models\CutiKuota;
 use App\Models\TunjanganMaster;
+use App\Models\TunjanganKaryawan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -28,219 +31,539 @@ class KaryawanController extends Controller
     /**
      * Menampilkan data karyawan untuk general manager (dengan filter & pagination).
      */
-// Di dalam KaryawanController.php, method indexPegawai()
-
+/**
+ * Menampilkan data karyawan untuk general manager (dengan filter & pagination).
+ */
 public function indexPegawai(Request $request)
 {
     $user = Auth::user();
+    
     if ($user->role === 'hr') {
-        // HR: source data dari tabel users
-        $query = User::with(['divisi', 'karyawan.tim', 'karyawan.tunjanganMaster'])
-            ->whereRaw("LOWER(TRIM(role)) NOT IN ('admin','owner')");
-
+        // Ambil data user langsung tanpa eager loading yang bermasalah
+        $query = User::with(['divisi', 'tim'])
+            ->whereIn('role', ['general_manager', 'manager_divisi', 'karyawan', 'finance', 'hr']);
+        
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('role', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%")
-                    ->orWhere('kontak', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%")
+                  ->orWhere('kontak', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%");
             });
         }
-
+        
         if ($divisi = $request->query('divisi')) {
             $query->whereHas('divisi', function ($sq) use ($divisi) {
                 $sq->where('divisi', $divisi);
             });
         }
-
-        $usersCollection = $query
-            ->orderBy('updated_at', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // PERBAIKAN: Ambil tunjangan dari tabel karyawan
-        $karyawan = $usersCollection->map(function ($u) {
-            $k = $u->karyawan;
-            $karyawanAlamat = trim((string) optional($k)->alamat);
-            $karyawanKontak = trim((string) optional($k)->kontak);
-            $karyawanFoto = trim((string) optional($k)->foto);
-
+        
+        $karyawanCollection = $query->orderBy('created_at', 'desc')->get();
+        
+        // Format data untuk view (tanpa eager loading yang bermasalah)
+        $karyawan = $karyawanCollection->map(function ($userItem) {
+            // Ambil data tunjangan via relasi karyawan
+            $karyawanData = Karyawan::where('user_id', $userItem->id)->first();
+            
+            $tetapList = collect();
+            $tidakTetapList = collect();
+            $tetapIds = [];
+            $tidakTetapIds = [];
+            
+            if ($karyawanData) {
+                $currentMonth = Carbon::now()->month;
+                $currentYear = Carbon::now()->year;
+                
+                // Ambil tunjangan dari tabel tunjangan_karyawan
+                $tetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
+                    ->where('bulan', $currentMonth)
+                    ->where('tahun', $currentYear)
+                    ->where('diberikan', 1)
+                    ->with('tunjanganMaster')
+                    ->get()
+                    ->filter(function($item) {
+                        return $item->tunjanganMaster && $item->tunjanganMaster->tipe == 'bulanan';
+                    });
+                
+                $tidakTetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
+                    ->where('bulan', $currentMonth)
+                    ->where('tahun', $currentYear)
+                    ->where('diberikan', 1)
+                    ->with('tunjanganMaster')
+                    ->get()
+                    ->filter(function($item) {
+                        return $item->tunjanganMaster && in_array($item->tunjanganMaster->tipe, ['bonus', 'insentif']);
+                    });
+                
+                $tetapIds = $tetapList->pluck('tunjangan_id')->toArray();
+                $tidakTetapIds = $tidakTetapList->pluck('tunjangan_id')->toArray();
+            }
+            
             return (object) [
-                'id' => $k ? $k->id : $u->id,
-                'user_id' => $u->id,
-                'nama' => $u->name,
-                'email' => $u->email,
-                'role' => $u->role,
-                'divisi' => optional($u->divisi)->divisi ?? optional($k)->divisi,
-                'divisi_id' => $u->divisi_id,
-                'tim' => optional($k)->tim,
-                'alamat' => $karyawanAlamat !== '' ? optional($k)->alamat : $u->alamat,
-                'kontak' => $karyawanKontak !== '' ? optional($k)->kontak : $u->kontak,
-                'foto' => $karyawanFoto !== '' ? optional($k)->foto : $u->foto,
-                'gaji' => $u->gaji,
-                'kontrak_mulai' => optional($k)->kontrak_mulai,
-                'kontrak_selesai' => optional($k)->kontrak_selesai,
-                'status_kerja' => optional($k)->status_kerja ?? $u->status_kerja,
-                'status_karyawan' => optional($k)->status_karyawan ?? $u->status_karyawan,
-                'tunjangan_tetap_ids' => $k && optional($k)->tunjanganMaster ? collect(optional($k)->tunjanganMaster)->where('tipe', 'bulanan')->pluck('id')->toArray() : [],
-                'tunjangan_tidak_tetap_ids' => $k && optional($k)->tunjanganMaster ? collect(optional($k)->tunjanganMaster)->whereIn('tipe', ['bonus', 'insentif'])->pluck('id')->toArray() : [],
-                'tunjangan_tetap_list' => $k && optional($k)->tunjanganMaster ? collect(optional($k)->tunjanganMaster)->where('tipe', 'bulanan') : collect(),
-                'tunjangan_tidak_tetap_list' => $k && optional($k)->tunjanganMaster ? collect(optional($k)->tunjanganMaster)->whereIn('tipe', ['bonus', 'insentif']) : collect(),
-                'user' => $u,
-                'name' => $u->name,
+                'user_id' => $userItem->id,
+                'nama' => $userItem->name,
+                'email' => $userItem->email,
+                'role' => $userItem->role,
+                'divisi' => $userItem->divisi ? $userItem->divisi->divisi : '-',
+                'divisi_id' => $userItem->divisi_id,
+                'tim' => $userItem->tim,
+                'alamat' => $userItem->alamat,
+                'kontak' => $userItem->kontak,
+                'foto' => $userItem->foto,
+                'gaji' => $userItem->gaji,
+                'kontrak_mulai' => $userItem->kontrak_mulai,
+                'kontrak_selesai' => $userItem->kontrak_selesai,
+                'status_kerja' => $userItem->status_kerja ?? 'aktif',
+                'status_karyawan' => $userItem->status_karyawan ?? 'tetap',
+                'tunjanganTetapBulanIni' => $tetapList,
+                'tunjanganTidakTetapBulanIni' => $tidakTetapList,
+                'tunjangan_tetap_ids' => $tetapIds,
+                'tunjangan_tidak_tetap_ids' => $tidakTetapIds,
             ];
         });
-
+        
         $divisis = Divisi::orderBy('divisi', 'asc')->get();
         $tunjanganMaster = TunjanganMaster::orderBy('tipe')->orderBy('nama')->get();
-
+        
         return view('hr.data_karyawan', compact('karyawan', 'divisis', 'tunjanganMaster'));
-    } else {
-        // Non-HR role
-        $query = Karyawan::with('user.divisi', 'tim');
+    }
+    
+    // Kode untuk role selain HR (general_manager, manager_divisi, dll)
+    $query = Karyawan::with([
+        'user',
+        'user.divisi',
+        'tim',
+        'tunjanganTetapBulanIni',
+        'tunjanganTidakTetapBulanIni'
+    ]);
+    
+    if ($search = $request->query('search')) {
+        $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+              ->orWhere('alamat', 'like', "%{$search}%")
+              ->orWhere('kontak', 'like', "%{$search}%")
+              ->orWhereHas('user', function ($sq) use ($search) {
+                  $sq->where('email', 'like', "%{$search}%")
+                     ->orWhere('role', 'like', "%{$search}%");
+              });
+        });
+    }
+    
+    if ($divisi = $request->query('divisi')) {
+        $query->whereHas('user.divisi', function ($sq) use ($divisi) {
+            $sq->where('divisi', $divisi);
+        });
+    }
+    
+    $karyawanCollection = $query->orderBy('updated_at', 'desc')->orderBy('created_at', 'desc')->get();
+    
+    $karyawan = $karyawanCollection->map(function ($k) {
+        $userData = $k->user;
+        
+        return (object) [
+            'id' => $k->id,
+            'user_id' => $k->user_id,
+            'nama' => $k->nama,
+            'email' => $userData?->email ?? $k->email ?? '',
+            'role' => $userData?->role ?? 'karyawan',
+            'divisi' => $userData?->divisi?->divisi ?? $k->divisi ?? '-',
+            'divisi_id' => $userData?->divisi_id ?? $k->divisi_id,
+            'tim' => $k->tim,
+            'alamat' => $k->alamat,
+            'kontak' => $k->kontak,
+            'foto' => $k->foto,
+            'gaji' => $k->gaji,
+            'kontrak_mulai' => $k->kontrak_mulai,
+            'kontrak_selesai' => $k->kontrak_selesai,
+            'status_kerja' => $k->status_kerja,
+            'status_karyawan' => $k->status_karyawan,
+            'tunjangan_tetap_list' => $k->tunjanganTetapBulanIni ?? collect(),
+            'tunjangan_tidak_tetap_list' => $k->tunjanganTidakTetapBulanIni ?? collect(),
+            'tunjangan_tetap_ids' => ($k->tunjanganTetapBulanIni ?? collect())->pluck('id')->toArray(),
+            'tunjangan_tidak_tetap_ids' => ($k->tunjanganTidakTetapBulanIni ?? collect())->pluck('id')->toArray(),
+        ];
+    });
+    
+    $divisis = Divisi::orderBy('divisi', 'asc')->get();
+    $tunjanganMaster = TunjanganMaster::orderBy('tipe')->orderBy('nama')->get();
+    
+    return view('hr.data_karyawan', compact('karyawan', 'divisis', 'tunjanganMaster'));
+}
 
-        if ($search = $request->query('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%");
-            });
+    /**
+     * Store karyawan baru (API untuk AJAX)
+     */
+    /**
+ * Store karyawan baru (API untuk AJAX)
+ */
+public function storePegawai(Request $request)
+{
+    try {
+        DB::beginTransaction();
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'role' => 'required|string',
+            'divisi_id' => 'nullable|exists:divisis,id',
+            'tim_id' => 'nullable|exists:tims,id',
+            'gaji' => 'nullable|numeric',
+            'kontak' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'status_kerja' => 'required|in:aktif,resign,phk',
+            'status_karyawan' => 'required|in:tetap,kontrak,freelance',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'tunjangan_tetap_ids' => 'nullable|string',
+            'tunjangan_tidak_tetap_ids' => 'nullable|string'
+        ]);
+        
+        // Create user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'divisi_id' => $validated['divisi_id'] ?? null,
+            'tim_id' => $validated['tim_id'] ?? null,
+            'gaji' => $validated['gaji'] ?? 0,
+            'kontak' => $validated['kontak'] ?? '',
+            'alamat' => $validated['alamat'] ?? '',
+            'status_kerja' => $validated['status_kerja'],
+            'status_karyawan' => $validated['status_karyawan']
+        ]);
+        
+        // Handle foto
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('foto-karyawan', 'public');
+            $user->foto = $fotoPath;
+            $user->save();
         }
-
-        if ($divisi = $request->query('divisi')) {
-            $query->whereHas('user', function ($q) use ($divisi) {
-                $q->whereHas('divisi', function ($sq) use ($divisi) {
-                    $sq->where('divisi', $divisi);
-                });
-            });
+        
+        // Handle tunjangan - Cari atau buat karyawan
+        $karyawan = Karyawan::where('user_id', $user->id)->first();
+        
+        if (!$karyawan) {
+            // Jika karyawan tidak ditemukan, buat baru
+            $divisiName = $user->divisi ? $user->divisi->divisi : null;
+            $karyawan = Karyawan::create([
+                'user_id' => $user->id,
+                'nama' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'divisi' => $divisiName,
+                'divisi_id' => $user->divisi_id,
+                'tim_id' => $user->tim_id,
+                'gaji' => $user->gaji,
+                'alamat' => $user->alamat,
+                'kontak' => $user->kontak,
+                'foto' => $user->foto,
+                'status_kerja' => $user->status_kerja,
+                'status_karyawan' => $user->status_karyawan,
+            ]);
         }
-
-        $karyawan = $query->orderBy('nama')->paginate(15)->withQueryString();
-        $tunjanganMaster = TunjanganMaster::orderBy('tipe')->orderBy('nama')->get();
-
-        return view('general_manajer.data_karyawan', compact('karyawan', 'tunjanganMaster'));
+        
+        if ($karyawan) {
+            $this->syncTunjanganKaryawan($karyawan->id, $request, false);
+        }
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Karyawan berhasil ditambahkan'
+        ]);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error storing karyawan: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menambahkan karyawan: ' . $e->getMessage()
+        ], 500);
     }
 }
 
     /**
-     * Store karyawan baru (untuk form tambah karyawan).
+     * Update karyawan (API untuk AJAX)
      */
-    public function storePegawai(Request $request)
-    {
+   /**
+ * Update karyawan (API untuk AJAX)
+ */
+/**
+ * Update karyawan (API untuk AJAX)
+ */
+public function updatePegawai(Request $request, $id)
+{
+    try {
+        DB::beginTransaction();
+        
+        $user = User::findOrFail($id);
+        
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'jabatan' => 'required|string|max:255',
-            'divisi' => 'required|string|max:255',
-            'alamat' => 'required|string',
-            'kontak' => 'required|string|max:255',
-            'gaji' => 'nullable|string|max:100',
-            'kontrak_mulai' => 'nullable|date',
-            'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
-            'status_karyawan' => 'nullable|in:tetap,kontrak,freelance',
-            'tunjangan_tetap_ids' => 'nullable|json',
-            'tunjangan_tidak_tetap_ids' => 'nullable|json',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:6',
+            'role' => 'required|string',
+            'divisi_id' => 'nullable|exists:divisis,id',
+            'tim_id' => 'nullable|exists:tims,id',
+            'gaji' => 'nullable|numeric',
+            'kontak' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'status_kerja' => 'required|in:aktif,resign,phk',
+            'status_karyawan' => 'required|in:tetap,kontrak,freelance',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'tunjangan_tetap_ids' => 'nullable|string',
+            'tunjangan_tidak_tetap_ids' => 'nullable|string'
         ]);
-
-        if (($validated['status_karyawan'] ?? null) !== 'kontrak') {
-            $validated['kontrak_mulai'] = null;
-            $validated['kontrak_selesai'] = null;
+        
+        // Update user data
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
+        $user->divisi_id = $validated['divisi_id'] ?? null;
+        $user->tim_id = $validated['tim_id'] ?? null;
+        $user->gaji = $validated['gaji'] ?? 0;
+        $user->kontak = $validated['kontak'] ?? '';
+        $user->alamat = $validated['alamat'] ?? '';
+        $user->status_kerja = $validated['status_kerja'];
+        $user->status_karyawan = $validated['status_karyawan'];
+        
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
         }
-
-        // Jika karyawan tipe kontrak dan tanggal selesai kontrak sudah lewat, set status_kerja nonaktif
-        if (($validated['status_karyawan'] ?? null) === 'kontrak' && !empty($validated['kontrak_selesai'])) {
-            try {
-                if (Carbon::parse($validated['kontrak_selesai'])->isPast()) {
-                    $validated['status_kerja'] = 'nonaktif';
-                }
-            } catch (\Exception $e) {
-                // ignore
+        
+        // Handle foto
+        if ($request->hasFile('foto')) {
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
             }
+            $fotoPath = $request->file('foto')->store('foto-karyawan', 'public');
+            $user->foto = $fotoPath;
         }
-
-        $karyawan = Karyawan::create($validated);
-
-        $tunjanganTetapIds = $request->input('tunjangan_tetap_ids', []);
-        $tunjanganTidakTetapIds = $request->input('tunjangan_tidak_tetap_ids', []);
-        if (is_string($tunjanganTetapIds)) {
-            $tunjanganTetapIds = json_decode($tunjanganTetapIds, true);
+        
+        $user->save();
+        
+        // Sync tunjangan - Cari atau buat karyawan
+        $karyawan = Karyawan::where('user_id', $user->id)->first();
+        
+        if (!$karyawan) {
+            // Jika karyawan tidak ditemukan, buat baru
+            $divisiName = $user->divisi ? $user->divisi->divisi : null;
+            $karyawan = Karyawan::create([
+                'user_id' => $user->id,
+                'nama' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'divisi' => $divisiName,
+                'divisi_id' => $user->divisi_id,
+                'tim_id' => $user->tim_id,
+                'gaji' => $user->gaji,
+                'alamat' => $user->alamat,
+                'kontak' => $user->kontak,
+                'foto' => $user->foto,
+                'status_kerja' => $user->status_kerja,
+                'status_karyawan' => $user->status_karyawan,
+            ]);
         }
-        if (is_string($tunjanganTidakTetapIds)) {
-            $tunjanganTidakTetapIds = json_decode($tunjanganTidakTetapIds, true);
+        
+        if ($karyawan) {
+            $this->syncTunjanganKaryawan($karyawan->id, $request, true);
         }
-        $karyawan->tunjanganMaster()->sync(array_filter(array_merge((array) $tunjanganTetapIds, (array) $tunjanganTidakTetapIds)));
-
-        return redirect()->route('pegawai.index')->with('success', 'Karyawan berhasil ditambahkan.');
-    }
-
-    /**
-     * Edit karyawan (return JSON untuk modal).
-     */
-    public function editPegawai($id)
-    {
-        $karyawan = Karyawan::findOrFail($id);
-        return response()->json($karyawan);
-    }
-
-    /**
-     * Update karyawan.
-     */
-    public function updatePegawai(Request $request, $id)
-    {
-        $karyawan = Karyawan::findOrFail($id);
-
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'jabatan' => 'required|string|max:255',
-            'divisi' => 'required|string|max:255',
-            'alamat' => 'required|string',
-            'kontak' => 'required|string|max:255',
-            'gaji' => 'nullable|string|max:100',
-            'kontrak_mulai' => 'nullable|date',
-            'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
-            'status_karyawan' => 'nullable|in:tetap,kontrak,freelance',
-            'tunjangan_tetap_ids' => 'nullable|json',
-            'tunjangan_tidak_tetap_ids' => 'nullable|json',
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Karyawan berhasil diupdate'
         ]);
-
-        if (($validated['status_karyawan'] ?? $karyawan->status_karyawan) !== 'kontrak') {
-            $validated['kontrak_mulai'] = null;
-            $validated['kontrak_selesai'] = null;
-        }
-
-        if (($validated['status_karyawan'] ?? $karyawan->status_karyawan) === 'kontrak' && !empty($validated['kontrak_selesai'])) {
-            try {
-                if (Carbon::parse($validated['kontrak_selesai'])->isPast()) {
-                    $validated['status_kerja'] = 'nonaktif';
-                }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
-
-        $karyawan->update($validated);
-
-        $tunjanganTetapIds = $request->input('tunjangan_tetap_ids', []);
-        $tunjanganTidakTetapIds = $request->input('tunjangan_tidak_tetap_ids', []);
-        if (is_string($tunjanganTetapIds)) {
-            $tunjanganTetapIds = json_decode($tunjanganTetapIds, true);
-        }
-        if (is_string($tunjanganTidakTetapIds)) {
-            $tunjanganTidakTetapIds = json_decode($tunjanganTidakTetapIds, true);
-        }
-        $karyawan->tunjanganMaster()->sync(array_filter(array_merge((array) $tunjanganTetapIds, (array) $tunjanganTidakTetapIds)));
-
-        return redirect()->route('pegawai.index')->with('success', 'karyawan berhasil diperbarui.');
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error updating karyawan: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengupdate karyawan: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
-     * Delete karyawan.
+     * Delete karyawan (API untuk AJAX)
      */
     public function destroyPegawai($id)
     {
-        $karyawan = Karyawan::findOrFail($id);
-        $karyawan->delete();
+        try {
+            DB::beginTransaction();
+            
+            $user = User::findOrFail($id);
+            
+            // Hapus foto jika ada
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
+            }
+            
+            // Hapus tunjangan karyawan
+$karyawan = Karyawan::where('user_id', $user->id)->first();
+if ($karyawan) {
+    TunjanganKaryawan::where('karyawan_id', $karyawan->id)->delete();
+}            
+            // Hapus user
+            $user->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Karyawan berhasil dihapus'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting karyawan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus karyawan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
-        return redirect()->route('pegawai.index')->with('success', 'karyawan berhasil dihapus.');
+    //**
+//  * Helper sync tunjangan karyawan sesuai struktur database
+//  * 
+//  * @param int $karyawanId ID dari tabel karyawan (bukan user_id)
+//  * @param Request $request
+//  * @param bool $deleteOld Hapus data lama untuk bulan ini
+//  */
+private function syncTunjanganKaryawan($karyawanId, Request $request, $deleteOld = false)
+{
+    $currentMonth = Carbon::now()->month;
+    $currentYear = Carbon::now()->year;
+    
+    if ($deleteOld) {
+        // Hapus tunjangan untuk bulan ini saja (bukan semua data)
+        TunjanganKaryawan::where('karyawan_id', $karyawanId)
+            ->where('bulan', $currentMonth)
+            ->where('tahun', $currentYear)
+            ->delete();
+    }
+    
+    // Handle tunjangan tetap
+    $tetapIds = [];
+    if ($request->filled('tunjangan_tetap_ids')) {
+        $tetapIds = json_decode($request->tunjangan_tetap_ids, true);
+        if (!is_array($tetapIds)) $tetapIds = [];
+    }
+    
+    foreach ($tetapIds as $tunjanganId) {
+        $tunjanganMaster = TunjanganMaster::find($tunjanganId);
+        if ($tunjanganMaster) {
+            // PASTIKAN SEMUA FIELD DIISI
+            TunjanganKaryawan::updateOrCreate(
+                [
+                    'karyawan_id' => $karyawanId,
+                    'tunjangan_id' => $tunjanganId,
+                    'bulan' => $currentMonth,
+                    'tahun' => $currentYear,
+                ],
+                [
+                    'nominal' => $tunjanganMaster->nominal,
+                    'diberikan' => 1,
+                ]
+            );
+        }
+    }
+    
+    // Handle tunjangan tidak tetap
+    $tidakTetapIds = [];
+    if ($request->filled('tunjangan_tidak_tetap_ids')) {
+        $tidakTetapIds = json_decode($request->tunjangan_tidak_tetap_ids, true);
+        if (!is_array($tidakTetapIds)) $tidakTetapIds = [];
+    }
+    
+    foreach ($tidakTetapIds as $tunjanganId) {
+        $tunjanganMaster = TunjanganMaster::find($tunjanganId);
+        if ($tunjanganMaster) {
+            // PASTIKAN SEMUA FIELD DIISI
+            TunjanganKaryawan::updateOrCreate(
+                [
+                    'karyawan_id' => $karyawanId,
+                    'tunjangan_id' => $tunjanganId,
+                    'bulan' => $currentMonth,
+                    'tahun' => $currentYear,
+                ],
+                [
+                    'nominal' => $tunjanganMaster->nominal,
+                    'diberikan' => 1,
+                ]
+            );
+        }
+    }
+}
+    /**
+     * API untuk template gaji
+     */
+    public function getGajiTemplate(Request $request)
+    {
+        $role = $request->get('role');
+        $divisiId = $request->get('divisi_id');
+        
+        $defaultGaji = [
+            'general_manager' => 15000000,
+            'manager_divisi' => 10000000,
+            'finance' => 8000000,
+            'hr' => 7000000,
+            'karyawan' => 5000000
+        ];
+        
+        $gajiPokok = $defaultGaji[$role] ?? null;
+        
+        return response()->json([
+            'success' => true,
+            'data' => ['gaji_pokok' => $gajiPokok]
+        ]);
+    }
+
+    /**
+     * API untuk mendapatkan tunjangan karyawan
+     */
+    public function getTunjanganKaryawan($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            
+            $tetap = $user->tunjanganTetap->map(function($item) {
+                return ['id' => $item->id, 'nama' => $item->nama, 'nominal' => $item->pivot->nominal];
+            });
+            
+            $tidakTetap = $user->tunjanganTidakTetap->map(function($item) {
+                return ['id' => $item->id, 'nama' => $item->nama, 'nominal' => $item->pivot->nominal];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => ['tetap' => $tetap, 'tidak_tetap' => $tidakTetap]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data tunjangan'
+            ], 500);
+        }
     }
 
     /**
@@ -251,7 +574,7 @@ public function indexPegawai(Request $request)
         $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
         
         $cuti = Cuti::where('user_id', $userId)
-            ->where('status', 'disetujui') // Pastikan kolom status di tabel cuti menggunakan 'disetujui'
+            ->where('status', 'disetujui')
             ->whereDate('tanggal_mulai', '<=', $today)
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
@@ -313,10 +636,10 @@ public function indexPegawai(Request $request)
     {
         $userId = Auth::id();
         $today = now('Asia/Jakarta')->toDateString();
-        $user = Auth::user()->load('divisi');  // Eager load the divisi relationship
+        $user = Auth::user()->load('divisi');
         $userRole = $user->role; 
         
-        // Determine divisi id and name (prefer users.divisi_id, but keep robust fallback)
+        // Determine divisi id and name
         $userDivisiId = $user->divisi_id ?: null;
         $userDivisi = trim((string) (optional($user->divisi)->divisi ?? '')) ?: null;
         $karyawanData = Karyawan::where('user_id', $userId)->first();
@@ -368,13 +691,13 @@ public function indexPegawai(Request $request)
             }
         }
 
-        // Hitung Jumlah Ketidakhadiran (Sakit, Izin, Cuti yang disetujui)
+        // Hitung Jumlah Ketidakhadiran
         $ketidakhadiranCount = Absensi::where('user_id', $userId)
                                 ->where('approval_status', 'approved')
                                 ->whereIn('jenis_ketidakhadiran', ['cuti', 'sakit', 'izin'])
                                 ->count();
 
-        // Hitung Jumlah Tugas (use divisi_id when available)
+        // Hitung Jumlah Tugas
         $tugasCount = Task::where(function ($query) use ($userId, $userDivisiId) {
             $query->where('assigned_to', $userId)
                   ->orWhereRaw("JSON_CONTAINS(assigned_to_ids, JSON_ARRAY(?))", [$userId]);
@@ -393,7 +716,7 @@ public function indexPegawai(Request $request)
         ->whereNotIn('status', ['selesai', 'dibatalkan'])
         ->count();
 
-        // Cek apakah karyawan menjadi penanggung jawab project + ringkasan detail
+        // Cek apakah karyawan menjadi penanggung jawab project
         $penanggungProjectQuery = Project::assignedToKaryawan($userId);
         $penanggungProjectCount = (clone $penanggungProjectQuery)->count();
         $penanggungProjectAktifCount = (clone $penanggungProjectQuery)
@@ -436,24 +759,9 @@ public function indexPegawai(Request $request)
 
             $roleBasedData['pendingApprovals'] = $countPendingManual + $countPendingCuti;
 
-            Log::info('GM Dashboard Check', [
-                'user_id' => $userId,
-                'user_role' => $userRole,
-                'user_divisi' => $userDivisi,
-                'user_divisi_id' => $userDivisiId,
-                'count_pending_manual' => $countPendingManual,
-                'count_cuti_table' => $countPendingCuti,
-                'final_total' => $roleBasedData['pendingApprovals']
-            ]);
-
-        } elseif ($userRole === 'manager') {
+        } elseif ($userRole === 'manager_divisi') {
             if ($userDivisiId) {
-                // Count team members by users.divisi_id
-                $roleBasedData['teamMembers'] = Karyawan::whereHas('user', function($q) use ($userDivisiId) {
-                    $q->where('divisi_id', $userDivisiId);
-                })->count();
-
-                // Pending approvals for users in the same divisi
+                $roleBasedData['teamMembers'] = User::where('divisi_id', $userDivisiId)->count();
                 $roleBasedData['teamPendingApprovals'] = Absensi::whereIn('user_id', function($query) use ($userDivisiId) {
                     $query->select('id')
                           ->from('users')
@@ -483,9 +791,6 @@ public function indexPegawai(Request $request)
         $announcements = \App\Models\Pengumuman::latest()->take(5)->get();
         $meetingNotes = \App\Models\CatatanRapat::latest()->take(5)->get();
 
-        $userId = Auth::id();
-
-        // Ambil tanggal untuk kalender (tidak pakai JSON fetch lagi)
         $highlightedDates = \App\Models\CatatanRapat::whereHas('penugasan', function ($query) use ($userId) {
                 $query->where('users.id', $userId);
             })
@@ -502,6 +807,7 @@ public function indexPegawai(Request $request)
             ->groupBy('date')
             ->pluck('date')
             ->toArray();
+            
         $totalHadir = \App\Models\Absensi::where('user_id', $userId)
             ->whereNotNull('jam_masuk')
             ->where('approval_status', 'approved')
@@ -566,42 +872,6 @@ public function indexPegawai(Request $request)
     }
 
     /**
-     * API: Daftar project yang ditanggung jawab karyawan
-     */
-    public function getPenanggungProjects(Request $request)
-    {
-        try {
-            $userId = Auth::id();
-            $projects = Project::with(['penanggungJawab', 'karyawanPenanggungJawab'])
-                ->assignedToKaryawan($userId)
-                ->orderBy('id', 'desc')
-                ->get([
-                    'id',
-                    'nama',
-                    'deskripsi',
-                    'status_pengerjaan',
-                    'status_kerjasama',
-                    'progres',
-                    'tanggal_mulai_pengerjaan',
-                    'tanggal_selesai_pengerjaan',
-                    'tanggal_mulai_kerjasama',
-                    'tanggal_selesai_kerjasama'
-                ]);
-
-            return response()->json([
-                'success' => true,
-                'data' => $projects
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error getPenanggungProjects: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data project'
-            ], 500);
-        }
-    }
-
-    /**
      * Menampilkan halaman absensi karyawan.
      */
     public function absensiPage(Request $request)
@@ -622,49 +892,39 @@ public function indexPegawai(Request $request)
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        // Hitung statistik - SESUAIKAN DENGAN STRUKTUR TABEL
-
-        // 1. Total Hadir = ada jam_masuk DAN approval_status = approved
+        // Hitung statistik
         $totalHadir = Absensi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-            ->whereNotNull('jam_masuk') // ADA CHECK-IN
-            ->where('approval_status', 'approved') // DISETUJUI
+            ->whereNotNull('jam_masuk')
+            ->where('approval_status', 'approved')
             ->count();
 
-        // 2. Total Izin = jenis_ketidakhadiran = 'izin' DAN approval_status = approved
         $totalIzin = Absensi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->where('jenis_ketidakhadiran', 'izin')
             ->where('approval_status', 'approved')
             ->count();
 
-        // 3. Total Sakit
         $totalSakit = Absensi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->where('jenis_ketidakhadiran', 'sakit')
             ->where('approval_status', 'approved')
             ->count();
 
-        // 4. Total Cuti
         $totalCuti = Absensi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->where('jenis_ketidakhadiran', 'cuti')
             ->where('approval_status', 'approved')
             ->count();
 
-        // 5. Total Dinas Luar
         $totalDinasLuar = Absensi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->where('jenis_ketidakhadiran', 'dinas-luar')
             ->where('approval_status', 'approved')
             ->count();
 
-        // 6. Total Alpha = tidak ada data absensi sama sekali untuk hari kerja
-        // (Perlu logika khusus)
-
         // Return appropriate view based on user role
         if ($user->role === 'hr') {
-            // Prepare default values so view always renders even if query fails
             $formattedAbsensi = collect();
             $ketidakhadiran = collect();
             $cuti = collect();
@@ -679,17 +939,14 @@ public function indexPegawai(Request $request)
             $izin_UserIds = [];
             $cutiUserIds = [];
 
-            // Gunakan rentang hari WIB agar konsisten untuk kolom tanggal bertipe datetime (UTC di DB)
             $todayStartUtc = Carbon::today('Asia/Jakarta')->startOfDay()->utc();
             $todayEndUtc = Carbon::today('Asia/Jakarta')->endOfDay()->utc();
 
-            // Prepare full lists for HR view (today's data only, confirmed submissions)
             try {
                 $users = User::where('role', 'karyawan')->get();
                 $userIds = $users->pluck('id')->toArray();
                 $totalKaryawan = count($userIds);
 
-                // Fetch all attendance records for today (must have jam_masuk)
                 $attendances = Absensi::with('user')
                     ->whereIn('user_id', $userIds)
                     ->whereBetween('tanggal', [$todayStartUtc, $todayEndUtc])
@@ -721,13 +978,11 @@ public function indexPegawai(Request $request)
                         }
                     }
 
-                    // Prioritaskan keterangan manual, fallback ke alasan pulang duluan bila ada
                     $keteranganValue = $absen->keterangan ?? $absen->reason ?? null;
                     if (empty($keteranganValue) && !empty($absen->is_early_checkout) && !empty($absen->early_checkout_reason)) {
                         $keteranganValue = $absen->early_checkout_reason;
                     }
                     
-                    // Determine status: terlambat or tepat waktu (samakan dengan riwayat karyawan)
                     $rawLateMinutes = $absen->getRawOriginal('late_minutes');
                     $isTerlambat = (is_numeric($rawLateMinutes) && (int) $rawLateMinutes > 0)
                         ? true
@@ -753,16 +1008,13 @@ public function indexPegawai(Request $request)
                     ]);
                 }
 
-                // Fetch ketidakhadiran (sakit + izin) for today - EXCLUDE pending - only confirmed
                 $ketidakhadiranRaw = Absensi::with('user')
                     ->whereIn('user_id', $userIds)
                     ->whereBetween('tanggal', [$todayStartUtc, $todayEndUtc])
                     ->whereIn('jenis_ketidakhadiran', ['sakit', 'izin'])
-                    // Include pending and approved so HR can see incoming requests
                     ->orderBy('created_at', 'desc')
                     ->get();
                 
-                // Format ketidakhadiran data for view
                 $ketidakhadiran = collect();
                 $sakit_UserIds = [];
                 $izin_UserIds = [];
@@ -778,12 +1030,10 @@ public function indexPegawai(Request $request)
                         'tanggal' => $item->tanggal,
                         'tanggal_akhir' => $item->tanggal_akhir ?? null,
                         'jenis_ketidakhadiran' => $item->jenis_ketidakhadiran,
-                        // Untuk daftar ketidakhadiran HR, tampilkan alasan izin/sakit (field reason) sebagai prioritas
                         'keterangan' => $item->reason ?? $item->keterangan ?? null,
                         'approval_status' => $item->approval_status ?? 'pending',
                     ]);
                     
-                    // Track user IDs by type
                     if ($item->jenis_ketidakhadiran === 'sakit') {
                         $sakit_UserIds[] = $item->user_id;
                     } elseif ($item->jenis_ketidakhadiran === 'izin') {
@@ -791,34 +1041,17 @@ public function indexPegawai(Request $request)
                     }
                 }
                 
-                // Get unique IDs
                 $sakit_UserIds = array_unique($sakit_UserIds);
                 $izin_UserIds = array_unique($izin_UserIds);
 
-                // DEBUG: Log counts and sample items to help debugging missing 'izin'
-                try {
-                    \Log::info('DEBUG ketidakhadiran summary', [
-                        'total_raw' => count($ketidakhadiranRaw),
-                        'sakit_count' => count($sakit_UserIds),
-                        'izin_count' => count($izin_UserIds),
-                        'sample_raw_types' => array_map(function($it){ return $it->jenis_ketidakhadiran ?? null; }, array_slice($ketidakhadiranRaw->toArray(), 0, 10)),
-                        'sample_raw_ids' => array_map(function($it){ return $it->id ?? null; }, array_slice($ketidakhadiranRaw->toArray(), 0, 10)),
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to log ketidakhadiran debug: ' . $e->getMessage());
-                }
-
-                // Fetch Cuti data overlapping this month (include pending and approved)
                 $cutiRaw = Cuti::with(['user', 'user.divisionDetail'])
                     ->whereIn('user_id', $userIds)
-                    // Overlap check: cuti that start before or on end of month AND end after or on start of month
                     ->whereDate('tanggal_mulai', '<=', $endOfMonth)
                     ->whereDate('tanggal_selesai', '>=', $startOfMonth)
                     ->whereIn('status', ['disetujui', 'menunggu', 'pending'])
                     ->orderBy('created_at', 'desc')
                     ->get();
                 
-                // Format cuti data for view
                 $cuti = collect();
                 $cutiUserIds = [];
                 
@@ -846,14 +1079,12 @@ public function indexPegawai(Request $request)
                 
                 $cutiUserIds = array_unique($cutiUserIds);
                 
-                // Calculate statistics
                 $hadiranUserIds = array_unique($attendanceUserIds);
                 $hadiranCount = count($hadiranUserIds);
                 $sakitCount = count($sakit_UserIds);
                 $izinCount = count($izin_UserIds);
                 $cutiCount = count($cutiUserIds);
                 
-                // Tidak Hadir = Total - (Hadir + Sakit + Izin + Cuti)
                 $allTrackedUserIds = array_unique(array_merge($hadiranUserIds, $sakit_UserIds, $izin_UserIds, $cutiUserIds));
                 $tidakHadirCount = $totalKaryawan - count($allTrackedUserIds);
 
@@ -876,24 +1107,22 @@ public function indexPegawai(Request $request)
                 'formattedAbsensi' => $formattedAbsensi,
                 'ketidakhadiran' => $ketidakhadiran,
                 'cuti' => $cuti,
-                // Pass today's statistics (pre-calculated in controller)
                 'totalKaryawan' => $totalKaryawan,
                 'hadiranCount' => $hadiranCount,
                 'sakitCount' => $sakitCount,
                 'izinCount' => $izinCount,
                 'cutiCount' => $cutiCount,
                 'tidakHadirCount' => $tidakHadirCount,
-                // Also pass raw id lists to help client-side non-attendee computation
-                'presentIds' => $hadiranUserIds,
-                'sakitIds' => $sakit_UserIds,
-                'izinIds' => $izin_UserIds,
-                'cutiIds' => $cutiUserIds,
-                'allUsers' => $users->map(function ($u) {
+                'presentIds' => $hadiranUserIds ?? [],
+                'sakitIds' => $sakit_UserIds ?? [],
+                'izinIds' => $izin_UserIds ?? [],
+                'cutiIds' => $cutiUserIds ?? [],
+                'allUsers' => isset($users) ? $users->map(function ($u) {
                     return [
                         'id' => $u->id,
                         'name' => $u->name,
                     ];
-                })->values(),
+                })->values() : collect(),
             ]);
         }
 
@@ -918,7 +1147,6 @@ public function indexPegawai(Request $request)
         try {
             $userId = Auth::id();
             $user = Auth::user();
-            // Determine divisi id and name
             $userDivisiId = null;
             $userDivisi = null;
             if ($user->divisi_id) {
@@ -935,22 +1163,8 @@ public function indexPegawai(Request $request)
             
             $userName = $user->name;
 
-            Log::info('=== KARYAWAN TUGAS LIST ===', [
-                'controller' => 'KaryawanController@listPage',
-                'user_id' => $userId,
-                'user_name' => $userName,
-                'user_divisi' => $userDivisi,
-                'user_divisi_id' => $userDivisiId,
-                'role' => $user->role,
-                'timestamp' => now()->toDateTimeString(),
-            ]);
-
-            // PERBAIKAN UTAMA: Query yang lebih komprehensif
             $tasks = Task::where(function ($query) use ($userId, $userDivisiId) {
-                // 1. Tugas untuk user
                 $query->where('assigned_to', $userId);
-
-                // 2. Tugas untuk divisi (by id)
                 if (Schema::hasColumn('tasks', 'target_type') && $userDivisiId) {
                     $query->orWhere(function ($q) use ($userDivisiId) {
                         $q->where('target_type', 'divisi');
@@ -961,21 +1175,12 @@ public function indexPegawai(Request $request)
                      $query->orWhere('divisi', $userDivisiId);
                 }
             })
-            // PERBAIKAN KRUSIAL: Hanya select id dan name dari relasi User
-            // Jangan select 'divisi' karena tabel users tidak punya kolom itu
-            ->with([
-                'creator:id,name',
-                'assignee:id,name', 
-                'targetManager:id,name'
-            ])
+            ->with(['creator:id,name', 'assignee:id,name', 'targetManager:id,name'])
             ->orderBy('deadline', 'asc')
             ->get();
 
-            // Jika view butuh nama divisi dari assignee, kita ambil manual
-            // Option A: Loop tambah data (Cara ini aman untuk view blade)
             $tasks->transform(function ($task) {
                 if ($task->assignee) {
-                    // Cari data karyawan berdasarkan user_id assignee
                     $karyawanInfo = Karyawan::where('user_id', $task->assignee->id)->first(['divisi']);
                     $task->assignee_divisi = $karyawanInfo ? $karyawanInfo->divisi : null;
                 } else {
@@ -1027,10 +1232,6 @@ public function indexPegawai(Request $request)
     // API UNTUK HALAMAN ABSENSI (FRONTEND JAVASCRIPT)
     // =================================================================
 
-    /**
-     * Mengambil status absensi hari ini.
-     * PERBAIKAN: Format response sesuai harapan Frontend { success: true, data: {...} }
-     */
     public function getTodayStatusApi()
     {
         try {
@@ -1041,66 +1242,59 @@ public function indexPegawai(Request $request)
                 ->whereDate('tanggal', $today)
                 ->first();
 
-          $data = [
-              'jam_masuk' => null,
-              'jam_pulang' => null,
-              'status' => 'Belum Absen',
-              'late_minutes' => 0,
-              'approval_status' => 'approved',
-              'is_on_leave' => false,
-              'jenis_ketidakhadiran' => null,
-              'jenis_ketidakhadiran_label' => null,
-              'keterangan' => null
-          ];
-
-              if ($absen) {
-              $data['jam_masuk'] = $absen->jam_masuk;
-              $data['jam_pulang'] = $absen->jam_pulang;
-              $data['approval_status'] = $absen->approval_status;
-              $data['jenis_ketidakhadiran'] = $absen->jenis_ketidakhadiran;
-              $data['jenis_ketidakhadiran_label'] = $absen->jenis_ketidakhadiran ? $absen->jenis_ketidakhadiran_label : null;
-              $data['keterangan'] = $absen->keterangan;
-
-            if ($absen->jam_masuk) {
-                $rawLateMin = $absen->getRawOriginal('late_minutes');
-                $isLate = $this->isAttendanceLate($absen);
-                $data['status'] = $isLate ? 'Terlambat' : 'Tepat Waktu';
-                $data['late_minutes'] = is_numeric($rawLateMin) ? (int) $rawLateMin : 0;
-                $data['is_terlambat'] = $isLate;
-                Log::debug('getTodayStatusApi status check', [
-                    'raw_late_minutes' => $rawLateMin,
-                    'late_minutes' => $data['late_minutes'],
-                    'is_terlambat' => $isLate,
-                    'status' => $data['status']
-                ]);
-            } elseif ($absen->jenis_ketidakhadiran) {
-                $data['status'] = match($absen->jenis_ketidakhadiran) {
-                    'cuti' => 'Cuti',
-                    'sakit' => 'Sakit',
-                    'izin' => 'Izin',
-                    'dinas-luar' => 'Dinas Luar',
-                    'lainnya' => 'Lainnya',
-                    default => 'Lainnya',
-                };
-            }
-        }
-
-        // Cek status cuti
-        $leaveStatus = $this->checkIfOnLeaveToday(Auth::id());
-        if ($leaveStatus['on_leave']) {
-            $data['is_on_leave'] = true;
-            $data['leave_type'] = $leaveStatus['details']->tipe_cuti;
-            $data['leave_reason'] = $leaveStatus['details']->alasan;
-            $data['leave_dates'] = [
-                'start' => $leaveStatus['details']->tanggal_mulai,
-                'end' => $leaveStatus['details']->tanggal_selesai
+            $data = [
+                'jam_masuk' => null,
+                'jam_pulang' => null,
+                'status' => 'Belum Absen',
+                'late_minutes' => 0,
+                'approval_status' => 'approved',
+                'is_on_leave' => false,
+                'jenis_ketidakhadiran' => null,
+                'jenis_ketidakhadiran_label' => null,
+                'keterangan' => null
             ];
-        }
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+            if ($absen) {
+                $data['jam_masuk'] = $absen->jam_masuk;
+                $data['jam_pulang'] = $absen->jam_pulang;
+                $data['approval_status'] = $absen->approval_status;
+                $data['jenis_ketidakhadiran'] = $absen->jenis_ketidakhadiran;
+                $data['jenis_ketidakhadiran_label'] = $absen->jenis_ketidakhadiran ? $absen->jenis_ketidakhadiran_label : null;
+                $data['keterangan'] = $absen->keterangan;
+
+                if ($absen->jam_masuk) {
+                    $rawLateMin = $absen->getRawOriginal('late_minutes');
+                    $isLate = $this->isAttendanceLate($absen);
+                    $data['status'] = $isLate ? 'Terlambat' : 'Tepat Waktu';
+                    $data['late_minutes'] = is_numeric($rawLateMin) ? (int) $rawLateMin : 0;
+                    $data['is_terlambat'] = $isLate;
+                } elseif ($absen->jenis_ketidakhadiran) {
+                    $data['status'] = match($absen->jenis_ketidakhadiran) {
+                        'cuti' => 'Cuti',
+                        'sakit' => 'Sakit',
+                        'izin' => 'Izin',
+                        'dinas-luar' => 'Dinas Luar',
+                        'lainnya' => 'Lainnya',
+                        default => 'Lainnya',
+                    };
+                }
+            }
+
+            $leaveStatus = $this->checkIfOnLeaveToday(Auth::id());
+            if ($leaveStatus['on_leave']) {
+                $data['is_on_leave'] = true;
+                $data['leave_type'] = $leaveStatus['details']->tipe_cuti;
+                $data['leave_reason'] = $leaveStatus['details']->alasan;
+                $data['leave_dates'] = [
+                    'start' => $leaveStatus['details']->tanggal_mulai,
+                    'end' => $leaveStatus['details']->tanggal_selesai
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
         } catch (\Exception $e) {
             Log::error('Today Status API Error: ' . $e->getMessage());
             return response()->json([
@@ -1111,17 +1305,10 @@ public function indexPegawai(Request $request)
         }
     }
 
-    /**
-     * Mengambil riwayat absensi.
-     * PERBAIKAN PENTING:
-     * 1. Format JSON { success: true, data: [...] } agar frontend membaca.
-     * 2. Nama Key disesuaikan (jam_masuk, jam_pulang) sesuai frontend.
-     */
     public function getHistory(Request $request)
     {
         $query = Absensi::where('user_id', Auth::id());
         
-        // Filter Logic sesuai frontend JS
         $filterType = $request->get('filter', 'month');
         $month = $request->get('month');
         $year = $request->get('year');
@@ -1137,7 +1324,6 @@ public function indexPegawai(Request $request)
         } elseif ($filterType === 'year') {
             $query->whereYear('tanggal', '=', date('Y'));
         } else {
-            // Default: Bulan Ini
             $query->whereMonth('tanggal', '=', date('m'))
                   ->whereYear('tanggal', '=', date('Y'));
         }
@@ -1145,12 +1331,10 @@ public function indexPegawai(Request $request)
         $history = $query->orderBy('tanggal', 'desc')->get();
 
         $formattedData = $history->map(function ($item) {
-            // Tentukan status
             $status = 'Tidak Hadir';
             $lateMinutes = 0;
 
             if ($item->jam_masuk) {
-                // Use late_minutes from database if available
                 $lateMinutes = $item->late_minutes !== null ? $item->late_minutes : 0;
                 $status = $lateMinutes > 0 ? 'Terlambat' : 'Tepat Waktu';
             } elseif ($item->jenis_ketidakhadiran) {
@@ -1165,10 +1349,10 @@ public function indexPegawai(Request $request)
 
             return [
                 'id' => $item->id,
-                'tanggal' => $item->tanggal, // Tanggal string mentah
-                'date' => Carbon::parse($item->tanggal)->translatedFormat('d F Y'), // Format label
-                'jam_masuk' => $item->jam_masuk, // Key disamakan dengan frontend
-                'jam_pulang' => $item->jam_pulang, // Key disamakan dengan frontend
+                'tanggal' => $item->tanggal,
+                'date' => Carbon::parse($item->tanggal)->translatedFormat('d F Y'),
+                'jam_masuk' => $item->jam_masuk,
+                'jam_pulang' => $item->jam_pulang,
                 'status' => $status,
                 'lateMinutes' => $lateMinutes,
                 'is_early_checkout' => $item->is_early_checkout,
@@ -1179,7 +1363,7 @@ public function indexPegawai(Request $request)
                 'purpose' => $item->purpose,
                 'jenis_ketidakhadiran' => $item->jenis_ketidakhadiran,
                 'keterangan' => $item->keterangan,
-                'is_on_leave' => false // Akan dihandle di level view/logika jika perlu
+                'is_on_leave' => false
             ];
         })->all();
 
@@ -1189,9 +1373,6 @@ public function indexPegawai(Request $request)
         ]);
     }
 
-    /**
-     * Mengambil data untuk dashboard karyawan via API.
-     */
     public function getDashboardData()
     {
         try {
@@ -1218,12 +1399,10 @@ public function indexPegawai(Request $request)
                 }
             }
 
-            // Get today's attendance status
             $absenHariIni = Absensi::where('user_id', $userId)
                 ->where('tanggal', $today)
                 ->first();
 
-            // Count statistics
             $totalHadir = Absensi::where('user_id', $userId)
                 ->whereNotNull('jam_masuk')
                 ->where('approval_status', 'approved')
@@ -1284,7 +1463,6 @@ public function indexPegawai(Request $request)
             ]);
         } catch (\Exception $e) {
             Log::error('Error in getDashboardData: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'error' => 'Error loading dashboard data',
                 'message' => $e->getMessage(),
@@ -1300,188 +1478,166 @@ public function indexPegawai(Request $request)
         }
     }
 
-    /**
-     * API: Mengambil data dashboard untuk karyawan (endpoint baru untuk /api/karyawan/dashboard-data)
-     * (Menggantikan duplikat method sebelumnya)
-     */
-    /**
- * API: Dashboard Data
- */
-public function getDashboardDataApi()
-{
-    try {
-        $userId = Auth::id();
-        $today = now()->toDateString();
-        $todayRecord = Absensi::where('user_id', $userId)->where('tanggal', $today)->first();
+    public function getDashboardDataApi()
+    {
+        try {
+            $userId = Auth::id();
+            $today = now()->toDateString();
+            $todayRecord = Absensi::where('user_id', $userId)->where('tanggal', $today)->first();
 
-        // Menghitung data bulanan
-        $monthStart = now()->startOfMonth()->toDateString();
-        $monthEnd = now()->endOfMonth()->toDateString();
-        
-        $monthlyRecords = Absensi::where('user_id', $userId)
-            ->whereBetween('tanggal', [$monthStart, $monthEnd])
-            ->get();
+            $monthStart = now()->startOfMonth()->toDateString();
+            $monthEnd = now()->endOfMonth()->toDateString();
+            
+            $monthlyRecords = Absensi::where('user_id', $userId)
+                ->whereBetween('tanggal', [$monthStart, $monthEnd])
+                ->get();
 
-        // Inisialisasi variabel bulanan
-        $totalHadir = 0;
-        $totalTerlambat = 0;
-        $totalIzin = 0;
-        $totalSakit = 0;
-        $totalAbsen = 0;
-        $totalCuti = 0;
+            $totalHadir = 0;
+            $totalTerlambat = 0;
+            $totalIzin = 0;
+            $totalSakit = 0;
+            $totalAbsen = 0;
+            $totalCuti = 0;
 
-        // Hitung data bulanan
-        foreach ($monthlyRecords as $record) {
-            if ($record->jam_masuk && !$record->jenis_ketidakhadiran) {
-                $totalHadir++;
-                if ($this->isAttendanceLate($record)) {
-                    $totalTerlambat++;
+            foreach ($monthlyRecords as $record) {
+                if ($record->jam_masuk && !$record->jenis_ketidakhadiran) {
+                    $totalHadir++;
+                    if ($this->isAttendanceLate($record)) {
+                        $totalTerlambat++;
+                    }
+                } elseif ($record->jenis_ketidakhadiran) {
+                    switch ($record->jenis_ketidakhadiran) {
+                        case 'izin':
+                            $totalIzin++;
+                            break;
+                        case 'sakit':
+                            $totalSakit++;
+                            break;
+                        case 'cuti':
+                            $totalCuti++;
+                            break;
+                        default:
+                            $totalAbsen++;
+                            break;
+                    }
+                } elseif (!$record->jam_masuk && !$record->jenis_ketidakhadiran) {
+                    $totalAbsen++;
                 }
-            } elseif ($record->jenis_ketidakhadiran) {
-                switch ($record->jenis_ketidakhadiran) {
-                    case 'izin':
-                        $totalIzin++;
-                        break;
-                    case 'sakit':
-                        $totalSakit++;
-                        break;
-                    case 'cuti':
-                        $totalCuti++;
-                        break;
-                    default:
-                        $totalAbsen++;
-                        break;
-                }
-            } elseif (!$record->jam_masuk && !$record->jenis_ketidakhadiran) {
-                $totalAbsen++;
             }
-        }
 
-        // Menghitung data mingguan
-        $weekStart = now()->startOfWeek()->toDateString();
-        $weekEnd = now()->endOfWeek()->toDateString();
-        
-        $weeklyRecords = Absensi::where('user_id', $userId)
-            ->whereBetween('tanggal', [$weekStart, $weekEnd])
-            ->get();
+            $weekStart = now()->startOfWeek()->toDateString();
+            $weekEnd = now()->endOfWeek()->toDateString();
+            
+            $weeklyRecords = Absensi::where('user_id', $userId)
+                ->whereBetween('tanggal', [$weekStart, $weekEnd])
+                ->get();
 
-        // Inisialisasi variabel mingguan
-        $weeklyHadir = 0;
-        $weeklyTerlambat = 0;
-        $weeklyIzin = 0;
-        $weeklySakit = 0;
-        $weeklyAbsen = 0;
-        $weeklyCuti = 0;
+            $weeklyHadir = 0;
+            $weeklyTerlambat = 0;
+            $weeklyIzin = 0;
+            $weeklySakit = 0;
+            $weeklyAbsen = 0;
+            $weeklyCuti = 0;
 
-        // Hitung data mingguan
-        foreach ($weeklyRecords as $record) {
-            if ($record->jam_masuk && !$record->jenis_ketidakhadiran) {
-                $weeklyHadir++;
-                if ($this->isAttendanceLate($record)) {
-                    $weeklyTerlambat++;
+            foreach ($weeklyRecords as $record) {
+                if ($record->jam_masuk && !$record->jenis_ketidakhadiran) {
+                    $weeklyHadir++;
+                    if ($this->isAttendanceLate($record)) {
+                        $weeklyTerlambat++;
+                    }
+                } elseif ($record->jenis_ketidakhadiran) {
+                    switch ($record->jenis_ketidakhadiran) {
+                        case 'izin':
+                            $weeklyIzin++;
+                            break;
+                        case 'sakit':
+                            $weeklySakit++;
+                            break;
+                        case 'cuti':
+                            $weeklyCuti++;
+                            break;
+                        default:
+                            $weeklyAbsen++;
+                            break;
+                    }
+                } elseif (!$record->jam_masuk && !$record->jenis_ketidakhadiran) {
+                    $weeklyAbsen++;
                 }
-            } elseif ($record->jenis_ketidakhadiran) {
-                switch ($record->jenis_ketidakhadiran) {
-                    case 'izin':
-                        $weeklyIzin++;
-                        break;
-                    case 'sakit':
-                        $weeklySakit++;
-                        break;
-                    case 'cuti':
-                        $weeklyCuti++;
-                        break;
-                    default:
-                        $weeklyAbsen++;
-                        break;
+            }
+
+            $todayAttendanceStatus = 'Belum Absen';
+            if ($todayRecord) {
+                if ($todayRecord->jam_masuk) {
+                    $todayAttendanceStatus = $this->isAttendanceLate($todayRecord) ? 'Terlambat' : 'Tepat Waktu';
+                } elseif ($todayRecord->jenis_ketidakhadiran) {
+                    $todayAttendanceStatus = 'Tidak Hadir';
                 }
-            } elseif (!$record->jam_masuk && !$record->jenis_ketidakhadiran) {
-                $weeklyAbsen++;
             }
+
+            $cutiSaldo = $this->getCutiSaldo($userId);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'attendance_status' => $todayAttendanceStatus,
+                    'today' => [
+                        'jam_masuk' => $todayRecord ? $todayRecord->jam_masuk?->format('H:i:s') : null,
+                        'jam_pulang' => $todayRecord ? $todayRecord->jam_pulang?->format('H:i:s') : null,
+                        'status' => $todayAttendanceStatus,
+                        'late_minutes' => $todayRecord ? $todayRecord->late_minutes : 0,
+                        'is_late' => $todayRecord ? $this->isAttendanceLate($todayRecord) : false,
+                        'is_early_checkout' => $todayRecord ? $todayRecord->is_early_checkout : false,
+                        'early_checkout_reason' => $todayRecord ? $todayRecord->early_checkout_reason : null,
+                    ],
+                    'month' => [
+                        'total_hadir' => $totalHadir,
+                        'total_terlambat' => $totalTerlambat,
+                        'total_izin' => $totalIzin,
+                        'total_sakit' => $totalSakit,
+                        'total_absen' => $totalAbsen,
+                        'total_cuti' => $totalCuti,
+                    ],
+                    'weekly' => [
+                        'total_hadir' => $weeklyHadir,
+                        'total_terlambat' => $weeklyTerlambat,
+                        'total_izin' => $weeklyIzin,
+                        'total_sakit' => $weeklySakit,
+                        'total_absen' => $weeklyAbsen,
+                        'total_cuti' => $weeklyCuti,
+                    ],
+                    'cuti_saldo' => $cutiSaldo,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Dashboard API Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
         }
-
-        $todayAttendanceStatus = 'Belum Absen';
-        if ($todayRecord) {
-            if ($todayRecord->jam_masuk) {
-                $todayAttendanceStatus = $this->isAttendanceLate($todayRecord) ? 'Terlambat' : 'Tepat Waktu';
-            } elseif ($todayRecord->jenis_ketidakhadiran) {
-                $todayAttendanceStatus = 'Tidak Hadir';
-            }
-        }
-
-        // Menghitung sisa cuti
-        $cutiSaldo = $this->getCutiSaldo($userId);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'attendance_status' => $todayAttendanceStatus,
-                'today' => [
-                    'jam_masuk' => $todayRecord ? $todayRecord->jam_masuk?->format('H:i:s') : null,
-                    'jam_pulang' => $todayRecord ? $todayRecord->jam_pulang?->format('H:i:s') : null,
-                    'status' => $todayAttendanceStatus,
-                    'late_minutes' => $todayRecord ? $todayRecord->late_minutes : 0,
-                    'is_late' => $todayRecord ? $this->isAttendanceLate($todayRecord) : false,
-                    'is_early_checkout' => $todayRecord ? $todayRecord->is_early_checkout : false,
-                    'early_checkout_reason' => $todayRecord ? $todayRecord->early_checkout_reason : null,
-                ],
-                'month' => [
-                    'total_hadir' => $totalHadir,
-                    'total_terlambat' => $totalTerlambat,
-                    'total_izin' => $totalIzin,
-                    'total_sakit' => $totalSakit,
-                    'total_absen' => $totalAbsen,
-                    'total_cuti' => $totalCuti,
-                ],
-                'weekly' => [
-                    'total_hadir' => $weeklyHadir,
-                    'total_terlambat' => $weeklyTerlambat,
-                    'total_izin' => $weeklyIzin,
-                    'total_sakit' => $weeklySakit,
-                    'total_absen' => $weeklyAbsen,
-                    'total_cuti' => $weeklyCuti,
-                ],
-                'cuti_saldo' => $cutiSaldo,
-            ]
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Dashboard API Error: ' . $e->getMessage());
-        return response()->json(['success' => false, 'message' => 'Server error'], 500);
     }
-}
 
-/**
- * Helper: Menghitung sisa cuti
- */
-private function getCutiSaldo($userId)
-{
-    try {
-        $karyawan = Karyawan::where('user_id', $userId)->first();
-        if (!$karyawan) return 0;
+    private function getCutiSaldo($userId)
+    {
+        try {
+            $karyawan = Karyawan::where('user_id', $userId)->first();
+            if (!$karyawan) return 0;
 
-        // Ambil kuota cuti tahunan
-        $cutiKuota = CutiKuota::where('karyawan_id', $karyawan->id)
-            ->where('tahun', now()->year)
-            ->first();
+            $cutiKuota = CutiKuota::where('karyawan_id', $karyawan->id)
+                ->where('tahun', now()->year)
+                ->first();
 
-        $totalKuota = $cutiKuota ? $cutiKuota->jumlah_hari : 12; // Default 12 hari
+            $totalKuota = $cutiKuota ? $cutiKuota->jumlah_hari : 12;
 
-        // Hitung cuti yang sudah diambil
-        $cutiDiambil = Cuti::where('karyawan_id', $karyawan->id)
-            ->where('status', 'disetujui')
-            ->whereYear('tanggal_mulai', now()->year)
-            ->sum('jumlah_hari');
+            $cutiDiambil = Cuti::where('karyawan_id', $karyawan->id)
+                ->where('status', 'disetujui')
+                ->whereYear('tanggal_mulai', now()->year)
+                ->sum('jumlah_hari');
 
-        return max(0, $totalKuota - $cutiDiambil);
-    } catch (\Exception $e) {
-        Log::error('Error calculating cuti saldo: ' . $e->getMessage());
-        return 0;
+            return max(0, $totalKuota - $cutiDiambil);
+        } catch (\Exception $e) {
+            Log::error('Error calculating cuti saldo: ' . $e->getMessage());
+            return 0;
+        }
     }
-}
 
-    /**
-     * API: Mengambil riwayat absensi (untuk frontend)
-     */
     public function getHistoryApi(Request $request)
     {
         try {
@@ -1568,9 +1724,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Mengambil status pengajuan (Pending & Recent)
-     */
     public function getPengajuanStatus()
     {
         try {
@@ -1626,9 +1779,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Proses absen masuk via AJAX
-     */
     public function absenMasukApi(Request $request)
     {
         try {
@@ -1636,7 +1786,6 @@ private function getCutiSaldo($userId)
             $nowWIB = now('Asia/Jakarta');
             $today = $nowWIB->toDateString();
 
-            // 0. Validasi: Cek apakah jam sekarang sudah mencapai jam kerja mulai (START_TIME)
             $operationalHours = Setting::where('key', 'operational_hours')->first();
             $startTime = '08:00';
             $lateLimitTime = '09:05';
@@ -1651,7 +1800,6 @@ private function getCutiSaldo($userId)
                     );
             }
 
-            // Parse start time
             [$startHour, $startMin] = explode(':', $startTime);
             $startSeconds = (int)$startHour * 3600 + (int)$startMin * 60;
 
@@ -1668,7 +1816,6 @@ private function getCutiSaldo($userId)
                 ], 403);
             }
 
-            // 1. Cek apakah user sedang cuti hari ini
             $cutiCheck = $this->checkIfOnLeaveToday($user->id);
             if ($cutiCheck['on_leave']) {
                 $cuti = $cutiCheck['details'];
@@ -1682,7 +1829,6 @@ private function getCutiSaldo($userId)
                 ], 403);
             }
 
-            // 2. Cek apakah sudah ada pengajuan ketidakhadiran yang disetujui
             $existingAbsence = Absensi::where('user_id', $user->id)
                                       ->where('tanggal', $today)
                                       ->whereNotNull('jenis_ketidakhadiran')
@@ -1745,7 +1891,7 @@ private function getCutiSaldo($userId)
                 'data' => [
                     'id' => $absensi->id,
                     'time' => $nowWIB->toDateTimeString(),
-                    'jam_masuk' => $nowWIB->toTimeString(), // Tambahkan jam_masuk
+                    'jam_masuk' => $nowWIB->toTimeString(),
                     'late_minutes' => $lateMinutes,
                 ]
             ]);
@@ -1756,16 +1902,12 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Proses absen pulang via AJAX
-     */
     public function absenPulangApi(Request $request)
     {
         try {
             $user = Auth::user();
             $today = now()->toDateString();
 
-            // 1. Cek apakah user sedang cuti hari ini
             $cutiCheck = $this->checkIfOnLeaveToday($user->id);
             if ($cutiCheck['on_leave']) {
                 $cuti = $cutiCheck['details'];
@@ -1830,9 +1972,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Proses pengajuan izin
-     */
     public function submitIzinApi(Request $request)
     {
         $request->validate([
@@ -1848,7 +1987,6 @@ private function getCutiSaldo($userId)
         foreach ($period as $date) {
             $dateStr = $date->toDateString();
 
-            // Cek apakah sudah ada cuti yang disetujui di tanggal ini
             $existingCuti = Cuti::where('user_id', $user->id)
                 ->where('status', 'disetujui')
                 ->whereDate('tanggal_mulai', '<=', $dateStr)
@@ -1888,9 +2026,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Proses pengajuan dinas luar
-     */
     public function submitDinasApi(Request $request)
     {
         $request->validate([
@@ -1907,7 +2042,6 @@ private function getCutiSaldo($userId)
         foreach ($period as $date) {
             $dateStr = $date->toDateString();
 
-            // Cek apakah sudah ada cuti yang disetujui di tanggal ini
             $existingCuti = Cuti::where('user_id', $user->id)
                 ->where('status', 'disetujui')
                 ->whereDate('tanggal_mulai', '<=', $dateStr)
@@ -1949,9 +2083,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Mendapatkan Tugas (JSON)
-     */
     public function apiGetTasks()
     {
         try {
@@ -1978,13 +2109,11 @@ private function getCutiSaldo($userId)
                     }
                 }
             })
-            // PERBAIKAN: Hanya select id & name, hindari kolom divisi di tabel users
             ->with(['creator:id,name', 'assignee:id,name'])
             ->orderBy('deadline', 'asc')
             ->get();
 
             $transformedTasks = $tasks->map(function ($task) {
-                // Ambil divisi secara manual jika diperlukan
                 $assigneeDivisi = null;
                 if ($task->assignee) {
                     $k = Karyawan::where('user_id', $task->assignee->id)->first(['divisi']);
@@ -2000,7 +2129,7 @@ private function getCutiSaldo($userId)
                     'status' => $task->status,
                     'target_type' => $task->target_type ?? 'unknown',
                     'assignee_text' => $task->assignee ? $task->assignee->name : ($task->target_type === 'divisi' ? 'Divisi' : 'Unknown'),
-                    'assignee_divisi' => $assigneeDivisi, // Tambahan data divisi
+                    'assignee_divisi' => $assigneeDivisi,
                     'creator_name' => $task->creator ? $task->creator->name : 'System',
                 ];
             });
@@ -2020,9 +2149,6 @@ private function getCutiSaldo($userId)
     // METHOD UNTUK MEETING NOTES DAN PENGUMUMAN
     // =================================================================
 
-    /**
-     * API: Mengambil tanggal-tanggal yang memiliki meeting notes
-     */
     public function getMeetingNotesDatesApi()
     {
         try {
@@ -2032,7 +2158,6 @@ private function getCutiSaldo($userId)
                 return response()->json(['success' => true, 'dates' => []]);
             }
             
-            // Use `tanggal` column from CatatanRapat model
             $dates = CatatanRapat::select('tanggal')
                 ->distinct()
                 ->orderBy('tanggal', 'desc')
@@ -2047,9 +2172,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Mengambil meeting notes untuk tanggal tertentu
-     */
     public function getMeetingNotesApi(Request $request)
     {
         try {
@@ -2085,9 +2207,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API untuk mendapatkan daftar tanggal yang memiliki catatan rapat
-     */
     public function getMeetingNotesDates()
     {
         try {
@@ -2110,9 +2229,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API untuk mendapatkan catatan rapat berdasarkan tanggal
-     */
     public function getMeetingNotes(Request $request)
     {
         try {
@@ -2149,16 +2265,12 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Mengambil tanggal-tanggal yang memiliki pengumuman
-     */
     public function getAnnouncementDatesApi()
     {
         try {
             if (!auth()->check()) return response()->json(['success' => false], 401);
             if (!Schema::hasTable('pengumuman')) return response()->json(['success' => true, 'dates' => []]);
             
-            // Use created_at for announcement dates
             $dates = Pengumuman::select('created_at')
                 ->distinct()
                 ->orderBy('created_at', 'desc')
@@ -2172,9 +2284,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API: Mengambil daftar pengumuman
-     */
     public function getAnnouncementsApi()
     {
         try {
@@ -2205,9 +2314,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API untuk mendapatkan pengumuman (Web View)
-     */
     public function getAnnouncements()
     {
         try {
@@ -2239,9 +2345,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API untuk mendapatkan daftar tanggal yang memiliki pengumuman
-     */
     public function getAnnouncementsDates()
     {
         try {
@@ -2262,9 +2365,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * API untuk mendapatkan pengumuman berdasarkan tanggal
-     */
     public function getAnnouncementsByDate(Request $request)
     {
         try {
@@ -2322,9 +2422,6 @@ private function getCutiSaldo($userId)
         return response()->json(['status' => 'ok', 'message' => 'API endpoints are working.']);
     }
 
-    /**
-     * Get detail karyawan dengan file/dokumen
-     */
     public function getDetailApi($id)
     {
         try {
@@ -2337,7 +2434,6 @@ private function getCutiSaldo($userId)
                 ], 404);
             }
             
-            // Check if user is authorized to view this karyawan
             $authUser = Auth::user();
             if ($authUser->role === 'manager_divisi' && $karyawan->divisi_id !== $authUser->divisi_id) {
                 return response()->json([
@@ -2362,7 +2458,6 @@ private function getCutiSaldo($userId)
                 'files' => []
             ];
             
-            // Get files if relationship exists
             if ($karyawan->files && count($karyawan->files) > 0) {
                 $data['files'] = $karyawan->files->map(function($file) {
                     return [
@@ -2388,11 +2483,6 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * Get task acceptance status
-     * NOTE: Dengan design baru, setiap task hanya punya 1 assignee
-     * Method ini untuk backward compatibility dengan old multi-assign tasks
-     */
     public function getAcceptanceStatus($taskId)
     {
         try {
@@ -2413,7 +2503,6 @@ private function getCutiSaldo($userId)
                 ], 404);
             }
 
-            // Validasi bahwa user adalah yang ditugaskan
             $isAssigned = $task->assigned_to == $user->id || 
                          (is_array($task->assigned_to_ids) && in_array($user->id, $task->assigned_to_ids));
             
@@ -2424,7 +2513,6 @@ private function getCutiSaldo($userId)
                 ], 403);
             }
 
-            // Jika task hanya punya 1 assignee (new design), return simple response
             if (!$task->assigned_to_ids || !is_array($task->assigned_to_ids) || count($task->assigned_to_ids) <= 1) {
                 return response()->json([
                     'success' => true,
@@ -2451,7 +2539,6 @@ private function getCutiSaldo($userId)
                 ]);
             }
 
-            // Untuk old multi-assign tasks: initialize jika belum ada
             $this->initializeTaskAcceptances($task);
 
             return response()->json([
@@ -2469,15 +2556,11 @@ private function getCutiSaldo($userId)
         }
     }
 
-    /**
-     * Accept task - mengubah status dari pending menjadi proses
-     */
     public function acceptTask(Request $request, $taskId)
     {
         try {
             $user = Auth::user();
             
-            // Validasi user
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -2485,7 +2568,6 @@ private function getCutiSaldo($userId)
                 ], 401);
             }
 
-            // Cari task
             $task = Task::find($taskId);
             if (!$task) {
                 return response()->json([
@@ -2494,7 +2576,6 @@ private function getCutiSaldo($userId)
                 ], 404);
             }
 
-            // Validasi bahwa user adalah yang ditugaskan
             $isAssigned = $task->assigned_to == $user->id || 
                          (is_array($task->assigned_to_ids) && in_array($user->id, $task->assigned_to_ids));
             
@@ -2505,20 +2586,14 @@ private function getCutiSaldo($userId)
                 ], 403);
             }
 
-            // NEW DESIGN: Setiap task hanya punya 1 assignee
-            // Jadi langsung ubah status menjadi proses tanpa menunggu assignee lain
             $task->status = 'proses';
             $task->save();
 
-            // OPTIONAL: Jika ada assigned_to_ids (old multi-assign task), track dengan task_acceptances
-            // Untuk backward compatibility
             if ($task->assigned_to_ids && is_array($task->assigned_to_ids) && count($task->assigned_to_ids) > 1) {
-                // Initialize jika belum ada
                 if (!$task->acceptances()->exists()) {
                     $this->initializeTaskAcceptances($task);
                 }
 
-                // Update status karyawan ini
                 $acceptance = TaskAcceptance::updateOrCreate(
                     [
                         'task_id' => $taskId,
@@ -2531,10 +2606,8 @@ private function getCutiSaldo($userId)
                     ]
                 );
 
-                // Check apakah semua sudah accept
                 $acceptanceStatus = $task->getAcceptanceStatus();
                 if (!$acceptanceStatus['is_fully_accepted']) {
-                    // Update message jika belum semua accept
                     return response()->json([
                         'success' => true,
                         'message' => 'Tugas berhasil diterima. Status sudah berubah menjadi Dalam Proses',
@@ -2573,15 +2646,12 @@ private function getCutiSaldo($userId)
         }
     }
 
-    // Helper method untuk inisialisasi task acceptances
     private function initializeTaskAcceptances($task)
     {
-        // Cek apakah sudah ada acceptance records
         if ($task->acceptances()->exists()) {
             return;
         }
 
-        // Get list of assignees
         $assignees = [];
         
         if ($task->assigned_to) {
@@ -2592,10 +2662,8 @@ private function getCutiSaldo($userId)
             $assignees = array_merge($assignees, $task->assigned_to_ids);
         }
 
-        // Remove duplicates
         $assignees = array_unique($assignees);
 
-        // Create acceptance records untuk setiap assignee
         foreach ($assignees as $userId) {
             TaskAcceptance::firstOrCreate(
                 [
@@ -2609,5 +2677,4 @@ private function getCutiSaldo($userId)
             );
         }
     }
-
 }

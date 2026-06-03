@@ -15,6 +15,10 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Notyf CSS/JS untuk Toast Notification -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -458,6 +462,167 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            padding: 0 4px;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            right: 0;
+            top: 45px;
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
+            z-index: 50;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .notification-header h4 {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .mark-all-read {
+            font-size: 12px;
+            color: #3b82f6;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .mark-all-read:hover {
+            text-decoration: underline;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+
+        .notification-item.unread {
+            background: #eff6ff;
+        }
+
+        .notification-item.unread:hover {
+            background: #dbeafe;
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+
+        .notification-message {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .notification-empty {
+            padding: 32px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        /* Notyf Toast Customization */
+        .notyf {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .notyf__toast--warning {
+            background: #f59e0b !important;
+        }
+
+        .notyf__toast--danger {
+            background: #ef4444 !important;
+        }
+
         /* Minimalist Popup Styles */
         .minimal-popup {
             position: fixed;
@@ -470,7 +635,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            z-index: 1000;
+            z-index: 1001;
             transform: translateX(400px);
             transition: transform 0.3s ease;
             max-width: 350px;
@@ -629,6 +794,17 @@
         .hidden-by-filter {
             display: none !important;
         }
+
+        /* Deadline highlight */
+        .deadline-warning {
+            color: #f59e0b !important;
+            font-weight: 600;
+        }
+
+        .deadline-expired {
+            color: #ef4444 !important;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -638,8 +814,30 @@
         @include('manager_divisi/templet/sider')
         <div class="flex-1 flex flex-col main-content">
             <div class="flex-1 p-3 sm:p-8">
+                <!-- Header dengan Title dan Notification Bell -->
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8">
                     <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-0">Data Project</h2>
+                    
+                    <!-- NOTIFICATION BELL -->
+                    <div class="relative">
+                        <div id="notificationBell" class="notification-bell">
+                            <span class="material-icons-outlined text-gray-600 text-2xl">notifications_none</span>
+                            <span id="notifBadge" class="notification-badge hidden">0</span>
+                        </div>
+                        
+                        <div id="notificationDropdown" class="notification-dropdown">
+                            <div class="notification-header">
+                                <h4>Notifikasi Deadline Pengerjaan</h4>
+                                <button class="mark-all-read" onclick="markAllNotificationsRead()">Tandai semua dibaca</button>
+                            </div>
+                            <div id="notificationList">
+                                <div class="notification-empty">
+                                    <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
+                                    <p>Tidak ada notifikasi deadline</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Search and Filter Section -->
@@ -727,7 +925,7 @@
                                             <th style="min-width: 200px;">Nama Project</th>
                                             <th style="min-width: 250px;">Deskripsi</th>
                                             <th style="min-width: 150px;">Harga</th>
-                                            <th style="min-width: 150px;">Periode Pengerjaan</th>
+                                            <th style="min-width: 180px;">Periode Pengerjaan</th>
                                             <th style="min-width: 150px;">Progres</th>
                                             <th style="min-width: 150px;">Status</th>
                                             <th style="min-width: 100px; text-align: center;">Aksi</th>
@@ -735,14 +933,43 @@
                                     </thead>
                                     <tbody id="desktopTableBody">
                                         @forelse ($projects as $index => $project)
+                                            @php
+                                                // Hitung sisa hari periode pengerjaan untuk notifikasi
+                                                $sisaHari = null;
+                                                $statusDeadline = 'normal';
+                                                $warnaDeadline = '';
+                                                $deadlineMessage = '';
+                                                if($project->tanggal_selesai_pengerjaan) {
+                                                    $tglSelesai = \Carbon\Carbon::parse($project->tanggal_selesai_pengerjaan);
+                                                    $sisaHari = floor(\Carbon\Carbon::now()->diffInDays($tglSelesai, false));
+                                                    if($sisaHari < 0) {
+                                                        $statusDeadline = 'expired';
+                                                        $warnaDeadline = 'deadline-expired';
+                                                        $deadlineMessage = '⚠️ Lewat ' . abs($sisaHari) . ' hari';
+                                                    } elseif($sisaHari <= 30) {
+                                                        $statusDeadline = 'warning';
+                                                        $warnaDeadline = 'deadline-warning';
+                                                        $deadlineMessage = '⏰ Sisa ' . $sisaHari . ' hari';
+                                                    }
+                                                }
+                                            @endphp
                                             <tr class="orderan-row" data-status="{{ strtolower($project->status_pengerjaan) }}"
                                                 data-nama="{{ strtolower($project->nama) }}"
-                                                data-deskripsi="{{ strtolower($project->deskripsi) }}">
+                                                data-deskripsi="{{ strtolower($project->deskripsi) }}"
+                                                data-deadline-status="{{ $statusDeadline }}">
                                                 <td>{{ $index + 1 }}</td>
                                                 <td>{{ $project->nama }}</td>
                                                 <td class="truncate max-w-xs">{{ $project->deskripsi }}</td>
                                                 <td>Rp {{ number_format($project->harga, 0, ',', '.') }}</td>
-                                                <td style="min-width: 180px;">{{ $project->tanggal_mulai_pengerjaan ? $project->tanggal_mulai_pengerjaan->format('Y-m-d') : '-' }} — {{ $project->tanggal_selesai_pengerjaan ? $project->tanggal_selesai_pengerjaan->format('Y-m-d') : '-' }}</td>
+                                                <td style="min-width: 180px;">
+                                                    <div>
+                                                        {{ $project->tanggal_mulai_pengerjaan ? $project->tanggal_mulai_pengerjaan->format('Y-m-d') : '-' }} — 
+                                                        <span class="{{ $warnaDeadline }}">{{ $project->tanggal_selesai_pengerjaan ? $project->tanggal_selesai_pengerjaan->format('Y-m-d') : '-' }}</span>
+                                                    </div>
+                                                    @if($deadlineMessage)
+                                                        <span class="text-xs {{ $warnaDeadline }}">{{ $deadlineMessage }}</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     <div class="flex items-center gap-2">
                                                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -765,7 +992,7 @@
                                                         data-id="{{ $project->id }}"
                                                         data-nama="{{ $project->nama }}"
                                                         data-harga="{{ $project->harga }}"
-                                                        data-deadline="{{ $project->deadline }}"
+                                                        data-deadline="{{ $project->tanggal_selesai_pengerjaan }}"
                                                         data-progres="{{ $project->progres }}"
                                                         data-status="{{ strtolower($project->status_pengerjaan) }}"
                                                         data-tanggal_mulai="{{ $project->tanggal_mulai_pengerjaan ? $project->tanggal_mulai_pengerjaan->format('Y-m-d') : '' }}"
@@ -792,6 +1019,25 @@
                         <!-- Mobile Card View -->
                         <div class="mobile-cards space-y-4">
                             @foreach ($projects as $index => $project)
+                                @php
+                                    $sisaHari = null;
+                                    $statusDeadline = 'normal';
+                                    $warnaDeadline = '';
+                                    $deadlineMessage = '';
+                                    if($project->tanggal_selesai_pengerjaan) {
+                                        $tglSelesai = \Carbon\Carbon::parse($project->tanggal_selesai_pengerjaan);
+                                        $sisaHari = floor(\Carbon\Carbon::now()->diffInDays($tglSelesai, false));
+                                        if($sisaHari < 0) {
+                                            $statusDeadline = 'expired';
+                                            $warnaDeadline = 'text-red-600';
+                                            $deadlineMessage = '⚠️ Lewat ' . abs($sisaHari) . ' hari';
+                                        } elseif($sisaHari <= 30) {
+                                            $statusDeadline = 'warning';
+                                            $warnaDeadline = 'text-orange-500';
+                                            $deadlineMessage = '⏰ Sisa ' . $sisaHari . ' hari';
+                                        }
+                                    }
+                                @endphp
                                 <div class="bg-white rounded-lg border p-4 shadow-sm orderan-card">
                                     <div class="flex justify-between items-start mb-3">
                                         <div>
@@ -808,7 +1054,11 @@
                                     <p class="text-sm mb-2">{{ $project->deskripsi }}</p>
 
                                     <div class="text-sm mb-2">
-                                        Deadline: {{ \Carbon\Carbon::parse($project->deadline)->format('d M Y') }}
+                                        Periode: {{ $project->tanggal_mulai_pengerjaan ? $project->tanggal_mulai_pengerjaan->format('d M Y') : '-' }} — 
+                                        <span class="{{ $warnaDeadline }}">{{ $project->tanggal_selesai_pengerjaan ? $project->tanggal_selesai_pengerjaan->format('d M Y') : '-' }}</span>
+                                        @if($deadlineMessage)
+                                            <span class="text-xs {{ $warnaDeadline }} ml-1">{{ $deadlineMessage }}</span>
+                                        @endif
                                     </div>
 
                                     <div class="mb-3">
@@ -828,10 +1078,12 @@
                                             class="edit-btn w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                                             data-id="{{ $project->id }}" data-nama="{{ $project->nama }}"
                                             data-harga="{{ $project->harga }}"
-                                            data-deadline="{{ $project->deadline }}"
+                                            data-deadline="{{ $project->tanggal_selesai_pengerjaan }}"
                                             data-progres="{{ $project->progres }}"
-                                            data-status="{{ strtolower($project->status_pengerjaan) }}">
-                                            <span class="material-icons-outlined mr-2 align-middle">edit</span>
+                                            data-status="{{ strtolower($project->status_pengerjaan) }}"
+                                            data-tanggal_mulai="{{ $project->tanggal_mulai_pengerjaan ? $project->tanggal_mulai_pengerjaan->format('Y-m-d') : '' }}"
+                                            data-tanggal_selesai="{{ $project->tanggal_selesai_pengerjaan ? $project->tanggal_selesai_pengerjaan->format('Y-m-d') : '' }}">
+                                            <span class="material-icons-outlined mr-2 align-middle">trending_up</span>
                                             Update Progres
                                         </button>
                                     </div>
@@ -1012,7 +1264,281 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script>
+        // ============================
+        // NOTIFICATION SYSTEM
+        // ============================
+        
+        // Inisialisasi Notyf untuk toast notification
+        const notyf = new Notyf({
+            duration: 6000,
+            position: { x: 'right', y: 'top' },
+            ripple: true,
+            dismissible: true,
+            types: [
+                {
+                    type: 'warning',
+                    background: '#f59e0b',
+                    icon: '<i class="material-icons-outlined" style="font-size: 20px; margin-right: 8px;">warning</i>',
+                    duration: 7000
+                },
+                {
+                    type: 'danger',
+                    background: '#ef4444',
+                    icon: '<i class="material-icons-outlined" style="font-size: 20px; margin-right: 8px;">error</i>',
+                    duration: 7000
+                },
+                {
+                    type: 'info',
+                    background: '#3b82f6',
+                    icon: '<i class="material-icons-outlined" style="font-size: 20px; margin-right: 8px;">info</i>'
+                }
+            ]
+        });
+
+        // Data notifikasi deadline dari server
+        let deadlineNotifications = [];
+        
+        // Fungsi untuk memainkan suara notifikasi
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.2;
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                audioContext.resume();
+            } catch(e) {
+                console.log('Audio tidak didukung');
+            }
+        }
+
+        // Queue untuk notifikasi berurutan
+        let notifQueue = [];
+        let isPlaying = false;
+
+        function showToastNotification(message, type) {
+            if (type === 'expired' || type === 'danger') {
+                notyf.open({
+                    type: 'danger',
+                    message: message
+                });
+            } else if (type === 'warning') {
+                notyf.open({
+                    type: 'warning',
+                    message: message
+                });
+            } else {
+                notyf.success({
+                    message: message
+                });
+            }
+            playNotificationSound();
+        }
+
+        function processNotificationQueue() {
+            if (notifQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+            
+            isPlaying = true;
+            const notif = notifQueue.shift();
+            showToastNotification(notif.message, notif.type);
+            
+            setTimeout(processNotificationQueue, 2500);
+        }
+
+        function addNotificationToQueue(message, type) {
+            notifQueue.push({ message: message, type: type });
+            if (!isPlaying) {
+                processNotificationQueue();
+            }
+        }
+
+        // Kumpulkan notifikasi deadline dari data projects
+        function collectDeadlineNotifications() {
+            const notifications = [];
+            const projectsData = @json($projects->items());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            projectsData.forEach(project => {
+                if (project.tanggal_selesai_pengerjaan) {
+                    const endDate = new Date(project.tanggal_selesai_pengerjaan);
+                    endDate.setHours(0, 0, 0, 0);
+                    const diffTime = endDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays < 0) {
+                        // Sudah lewat
+                        notifications.push({
+                            id: project.id,
+                            nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
+                            status: 'expired',
+                            message: `🔴 Periode pengerjaan proyek "${project.nama}" telah berakhir ${Math.abs(diffDays)} hari yang lalu (${project.tanggal_selesai_pengerjaan})`
+                        });
+                    } else if (diffDays <= 30) {
+                        // Akan berakhir dalam 30 hari
+                        notifications.push({
+                            id: project.id,
+                            nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
+                            status: 'warning',
+                            message: `⚠️ Periode pengerjaan proyek "${project.nama}" akan berakhir dalam ${diffDays} hari (${project.tanggal_selesai_pengerjaan})`
+                        });
+                    }
+                }
+            });
+            
+            return notifications;
+        }
+
+        // Tampilkan notifikasi awal saat halaman dibuka
+        function showInitialNotifications() {
+            const notifications = collectDeadlineNotifications();
+            
+            // Urutkan berdasarkan sisa hari (terkecil/terdekat dulu)
+            notifications.sort((a, b) => {
+                if (a.status === 'expired' && b.status !== 'expired') return 1;
+                if (a.status !== 'expired' && b.status === 'expired') return -1;
+                return Math.abs(a.sisaHari) - Math.abs(b.sisaHari);
+            });
+            
+            notifications.forEach(notif => {
+                const type = notif.status === 'expired' ? 'expired' : 'warning';
+                addNotificationToQueue(notif.message, type);
+            });
+            
+            // Simpan untuk dropdown notifikasi
+            deadlineNotifications = notifications;
+            updateNotificationDropdown();
+            updateNotificationBadge();
+        }
+
+        // Update dropdown notifikasi
+        function updateNotificationDropdown() {
+            const listContainer = document.getElementById('notificationList');
+            if (!listContainer) return;
+            
+            const allNotifications = [...deadlineNotifications];
+            
+            if (allNotifications.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="notification-empty">
+                        <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
+                        <p>Tidak ada notifikasi deadline</p>
+                        <p class="text-xs mt-1">Semua periode pengerjaan aman</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            allNotifications.forEach(notif => {
+                const isExpired = notif.status === 'expired';
+                const icon = isExpired ? 'error' : 'warning';
+                const iconColor = isExpired ? 'text-red-500' : 'text-orange-500';
+                const bgClass = isExpired ? 'bg-red-50' : 'bg-orange-50';
+                const statusText = isExpired ? 'Sudah Lewat' : 'Akan Berakhir';
+                
+                html += `
+                    <div class="notification-item ${bgClass}" onclick="markNotificationRead(${notif.id})">
+                        <div class="flex gap-3">
+                            <div class="notification-icon ${iconColor}">
+                                <span class="material-icons-outlined text-sm">${icon}</span>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${statusText} - ${escapeHtml(notif.nama)}</div>
+                                <div class="notification-message">${escapeHtml(notif.message)}</div>
+                                <div class="notification-time">Deadline: ${notif.tanggalSelesai}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listContainer.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update badge notifikasi
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            
+            const unreadCount = deadlineNotifications.length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Tandai notifikasi dibaca
+        function markNotificationRead(id) {
+            deadlineNotifications = deadlineNotifications.filter(n => n.id !== id);
+            updateNotificationDropdown();
+            updateNotificationBadge();
+        }
+
+        // Tandai semua notifikasi dibaca
+        function markAllNotificationsRead() {
+            deadlineNotifications = [];
+            updateNotificationDropdown();
+            updateNotificationBadge();
+        }
+
+        // Toggle dropdown notifikasi
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Tampilkan notifikasi awal
+            setTimeout(() => {
+                showInitialNotifications();
+            }, 500);
+            
+            // Notification bell click handler
+            const bell = document.getElementById('notificationBell');
+            if (bell) {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleNotificationDropdown();
+                });
+            }
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                const dropdown = document.getElementById('notificationDropdown');
+                const bellElement = document.getElementById('notificationBell');
+                if (dropdown && bellElement && !bellElement.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            
             // === MODAL FUNCTIONS ===
             const editOrderanModal = document.getElementById('editOrderanModal');
             const editOrderanForm = document.getElementById('editOrderanForm');
@@ -1023,92 +1549,76 @@
             const progresValue = document.getElementById('progresValue');
 
             // Handle edit button clicks
- // Di JavaScript
-// Handle edit button clicks
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        // Ambil semua data attribute
-        const id = this.getAttribute('data-id');
-        const nama = this.getAttribute('data-nama');
-        const harga = this.getAttribute('data-harga');
-        const deadline = this.getAttribute('data-deadline');
-        const progres = this.getAttribute('data-progres');
-        const status = this.getAttribute('data-status');
-        const tanggal_mulai = this.getAttribute('data-tanggal_mulai');
-        const tanggal_selesai = this.getAttribute('data-tanggal_selesai');
-        
-        // DEBUG: Log semua data
-        console.log('Button clicked with data:', {
-            id, nama, harga, deadline, progres, status, tanggal_mulai, tanggal_selesai
-        });
-        
-        // VALIDASI: Pastikan ID ada
-        if (!id) {
-            console.error('No ID found on button!');
-            showMinimalPopup('Error', 'Data project tidak valid.', 'error');
-            return;
-        }
-        
-        // Set values for modal
-        document.getElementById('editId').value = id;
-        
-        // Display project info (readonly)
-        document.getElementById('editNamaDisplay').textContent = nama || 'Tidak ada data';
-        
-        if (harga) {
-            document.getElementById('editHargaDisplay').textContent = 'Rp ' + 
-                parseInt(harga).toLocaleString('id-ID');
-        } else {
-            document.getElementById('editHargaDisplay').textContent = 'Rp 0';
-        }
-        
-        // Format deadline
-        if (deadline) {
-            try {
-                const deadlineDate = new Date(deadline);
-                if (!isNaN(deadlineDate.getTime())) {
-                    const formattedDeadline = deadlineDate.toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                    document.getElementById('editDeadlineDisplay').textContent = formattedDeadline;
-                } else {
-                    document.getElementById('editDeadlineDisplay').textContent = deadline;
-                }
-            } catch (e) {
-                document.getElementById('editDeadlineDisplay').textContent = deadline || 'Tidak ada deadline';
-            }
-        }
-        
-        // Set editable fields dengan validasi
-        const progresValue = progres || '0';
-        document.getElementById('editProgres').value = progresValue;
-        
-        const slider = document.getElementById('progresSlider');
-        const valueDisplay = document.getElementById('progresValue');
-        if (slider) slider.value = progresValue;
-        if (valueDisplay) valueDisplay.textContent = progresValue + '%';
-        
-        document.getElementById('editStatus').value = status || 'pending';
-        
-        // Set tanggal mulai dan selesai
-        document.getElementById('editTanggalMulai').value = tanggal_mulai || '';
-        document.getElementById('editTanggalSelesai').value = tanggal_selesai || '';
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const nama = this.getAttribute('data-nama');
+                    const harga = this.getAttribute('data-harga');
+                    const deadline = this.getAttribute('data-deadline');
+                    const progres = this.getAttribute('data-progres');
+                    const status = this.getAttribute('data-status');
+                    const tanggal_mulai = this.getAttribute('data-tanggal_mulai');
+                    const tanggal_selesai = this.getAttribute('data-tanggal_selesai');
+                    
+                    if (!id) {
+                        showMinimalPopup('Error', 'Data project tidak valid.', 'error');
+                        return;
+                    }
+                    
+                    document.getElementById('editId').value = id;
+                    document.getElementById('editNamaDisplay').textContent = nama || 'Tidak ada data';
+                    
+                    if (harga) {
+                        document.getElementById('editHargaDisplay').textContent = 'Rp ' + 
+                            parseInt(harga).toLocaleString('id-ID');
+                    } else {
+                        document.getElementById('editHargaDisplay').textContent = 'Rp 0';
+                    }
+                    
+                    if (deadline) {
+                        try {
+                            const deadlineDate = new Date(deadline);
+                            if (!isNaN(deadlineDate.getTime())) {
+                                const formattedDeadline = deadlineDate.toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric'
+                                });
+                                document.getElementById('editDeadlineDisplay').textContent = formattedDeadline;
+                            } else {
+                                document.getElementById('editDeadlineDisplay').textContent = deadline;
+                            }
+                        } catch (e) {
+                            document.getElementById('editDeadlineDisplay').textContent = deadline || 'Tidak ada deadline';
+                        }
+                    }
+                    
+                    const progresVal = progres || '0';
+                    document.getElementById('editProgres').value = progresVal;
+                    
+                    if (progresSlider) progresSlider.value = progresVal;
+                    if (progresValue) progresValue.textContent = progresVal + '%';
+                    
+                    document.getElementById('editStatus').value = status || 'pending';
+                    document.getElementById('editTanggalMulai').value = tanggal_mulai || '';
+                    document.getElementById('editTanggalSelesai').value = tanggal_selesai || '';
 
-        // Show modal
-        editOrderanModal.classList.remove('hidden');
-    });
-});
+                    editOrderanModal.classList.remove('hidden');
+                });
+            });
 
             // Close edit modal
-            batalEditBtn.addEventListener('click', function() {
-                editOrderanModal.classList.add('hidden');
-            });
+            if (batalEditBtn) {
+                batalEditBtn.addEventListener('click', function() {
+                    editOrderanModal.classList.add('hidden');
+                });
+            }
 
-            closeEditModalBtn.addEventListener('click', function() {
-                editOrderanModal.classList.add('hidden');
-            });
+            if (closeEditModalBtn) {
+                closeEditModalBtn.addEventListener('click', function() {
+                    editOrderanModal.classList.add('hidden');
+                });
+            }
 
             // Close modal when clicking outside
             window.addEventListener('click', function(event) {
@@ -1119,7 +1629,6 @@ document.querySelectorAll('.edit-btn').forEach(button => {
 
             // Handle progres slider
             if (progresSlider && progresInput && progresValue) {
-                // Update slider saat input berubah
                 progresInput.addEventListener('input', function() {
                     let value = parseInt(this.value);
                     if (isNaN(value)) value = 0;
@@ -1131,7 +1640,6 @@ document.querySelectorAll('.edit-btn').forEach(button => {
                     progresValue.textContent = value + '%';
                 });
 
-                // Update input saat slider digeser
                 progresSlider.addEventListener('input', function() {
                     progresInput.value = this.value;
                     progresValue.textContent = this.value + '%';
@@ -1144,14 +1652,12 @@ document.querySelectorAll('.edit-btn').forEach(button => {
                     const status = this.getAttribute('data-status');
                     document.getElementById('editStatus').value = status;
 
-                    // Auto-set progres berdasarkan status
                     if (progresInput && progresSlider && progresValue) {
                         if (status === 'pending') {
                             progresInput.value = 0;
                             progresSlider.value = 0;
                             progresValue.textContent = '0%';
                         } else if (status === 'dalam_pengerjaan') {
-                            // Jika kurang dari 50%, set ke 50%
                             if (parseInt(progresInput.value) < 50) {
                                 progresInput.value = 50;
                                 progresSlider.value = 50;
@@ -1161,85 +1667,66 @@ document.querySelectorAll('.edit-btn').forEach(button => {
                             progresInput.value = 100;
                             progresSlider.value = 100;
                             progresValue.textContent = '100%';
-                        } else if (status === 'dibatalkan') {
-                            // Dibatalkan bisa tetap dengan progres yang sekarang
-                            // atau bisa di-reset, tergantung kebutuhan
                         }
                     }
                 });
             });
 
             // Handle form submission
-// Handle form submission
-editOrderanForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const id = document.getElementById('editId').value;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-    // VALIDASI: Pastikan ID tidak kosong
-    if (!id) {
-        console.error('ID is empty!');
-        showMinimalPopup('Error', 'ID project tidak ditemukan. Silakan refresh halaman.', 'error');
-        return;
-    }
-    
-    // Debug data yang akan dikirim
-    console.log('Data to send:', {
-        id: id,
-        progres: formData.get('progres'),
-        status: formData.get('status'),
-        _token: csrfToken
-    });
-    
-    // GUNAKAN URL YANG BENAR
-    const url = `/manager-divisi/data_project/${id}/update`;
-    console.log('Request URL:', url);
-    
-    fetch(url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response URL:', response.url);
-        
-        if (!response.ok) {
-            return response.text().then(text => {
-                console.error('Server error response:', text);
-                let errorData;
-                try {
-                    errorData = JSON.parse(text);
-                } catch {
-                    errorData = { message: text || 'Unknown error' };
-                }
-                throw new Error(errorData.message || 'Server error: ' + response.status);
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Success data:', data);
-        if (data.success) {
-            showMinimalPopup('Berhasil', data.message, 'success');
-            editOrderanModal.classList.add('hidden');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Fetch Error:', error);
-        showMinimalPopup('Error', error.message || 'Terjadi kesalahan. Silakan coba lagi.', 'error');
-    });
-});
+            if (editOrderanForm) {
+                editOrderanForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const id = document.getElementById('editId').value;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    if (!id) {
+                        showMinimalPopup('Error', 'ID project tidak ditemukan. Silakan refresh halaman.', 'error');
+                        return;
+                    }
+                    
+                    const url = `/manager-divisi/data_project/${id}/update`;
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                let errorData;
+                                try {
+                                    errorData = JSON.parse(text);
+                                } catch {
+                                    errorData = { message: text || 'Unknown error' };
+                                }
+                                throw new Error(errorData.message || 'Server error: ' + response.status);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showMinimalPopup('Berhasil', data.message, 'success');
+                            editOrderanModal.classList.add('hidden');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch Error:', error);
+                        showMinimalPopup('Error', error.message || 'Terjadi kesalahan. Silakan coba lagi.', 'error');
+                    });
+                });
+            }
 
             // === FILTER FUNCTIONS ===
             const filterBtn = document.getElementById('filterBtn');
@@ -1253,29 +1740,23 @@ editOrderanForm.addEventListener('submit', function(e) {
             const totalCount = document.getElementById('totalCount');
 
             if (filterBtn && filterDropdown) {
-                // Toggle filter dropdown
                 filterBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     filterDropdown.classList.toggle('show');
                 });
 
-                // Close dropdown when clicking outside
                 document.addEventListener('click', function() {
                     filterDropdown.classList.remove('show');
                 });
 
-                // Prevent dropdown from closing when clicking inside
                 filterDropdown.addEventListener('click', function(e) {
                     e.stopPropagation();
                 });
 
-                // Handle "All" checkbox
                 if (filterAll) {
                     filterAll.addEventListener('change', function() {
                         if (this.checked) {
-                            // Uncheck all other checkboxes
-                            document.querySelectorAll(
-                                    '.filter-option input[type="checkbox"]:not(#filterAll)')
+                            document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)')
                                 .forEach(cb => {
                                     cb.checked = false;
                                 });
@@ -1283,20 +1764,16 @@ editOrderanForm.addEventListener('submit', function(e) {
                     });
                 }
 
-                // Handle other checkboxes
                 document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked && filterAll) {
-                            // Uncheck "All" checkbox
                             filterAll.checked = false;
                         }
                     });
                 });
 
-                // Apply filter
                 if (applyFilterBtn) {
                     applyFilterBtn.addEventListener('click', function() {
-                        const filterAll = document.getElementById('filterAll');
                         const filterPending = document.getElementById('filterPending');
                         const filterDalamPengerjaan = document.getElementById('filterDalamPengerjaan');
                         const filterSelesai = document.getElementById('filterSelesai');
@@ -1314,12 +1791,10 @@ editOrderanForm.addEventListener('submit', function(e) {
 
                         applyFilters(activeFilters);
                         filterDropdown.classList.remove('show');
-                        showMinimalPopup('Filter Diterapkan',
-                            `Menampilkan ${totalCount.textContent} project`, 'success');
+                        showMinimalPopup('Filter Diterapkan', `Menampilkan ${totalCount.textContent} project`, 'success');
                     });
                 }
 
-                // Reset filter
                 if (resetFilterBtn) {
                     resetFilterBtn.addEventListener('click', function() {
                         if (filterAll) filterAll.checked = true;
@@ -1351,13 +1826,11 @@ editOrderanForm.addEventListener('submit', function(e) {
             function applyFilters(activeFilters = ['all'], searchTerm = '') {
                 let visibleCount = 0;
 
-                // Apply filters to rows
                 orderanRows.forEach(row => {
                     const status = row.getAttribute('data-status').toLowerCase();
                     const nama = row.getAttribute('data-nama').toLowerCase();
                     const deskripsi = row.getAttribute('data-deskripsi').toLowerCase();
 
-                    // Check if status matches filter
                     let statusMatches = false;
                     if (activeFilters && activeFilters.includes('all')) {
                         statusMatches = true;
@@ -1367,7 +1840,6 @@ editOrderanForm.addEventListener('submit', function(e) {
                         statusMatches = true;
                     }
 
-                    // Check if search term matches
                     let searchMatches = true;
                     if (searchTerm) {
                         searchMatches = nama.includes(searchTerm) ||
@@ -1383,11 +1855,8 @@ editOrderanForm.addEventListener('submit', function(e) {
                     }
                 });
 
-                // Apply filters to cards
                 orderanCards.forEach(card => {
                     const cardText = card.textContent.toLowerCase();
-
-                    // For cards, we'll just use search
                     if (searchTerm && !cardText.includes(searchTerm)) {
                         card.classList.add('hidden-by-filter');
                     } else {
@@ -1395,7 +1864,6 @@ editOrderanForm.addEventListener('submit', function(e) {
                     }
                 });
 
-                // Update total count
                 if (totalCount) {
                     totalCount.textContent = visibleCount;
                 }
@@ -1411,35 +1879,37 @@ editOrderanForm.addEventListener('submit', function(e) {
 
                 if (!popup) return;
 
-                // Set content
                 popupTitle.textContent = title;
                 popupMessage.textContent = message;
 
-                // Set type
                 popup.className = 'minimal-popup show';
                 if (type === 'error') {
                     popup.classList.add('error');
-                    popupIcon.textContent = 'error';
+                    if (popupIcon) popupIcon.textContent = 'error';
                 } else if (type === 'warning') {
                     popup.classList.add('warning');
-                    popupIcon.textContent = 'warning';
+                    if (popupIcon) popupIcon.textContent = 'warning';
                 } else {
                     popup.classList.add('success');
-                    popupIcon.textContent = 'check';
+                    if (popupIcon) popupIcon.textContent = 'check';
                 }
 
-                // Auto hide after 3 seconds
                 const autoHide = setTimeout(() => {
                     popup.classList.remove('show');
                 }, 3000);
 
-                // Manual close
-                popupCloseBtn.onclick = () => {
-                    clearTimeout(autoHide);
-                    popup.classList.remove('show');
-                };
+                if (popupCloseBtn) {
+                    popupCloseBtn.onclick = () => {
+                        clearTimeout(autoHide);
+                        popup.classList.remove('show');
+                    };
+                }
             }
         });
+        
+        // Make functions global for onclick handlers
+        window.markNotificationRead = markNotificationRead;
+        window.markAllNotificationsRead = markAllNotificationsRead;
     </script>
 </body>
 

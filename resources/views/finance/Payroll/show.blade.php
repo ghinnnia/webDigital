@@ -1,40 +1,34 @@
 @include('finance.templet.sider')
 
-<main class="flex-1 flex flex-col bg-[#f8fafc] main-content min-h-screen">
-    <div class="p-4 lg:p-8">
-        <div class="max-w-[1600px] mx-auto">
+<main class="flex-1 flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 main-content">
+    <div class="flex-1 p-4 sm:p-8">
+        <div class="container mx-auto max-w-full">
             
             <!-- Header -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
-                        <span class="p-2.5 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </span>
-                        Detail Penggajian
-                    </h1>
-                    <p class="text-slate-500 mt-2">Periode: <span class="font-semibold text-indigo-600">{{ $period->nama_periode }}</span></p>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('finance.payroll.index') }}" class="text-slate-500 hover:text-slate-700 transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </a>
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-800 tracking-tight"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Detail Penggajian</h1>
+                            <p class="text-slate-500 mt-1">Periode: <span class="font-semibold text-indigo-600">{{ $period->nama_periode }}</span></p>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <form action="{{ route('finance.payroll.hitung-potongan', $period->id) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-100 transition-all active:scale-95">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            🔄 Hitung Potongan
+                            <i class="fa-solid fa-calculator mr-2"></i> Hitung Potongan & Lembur
                         </button>
                     </form>
                     @if($period->status == 'processed')
                         <form action="{{ route('finance.payroll.approve', $period->id) }}" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="flex items-center px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Setujui Penggajian
+                                <i class="fa-solid fa-check-circle mr-2"></i> Setujui Penggajian
                             </button>
                         </form>
                     @endif
@@ -44,10 +38,7 @@
                             <input type="date" name="tanggal_pembayaran" value="{{ now()->format('Y-m-d') }}" 
                                    class="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                             <button type="submit" class="flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-100 transition-all active:scale-95">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Tandai Dibayar
+                                <i class="fa-solid fa-money-bill-wave mr-2"></i> Tandai Dibayar
                             </button>
                         </form>
                     @endif
@@ -55,18 +46,14 @@
             </div>
 
             @if(session('success'))
-                <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl shadow-sm flex items-center">
-                    <div class="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center mr-3">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
+                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded-r-xl shadow-sm flex items-center">
+                    <i class="fa-solid fa-circle-check mr-2"></i>
                     <span class="font-semibold">{{ session('success') }}</span>
                 </div>
             @endif
 
             <!-- Statistik Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                     <div class="flex items-center justify-between">
                         <div>
@@ -74,9 +61,7 @@
                             <p class="text-2xl font-bold text-slate-800 mt-1">{{ $statistik['total_karyawan'] }}</p>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
+                            <i class="fa-solid fa-users text-indigo-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -87,22 +72,40 @@
                             <p class="text-xl font-bold text-emerald-600 mt-1">Rp {{ number_format($statistik['total_gaji'], 0, ',', '.') }}</p>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm0-10V7a2 2 0 012-2h10a2 2 0 012 2v6a2 2 0 01-2 2h-2m-6 0a4 4 0 108 0 4 4 0 00-8 0z"/>
-                            </svg>
+                            <i class="fa-solid fa-money-bill-wave text-emerald-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase">Total Potongan</p>
-                            <p class="text-xl font-bold text-red-600 mt-1">Rp {{ number_format($statistik['total_potongan'], 0, ',', '.') }}</p>
+                            <p class="text-xs font-semibold text-slate-400 uppercase">Total Lembur</p>
+                            <p class="text-xl font-bold text-blue-600 mt-1">Rp {{ number_format($statistik['total_lembur'] ?? 0, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <i class="fa-solid fa-clock text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase">Potongan Kehadiran</p>
+                            <p class="text-xl font-bold text-orange-600 mt-1">Rp {{ number_format($statistik['total_potongan_hadir'] ?? 0, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <i class="fa-solid fa-user-clock text-orange-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase">Potongan BPJS</p>
+                            <p class="text-xl font-bold text-red-600 mt-1">Rp {{ number_format($statistik['total_potongan_bpjs'] ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                            </svg>
+                            <i class="fa-solid fa-heartbeat text-red-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -110,26 +113,25 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-semibold text-slate-400 uppercase">Gaji Bersih</p>
-                            <p class="text-xl font-bold text-blue-600 mt-1">Rp {{ number_format($statistik['total_gaji'] - $statistik['total_potongan'], 0, ',', '.') }}</p>
+                            <p class="text-xl font-bold text-indigo-600 mt-1">Rp {{ number_format($statistik['total_gaji'] + ($statistik['total_lembur'] ?? 0) - ($statistik['total_potongan_hadir'] ?? 0) - ($statistik['total_potongan_bpjs'] ?? 0), 0, ',', '.') }}</p>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                            <i class="fa-solid fa-wallet text-indigo-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabel Detail Gaji -->
+            <!-- Tabel Detail Gaji (TANPA CHECKBOX) -->
             <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                <div class="px-6 py-5 bg-white border-b border-slate-100">
+                <div class="px-6 py-5 bg-white border-b border-slate-100 flex justify-between items-center">
                     <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
+                        <i class="fa-solid fa-table-list text-indigo-600"></i>
                         Daftar Gaji Karyawan
                     </h2>
+                    <button onclick="kirimSemuaSlipGaji()" class="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Semua Slip Gaji
+                    </button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -141,9 +143,12 @@
                                 <th class="px-5 py-4 text-left font-bold text-slate-700">Divisi</th>
                                 <th class="px-5 py-4 text-right font-bold text-slate-700">Gaji Pokok</th>
                                 <th class="px-5 py-4 text-right font-bold text-slate-700">Tunjangan</th>
-                                <th class="px-5 py-4 text-right font-bold text-slate-700 bg-red-50 text-red-700">Potongan</th>
+                                <th class="px-5 py-4 text-right font-bold text-slate-700 bg-blue-50 text-blue-700">Lembur</th>
+                                <th class="px-5 py-4 text-right font-bold text-slate-700 bg-orange-50 text-orange-700">Potongan Kehadiran</th>
+                                <th class="px-5 py-4 text-right font-bold text-slate-700 bg-red-50 text-red-700">Potongan BPJS</th>
                                 <th class="px-5 py-4 text-right font-bold text-slate-700 bg-emerald-50 text-emerald-700">Total Bersih</th>
-                                <th class="px-5 py-4 text-center font-bold text-slate-700">Slip</th>
+                                <th class="px-5 py-4 text-center font-bold text-slate-700">Slip Gaji</th>
+                                <th class="px-5 py-4 text-center font-bold text-slate-700">Kirim</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -156,19 +161,48 @@
                                 </td>
                                 <td class="px-5 py-4 text-slate-600">{{ $detail->divisi ?? '-' }}</td>
                                 <td class="px-5 py-4 text-right font-mono">Rp {{ number_format($detail->gaji_pokok, 0, ',', '.') }}</td>
-                                <td class="px-5 py-4 text-right font-mono text-emerald-600">Rp {{ number_format(($detail->tunjangan_tetap ?? 0) + ($detail->tunjangan_kinerja ?? 0) + ($detail->tunjangan_lain ?? 0), 0, ',', '.') }}</td>
-                                <td class="px-5 py-4 text-right font-mono text-red-600 bg-red-50/30">
-                                    Rp {{ number_format(($detail->potongan_tidak_hadir ?? 0) + ($detail->potongan_bpjs ?? 0) + ($detail->potongan_lain ?? 0), 0, ',', '.') }}
-                                    @if(($detail->potongan_tidak_hadir ?? 0) > 0)
-                                    <span class="text-xs text-red-400 ml-1">(potongan hadir)</span>
+                                <td class="px-5 py-4 text-right font-mono text-emerald-600">Rp {{ number_format(($detail->tunjangan_tetap ?? 0) + ($detail->tunjangan_kinerja ?? 0), 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-mono text-blue-600 bg-blue-50/30">
+                                    @php
+                                        $upahLembur = $detail->upah_lembur ?? 0;
+                                        $jamLembur = $detail->jam_lembur ?? 0;
+                                    @endphp
+                                    @if($upahLembur > 0)
+                                        Rp {{ number_format($upahLembur, 0, ',', '.') }}
+                                        <span class="text-xs text-blue-400 ml-1 block">({{ $jamLembur }} jam)</span>
+                                    @else
+                                        Rp 0
                                     @endif
                                 </td>
-                                <td class="px-5 py-4 text-right font-bold text-indigo-600 text-base">Rp {{ number_format($detail->total_gaji_bersih, 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-mono text-orange-600 bg-orange-50/30">
+                                    Rp {{ number_format($detail->potongan_tidak_hadir ?? 0, 0, ',', '.') }}
+                                    @if(($detail->potongan_tidak_hadir ?? 0) > 0)
+                                    @php
+                                        $hariTidakHadir = round(($detail->potongan_tidak_hadir ?? 0) / ($detail->gaji_pokok / 25));
+                                    @endphp
+                                    <span class="text-xs text-orange-400 ml-1 block">(tidak hadir {{ $hariTidakHadir }} hari)</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 text-right font-mono text-red-600 bg-red-50/30">
+                                    Rp {{ number_format($detail->potongan_bpjs ?? 0, 0, ',', '.') }}
+                                    <span class="text-xs text-red-400 ml-1 block">(BPJS)</span>
+                                </td>
+                                <td class="px-5 py-4 text-right font-bold text-indigo-600 text-base">
+                                    Rp {{ number_format($detail->total_gaji_bersih, 0, ',', '.') }}
+                                </td>
                                 <td class="px-5 py-4 text-center">
                                     <a href="{{ route('finance.payroll.slip', [$period->id, $detail->id]) }}" 
+                                       target="_blank"
                                        class="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-all">
-                                        📄 Slip
+                                        <i class="fa-solid fa-file-pdf mr-1"></i> Slip
                                     </a>
+                                </td>
+                                <td class="px-5 py-4 text-center">
+                                    <button onclick="kirimSlipGaji({{ $period->id }}, {{ $detail->id }}, '{{ $detail->user->name ?? '-' }}')" 
+                                            class="inline-flex items-center px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-all"
+                                            title="Kirim Slip Gaji ke {{ $detail->user->email ?? '-' }}">
+                                        <i class="fa-solid fa-envelope mr-1"></i> Kirim
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
@@ -176,28 +210,29 @@
                         <tfoot class="bg-slate-100 border-t-2 border-slate-200">
                             <tr>
                                 <td colspan="5" class="px-5 py-4 text-right font-bold text-slate-700">TOTAL:</td>
-                                <td class="px-5 py-4 text-right font-bold text-red-700">Rp {{ number_format($statistik['total_potongan'], 0, ',', '.') }}</td>
-                                <td class="px-5 py-4 text-right font-bold text-indigo-700 text-lg">Rp {{ number_format($statistik['total_gaji'] - $statistik['total_potongan'], 0, ',', '.') }}</td>
-                                <td class="px-5 py-4"></td>
+                                <td class="px-5 py-4 text-right font-bold text-blue-700">Rp {{ number_format($statistik['total_lembur'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-bold text-orange-700">Rp {{ number_format($statistik['total_potongan_hadir'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-bold text-red-700">Rp {{ number_format($statistik['total_potongan_bpjs'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-bold text-indigo-700 text-lg">
+                                    Rp {{ number_format(($statistik['total_gaji'] ?? 0) + ($statistik['total_lembur'] ?? 0) - ($statistik['total_potongan_hadir'] ?? 0) - ($statistik['total_potongan_bpjs'] ?? 0), 0, ',', '.') }}
+                                </td>
+                                <td colspan="2" class="px-5 py-4"></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
 
-            <!-- Informasi -->
+            <!-- Informasi Potongan -->
             <div class="mt-8 p-4 bg-blue-50 rounded-2xl border border-blue-200">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <i class="fa-solid fa-circle-info text-blue-600 mt-0.5"></i>
                     <div class="text-sm text-blue-700">
-                        <p><strong>Informasi Potongan:</strong> Potongan dihitung dari kehadiran karyawan.</p>
+                        <p><strong>Informasi Potongan & Lembur:</strong></p>
                         <ul class="mt-2 space-y-1 text-xs">
-                            <li>• Alpha (tanpa keterangan) → Potong 1 hari gaji (Gaji Pokok ÷ 25)</li>
-                            <li>• Izin (tanpa surat) → Potong 1 hari gaji</li>
-                            <li>• Cuti di luar jatah → Potong 1 hari gaji</li>
-                            <li>• Sakit dengan surat dokter → Tidak dipotong</li>
+                            <li>• <strong>Potongan Kehadiran</strong> → Alpha / Izin tanpa surat / Telat > 12 siang (Gaji Pokok ÷ 25 per hari)</li>
+                            <li>• <strong>Potongan BPJS</strong> → Rp 100.000 per karyawan (dipotong seragam)</li>
+                            <li>• <strong>Upah Lembur</strong> → Rp 30.000 per jam (disetujui HR)</li>
                         </ul>
                     </div>
                 </div>
@@ -206,3 +241,97 @@
         </div>
     </div>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Kirim single slip gaji
+function kirimSlipGaji(periodId, detailId, namaKaryawan) {
+    Swal.fire({
+        title: 'Kirim Slip Gaji',
+        html: `Apakah Anda yakin ingin mengirim slip gaji ke <strong>${namaKaryawan}</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: '<i class="fa-solid fa-paper-plane mr-1"></i> Kirim',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                const url = `{{ url('finance/payroll') }}/${periodId}/send-notification/${detailId}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire('Berhasil!', result.message, 'success');
+                } else {
+                    Swal.fire('Gagal!', result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'Gagal mengirim slip gaji', 'error');
+            }
+        }
+    });
+}
+
+// Kirim semua slip gaji (massal)
+function kirimSemuaSlipGaji() {
+    // Ambil semua ID detail dari tabel
+    const allIds = @json($period->details->pluck('id'));
+    
+    if (allIds.length === 0) {
+        Swal.fire('Peringatan', 'Tidak ada data karyawan', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Kirim Slip Gaji Massal',
+        html: `Apakah Anda yakin ingin mengirim slip gaji ke <strong>${allIds.length} karyawan</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: '<i class="fa-solid fa-paper-plane mr-1"></i> Kirim Semua',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                const url = `{{ url('finance/payroll') }}/{{ $period->id }}/send-notification-mass`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: allIds })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire('Berhasil!', result.message, 'success');
+                } else {
+                    Swal.fire('Gagal!', result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'Gagal mengirim slip gaji massal', 'error');
+            }
+        }
+    });
+}
+</script>

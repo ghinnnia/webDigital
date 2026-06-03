@@ -176,19 +176,19 @@
             <span class="sidebar-text">Gaji Pegawai</span>
         </a>
 
+        <!-- Menu Kelola Lembur -->
+<a href="{{ route('hr.lembur.index') }}" 
+   class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+    <span class="material-icons-outlined">schedule</span>
+    <span>Kelola Lembur</span>
+</a>
+
         <!--PENGUMUMAN -->
       <a href="{{ route('pengumuman.index') }}" class="nav-item {{ request()->routeIs('pengumuman*') ? 'active' : '' }}">
     <span class="material-icons-outlined sidebar-icon">campaign</span>
     <span class="sidebar-text">Pengumuman</span>
 </a>
-<!-- Surat Sakit -->
-<a href="{{ route('hr.absensi.surat-sakit') }}" 
-   class="nav-item {{ request()->routeIs('hr.absensi.surat-sakit*') ? 'active' : '' }}">
-    <div class="w-8 h-8 flex items-center justify-center">
-        <span class="material-icons-outlined text-xl">medication</span>
-    </div>
-    <span class="text-sm font-medium">Surat Sakit</span>
-</a>
+
 
     </nav>
 

@@ -294,6 +294,12 @@
                 Pengajuan Cuti
                 <span class="nav-indicator"></span>
             </a>
+            <!-- Menu Pengajuan Lembur -->
+            <a class="nav-link {{ strpos($currentPage, 'karyawan/lembur') !== false ? 'active' : '' }} px-1 py-2"
+                href="{{ route('karyawan.lembur.index') }}">
+                Pengajuan Lembur
+                <span class="nav-indicator"></span>
+            </a>
         </nav>
 
         <!-- Desktop Right Side Controls -->
@@ -407,6 +413,11 @@
                 href="{{ route('karyawan.cuti.index') }}">
                 Pengajuan Cuti
             </a>
+            <!-- Menu Pengajuan Lembur Mobile -->
+            <a class="mobile-nav-link block px-3 py-2 rounded-md transition-all duration-300 {{ strpos($currentPage, 'karyawan/lembur') !== false ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800' }}"
+                href="{{ route('karyawan.lembur.index') }}">
+                Pengajuan Lembur
+            </a>
             <a href="{{ route('karyawan.profile') }}"
                 class="mobile-nav-link block px-3 py-2 rounded-md transition-all duration-300 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800">
                 Profil Saya
@@ -470,55 +481,114 @@
             notificationDropdown.classList.remove('show');
         });
         
-        function loadNotifications() {
-            fetch('/api/notifications')
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('notificationList');
-                    if (data.notifications && data.notifications.length > 0) {
-                        container.innerHTML = data.notifications.map(n => `
-                            <div class="notification-item ${!n.is_read ? 'unread' : ''}">
-                                <p class="text-sm font-medium">${n.title}</p>
-                                <p class="text-xs text-gray-500">${n.message}</p>
-                                <p class="text-xs text-gray-400 mt-1">${n.time_ago}</p>
+   // Load notifications function
+function loadNotifications() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('notificationList');
+            const bell = document.getElementById('notificationBell');
+            const badge = document.getElementById('notificationBadge');
+            
+            if (data.notifications && data.notifications.length > 0) {
+                container.innerHTML = data.notifications.map(n => {
+                    let icon = '';
+                    switch(n.type) {
+                        case 'payroll': icon = '💰'; break;
+                        case 'task_revision': icon = '🔄'; break;
+                        case 'deadline_warning': icon = '⚠️'; break;
+                        default: icon = '📋';
+                    }
+                    
+                    return `
+                        <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markNotificationRead(${n.id}, '${n.link}')">
+                            <div class="flex gap-3">
+                                <div class="flex-shrink-0 text-xl">${icon}</div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium">${n.title}</p>
+                                    <p class="text-xs text-gray-500">${n.message}</p>
+                                    <p class="text-xs text-gray-400 mt-1">${n.time_ago}</p>
+                                </div>
                             </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<div class="p-4 text-center text-gray-400">Tidak ada notifikasi</div>';
+                        </div>
+                    `;
+                }).join('');
+                
+                if (data.unread_count > 0) {
+                    if (badge) {
+                        badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+                        badge.style.display = 'flex';
                     }
-                })
-                .catch(err => console.error('Error:', err));
-        }
-        
-        // Update badge notifikasi setiap 30 detik
-        setInterval(() => {
-            fetch('/api/notifications/unread-count', {
-                headers: {
-                    'Accept': 'application/json'
+                } else if (badge) {
+                    badge.style.display = 'none';
                 }
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json();
-                })
-                .then(data => {
-                    const badge = document.getElementById('notificationBadge');
-                    if (data.count > 0) {
-                        if (badge) {
-                            badge.textContent = data.count > 9 ? '9+' : data.count;
-                        } else {
-                            const newBadge = document.createElement('span');
-                            newBadge.id = 'notificationBadge';
-                            newBadge.className = 'notification-badge';
-                            newBadge.textContent = data.count > 9 ? '9+' : data.count;
-                            document.getElementById('notificationBell').appendChild(newBadge);
-                        }
-                    } else if (badge) {
-                        badge.remove();
-                    }
-                })
-                .catch(err => console.error('Error:', err));
-        }, 30000);
+            } else {
+                container.innerHTML = '<div class="p-4 text-center text-gray-400">Tidak ada notifikasi</div>';
+            }
+        })
+        .catch(err => console.error('Error loading notifications:', err));
+}
+
+// Mark notification as read
+function markNotificationRead(id, link) {
+    fetch(`/api/notifications/${id}/read`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && link) {
+            window.location.href = link;
+        } else {
+            loadNotifications();
+            const badge = document.getElementById('notificationBadge');
+            if (badge) badge.style.display = 'none';
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+// Fungsi untuk menandai notifikasi sudah dibaca
+function markNotificationRead(id, link) {
+    fetch(`/api/notifications/${id}/read`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && link) {
+            window.location.href = link;
+        } else {
+            loadNotifications();
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+
+// Update unread count periodically
+setInterval(() => {
+    fetch('/api/notifications')
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('notificationBadge');
+            if (data.unread_count > 0) {
+                if (badge) {
+                    badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+                    badge.style.display = 'flex';
+                }
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(err => console.error('Error:', err));
+}, 30000);
 
         // Mobile menu auto-close on link click
         document.querySelectorAll('#mobile-menu a, #mobile-menu button').forEach(link => {
@@ -555,6 +625,12 @@
         <a href="{{ route('karyawan.cuti.index') }}" class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary transition-colors {{ strpos($currentPage, 'karyawan/cuti') !== false ? 'text-primary dark:text-blue-400' : '' }}">
             <span class="material-symbols-outlined text-2xl">beach_access</span>
             <span class="text-xs mt-1">Cuti</span>
+        </a>
+        
+        <!-- Lembur -->
+        <a href="{{ route('karyawan.lembur.index') }}" class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary transition-colors {{ strpos($currentPage, 'karyawan/lembur') !== false ? 'text-primary dark:text-blue-400' : '' }}">
+            <span class="material-symbols-outlined text-2xl">schedule</span>
+            <span class="text-xs mt-1">Lembur</span>
         </a>
         
         <!-- Big Absen Button (Center) -->
