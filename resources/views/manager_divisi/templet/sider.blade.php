@@ -257,6 +257,13 @@
                     <span class="sidebar-text">Top & Low Grade</span>
                 </a>
 
+                <a href="{{ route('manager_divisi.lembur.index') }}"
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    :class="window.location.pathname.includes('/lembur') ? 'active' : ''">
+                    <span class="material-symbols-outlined sidebar-icon">more_time</span>
+                    <span class="sidebar-text">Approve Lembur</span>
+                </a>
+
             </nav>
 
             <div class="sidebar-footer border-t border-gray-200 flex-shrink-0">

@@ -7,18 +7,28 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up()
-    {
-        Schema::table('kpa', function (Blueprint $table) {
-            if (!Schema::hasColumn('kpa', 'rekomendasi')) {
-                $table->text('rekomendasi')->nullable()->after('grade');
-            }
-        });
+{
+    if (!Schema::hasTable('kpa')) {
+        return; // skip jika tabel tidak ada
     }
 
-    public function down()
-    {
-        Schema::table('kpa', function (Blueprint $table) {
-            $table->dropColumn('rekomendasi');
-        });
+    Schema::table('kpa', function (Blueprint $table) {
+        if (!Schema::hasColumn('kpa', 'rekomendasi')) {
+            $table->text('rekomendasi')->nullable()->after('grade');
+        }
+    });
+}
+
+public function down()
+{
+    if (!Schema::hasTable('kpa')) {
+        return;
     }
+
+    Schema::table('kpa', function (Blueprint $table) {
+        if (Schema::hasColumn('kpa', 'rekomendasi')) {
+            $table->dropColumn('rekomendasi');
+        }
+    });
+}
 };

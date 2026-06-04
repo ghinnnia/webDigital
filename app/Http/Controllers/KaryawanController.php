@@ -63,8 +63,8 @@ public function indexPegawai(Request $request)
         
         // Format data untuk view (tanpa eager loading yang bermasalah)
         $karyawan = $karyawanCollection->map(function ($userItem) {
-            // Ambil data tunjangan via relasi karyawan
-            $karyawanData = Karyawan::where('user_id', $userItem->id)->first();
+            // Ambil data karyawan beserta tim (tim_id ada di karyawan, bukan users)
+            $karyawanData = Karyawan::with('tim')->where('user_id', $userItem->id)->first();
             
             $tetapList = collect();
             $tidakTetapList = collect();
@@ -72,50 +72,37 @@ public function indexPegawai(Request $request)
             $tidakTetapIds = [];
             
             if ($karyawanData) {
-                $currentMonth = Carbon::now()->month;
-                $currentYear = Carbon::now()->year;
-                
-                // Ambil tunjangan dari tabel tunjangan_karyawan
-                $tetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
-                    ->where('bulan', $currentMonth)
-                    ->where('tahun', $currentYear)
-                    ->where('diberikan', 1)
-                    ->with('tunjanganMaster')
-                    ->get()
-                    ->filter(function($item) {
-                        return $item->tunjanganMaster && $item->tunjanganMaster->tipe == 'bulanan';
-                    });
-                
-                $tidakTetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
-                    ->where('bulan', $currentMonth)
-                    ->where('tahun', $currentYear)
-                    ->where('diberikan', 1)
-                    ->with('tunjanganMaster')
-                    ->get()
-                    ->filter(function($item) {
-                        return $item->tunjanganMaster && in_array($item->tunjanganMaster->tipe, ['bonus', 'insentif']);
-                    });
-                
-                $tetapIds = $tetapList->pluck('tunjangan_id')->toArray();
-                $tidakTetapIds = $tidakTetapList->pluck('tunjangan_id')->toArray();
+                // Ambil tunjangan dari tabel karyawan_tunjangan (pivot default, tanpa bulan/tahun)
+                $semuaTunjangan = $karyawanData->tunjanganDefault()->get();
+
+                $tetapList = $semuaTunjangan->filter(fn($t) => $t->tipe === 'bulanan');
+                $tidakTetapList = $semuaTunjangan->filter(fn($t) => in_array($t->tipe, ['bonus', 'insentif']));
+
+                $tetapIds = $tetapList->pluck('id')->toArray();
+                $tidakTetapIds = $tidakTetapList->pluck('id')->toArray();
             }
             
+            // Tim diambil dari tabel karyawan (bukan users, karena tim_id ada di karyawan)
+            $timObject = $karyawanData ? $karyawanData->tim : null;
+
             return (object) [
+                'id' => $karyawanData ? $karyawanData->id : null, // karyawan.id untuk delete/edit
                 'user_id' => $userItem->id,
                 'nama' => $userItem->name,
                 'email' => $userItem->email,
                 'role' => $userItem->role,
                 'divisi' => $userItem->divisi ? $userItem->divisi->divisi : '-',
                 'divisi_id' => $userItem->divisi_id,
-                'tim' => $userItem->tim,
+                'tim' => $timObject,
+                'tim_id' => $karyawanData ? $karyawanData->tim_id : null,
                 'alamat' => $userItem->alamat,
                 'kontak' => $userItem->kontak,
-                'foto' => $userItem->foto,
+                'foto' => $karyawanData ? $karyawanData->foto : $userItem->foto,
                 'gaji' => $userItem->gaji,
                 'kontrak_mulai' => $userItem->kontrak_mulai,
                 'kontrak_selesai' => $userItem->kontrak_selesai,
-                'status_kerja' => $userItem->status_kerja ?? 'aktif',
-                'status_karyawan' => $userItem->status_karyawan ?? 'tetap',
+                'status_kerja' => $karyawanData ? $karyawanData->status_kerja : ($userItem->status_kerja ?? 'aktif'),
+                'status_karyawan' => $karyawanData ? $karyawanData->status_karyawan : ($userItem->status_karyawan ?? 'tetap'),
                 'tunjanganTetapBulanIni' => $tetapList,
                 'tunjanganTidakTetapBulanIni' => $tidakTetapList,
                 'tunjangan_tetap_ids' => $tetapIds,

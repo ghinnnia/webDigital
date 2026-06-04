@@ -144,9 +144,7 @@ Route::get('/hr/kpa/preview-nilai', [HRKPAController::class, 'previewNilai'])->n
 // Hapus aspek & indikator
 Route::delete('/kpa/aspek/{id}', [HRKPAController::class, 'aspekDestroy'])->name('hr.kpa.aspek.destroy');
 Route::delete('/kpa/indikator/{id}', [HRKPAController::class, 'indikatorDestroy'])->name('hr.kpa.indikator.destroy');
-// Tunjangan
-Route::get('/tunjangan', [HRKPAController::class, 'tunjanganIndex'])->name('hr.tunjangan.index');
-Route::post('/tunjangan', [HRKPAController::class, 'simpanTunjangan'])->name('hr.tunjangan.store');
+// Tunjangan - route asli ada di bawah (TunjanganHrController)
     
 // ========== ABSENSI HR ==========
 Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(function () {
@@ -162,11 +160,13 @@ Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(functio
 });
 
 // ========== TUNJANGAN HR ==========
-Route::get('/tunjangan', [TunjanganHrController::class, 'index'])->name('hr.tunjangan.index');
-Route::post('/tunjangan', [TunjanganHrController::class, 'store'])->name('hr.tunjangan.store');
-Route::post('/tunjangan/add', [TunjanganHrController::class, 'addTunjangan'])->name('hr.tunjangan.add');
-Route::put('/tunjangan/{id}', [TunjanganHrController::class, 'update'])->name('hr.tunjangan.update');
-Route::delete('/tunjangan/{id}', [TunjanganHrController::class, 'destroy'])->name('hr.tunjangan.destroy');
+Route::middleware(['auth', 'role:hr,admin'])->prefix('hr')->name('hr.')->group(function () {
+    Route::get('/tunjangan', [TunjanganHrController::class, 'index'])->name('tunjangan.index');
+    Route::post('/tunjangan', [TunjanganHrController::class, 'store'])->name('tunjangan.store');
+    Route::post('/tunjangan/add', [TunjanganHrController::class, 'addTunjangan'])->name('tunjangan.add');
+    Route::put('/tunjangan/{id}', [TunjanganHrController::class, 'updateTunjangan'])->name('tunjangan.update');
+    Route::delete('/tunjangan/{id}', [TunjanganHrController::class, 'destroyTunjangan'])->name('tunjangan.destroy');
+});
 
 // Routes untuk Gaji Template
 Route::middleware(['auth'])->prefix('hr/gaji-template')->group(function () {
@@ -262,9 +262,7 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
     Route::prefix('lembur')->name('lembur.')->group(function () {
         Route::get('/', [LemburController::class, 'financeIndex'])->name('index');
         Route::post('/mark-paid', [LemburController::class, 'markAsPaid'])->name('mark-paid');
-        // Di dalam group finance payroll
-Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
-Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
+        Route::post('/set-upah', [LemburController::class, 'setUpahLembur'])->name('set-upah');
     });
 });
 
@@ -1550,6 +1548,13 @@ Route::middleware(['auth', 'role:manager_divisi'])
             Route::put('/{cuti}', [CutiController::class, 'update'])->name('update');
             Route::get('/karyawan-by-divisi', [CutiController::class, 'getKaryawanByDivisi'])->name('karyawan.by-divisi');
             Route::get('/summary', [CutiController::class, 'getSummary'])->name('summary');
+        });
+
+        // LEMBUR MANAGEMENT (Manager Divisi)
+        Route::prefix('lembur')->name('lembur.')->group(function () {
+            Route::get('/', [LemburController::class, 'managerDivisiIndex'])->name('index');
+            Route::post('/{id}/approve', [LemburController::class, 'approveByManager'])->name('approve');
+            Route::post('/{id}/reject', [LemburController::class, 'rejectByManager'])->name('reject');
         });
 
         // DATA PROJECT

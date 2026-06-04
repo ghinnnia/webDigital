@@ -11,7 +11,7 @@ return new class extends Migration
     {
         if (!Schema::hasColumn('karyawan', 'tim_id')) {
             Schema::table('karyawan', function (Blueprint $table) {
-                $table->foreignId('tim_id')->nullable()->after('divisi_id')->constrained('tims')->onDelete('set null');
+                $table->foreignId('tim_id')->nullable()->after('divisi_id')->constrained('tim')->onDelete('set null');
             });
         }
     }

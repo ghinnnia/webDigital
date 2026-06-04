@@ -164,7 +164,7 @@ class AdminKaryawanController extends Controller
 
             DB::beginTransaction();
 
-            // Buat user
+            // Buat user (User::boot() otomatis membuat Karyawan)
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -200,7 +200,7 @@ class AdminKaryawanController extends Controller
                 $tunjanganTidakTetapIds = json_decode($tunjanganTidakTetapIds, true);
             }
             
-            $allTunjanganIds = array_merge((array)$tunjanganTetapIds, (array)$tunjanganTidakTetapIds);
+            $allTunjanganIds = array_filter(array_merge((array)$tunjanganTetapIds, (array)$tunjanganTidakTetapIds));
             
             \Log::info('Saving tunjangan IDs to pivot:', [
                 'tetap_decoded' => $tunjanganTetapIds,
@@ -208,29 +208,48 @@ class AdminKaryawanController extends Controller
                 'all_ids' => $allTunjanganIds
             ]);
 
-            // Buat karyawan
-            $karyawan = Karyawan::create([
-                'user_id' => $user->id,
-                'nama' => $validated['name'],
-                'email' => $validated['email'],
-                'role' => $validated['role'],
-                'divisi_id' => $validated['divisi_id'] ?? null,
-                'tim_id' => $validated['tim_id'] ?? null,
-                'alamat' => $validated['alamat'] ?? '',
-                'kontak' => $validated['kontak'] ?? '',
-                'gaji' => $validated['gaji'] ?? null,
-                'status_kerja' => $validated['status_kerja'] ?? 'aktif',
-                'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                'foto' => $fotoPath
-            ]);
+            // Ambil Karyawan yang sudah dibuat otomatis oleh User::boot()
+            // PERBAIKAN: Tidak membuat Karyawan baru (sudah dibuat di User::boot) → mencegah double data
+            $karyawan = Karyawan::where('user_id', $user->id)->first();
 
-            // Sync tunjangan ke pivot table
+            if (!$karyawan) {
+                // Fallback jika boot() tidak membuat karyawan
+                $karyawan = Karyawan::create([
+                    'user_id' => $user->id,
+                    'nama' => $validated['name'],
+                    'email' => $validated['email'],
+                    'role' => $validated['role'],
+                    'divisi_id' => $validated['divisi_id'] ?? null,
+                    'tim_id' => $validated['tim_id'] ?? null,
+                    'alamat' => $validated['alamat'] ?? '',
+                    'kontak' => $validated['kontak'] ?? '',
+                    'gaji' => $validated['gaji'] ?? null,
+                    'status_kerja' => $validated['status_kerja'] ?? 'aktif',
+                    'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
+                    'foto' => $fotoPath
+                ]);
+            } else {
+                // Update field tambahan yang tidak ada di User::boot()
+                // tim_id hanya ada di tabel karyawan (bukan users)
+                $updateData = [
+                    'divisi_id' => $validated['divisi_id'] ?? null,
+                    'tim_id' => $validated['tim_id'] ?? null,
+                    'status_kerja' => $validated['status_kerja'] ?? 'aktif',
+                    'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
+                ];
+                if ($fotoPath) {
+                    $updateData['foto'] = $fotoPath;
+                }
+                $karyawan->update($updateData);
+            }
+
+            // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)
             \Log::info('Before sync - karyawan ID:', ['id' => $karyawan->id, 'tunjangan_ids' => $allTunjanganIds]);
-            $syncResult = $karyawan->tunjanganMaster()->sync($allTunjanganIds);
+            $syncResult = $karyawan->tunjanganDefault()->sync($allTunjanganIds);
             \Log::info('After sync - result:', $syncResult);
             
             // Verify sync worked
-            $verifyCount = $karyawan->tunjanganMaster()->count();
+            $verifyCount = $karyawan->tunjanganDefault()->count();
             \Log::info('Verify count after sync:', ['count' => $verifyCount]);
 
             DB::commit();
@@ -347,8 +366,8 @@ class AdminKaryawanController extends Controller
                 'foto' => $fotoPath
             ]);
 
-            // Sync tunjangan ke pivot table
-            $karyawan->tunjanganMaster()->sync($allTunjanganIds);
+            // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)
+            $karyawan->tunjanganDefault()->sync($allTunjanganIds);
 
             DB::commit();
 
@@ -390,7 +409,16 @@ class AdminKaryawanController extends Controller
                 Storage::disk('public')->delete($karyawan->foto);
             }
 
+            // Hapus pivot tunjangan default
+            $karyawan->tunjanganDefault()->detach();
+
+            // Hapus record karyawan
             $karyawan->delete();
+
+            // Hapus user juga agar tidak muncul lagi di daftar
+            if ($userId) {
+                User::where('id', $userId)->delete();
+            }
 
             return response()->json([
                 'success' => true,
@@ -410,25 +438,33 @@ class AdminKaryawanController extends Controller
     {
         try {
             $karyawan = Karyawan::with(['user', 'divisiRelation', 'tim'])->findOrFail($id);
-            
+
+            // Baca tunjangan dari karyawan_tunjangan (pivot bersih)
+            $semuaTunjangan = $karyawan->tunjanganDefault()->get();
+            $tetapIds = $semuaTunjangan->where('tipe', 'bulanan')->pluck('id')->toArray();
+            $tidakTetapIds = $semuaTunjangan->whereIn('tipe', ['bonus', 'insentif'])->pluck('id')->toArray();
+
+            // Ambil data dari user jika tersedia
+            $user = $karyawan->user;
+
             return response()->json([
                 'success' => true,
                 'data' => [
                     'id' => $karyawan->id,
                     'user_id' => $karyawan->user_id,
-                    'nama' => $karyawan->nama,
-                    'email' => $karyawan->email,
-                    'role' => $karyawan->role,
-                    'divisi_id' => $karyawan->divisi_id,
+                    'nama' => $user->name ?? $karyawan->nama,
+                    'email' => $user->email ?? $karyawan->email,
+                    'role' => $user->role ?? $karyawan->role,
+                    'divisi_id' => $user->divisi_id ?? $karyawan->divisi_id,
                     'tim_id' => $karyawan->tim_id,
-                    'alamat' => $karyawan->alamat,
-                    'kontak' => $karyawan->kontak,
-                    'gaji' => $karyawan->gaji,
+                    'alamat' => $user->alamat ?? $karyawan->alamat,
+                    'kontak' => $user->kontak ?? $karyawan->kontak,
+                    'gaji' => $user->gaji ?? $karyawan->gaji,
                     'status_kerja' => $karyawan->status_kerja,
                     'status_karyawan' => $karyawan->status_karyawan,
                     'foto' => $karyawan->foto ? asset('storage/' . $karyawan->foto) : null,
-                    'tunjangan_tetap_ids' => $karyawan->tunjanganTetap->pluck('id')->toArray(),
-                    'tunjangan_tidak_tetap_ids' => $karyawan->tunjanganTidakTetap->pluck('id')->toArray()
+                    'tunjangan_tetap_ids' => $tetapIds,
+                    'tunjangan_tidak_tetap_ids' => $tidakTetapIds
                 ]
             ]);
             

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Gaji;
 use App\Models\User;
+use App\Models\Karyawan;
 use App\Models\Divisi;
 use App\Models\TunjanganKaryawan;
 use App\Models\GajiTemplate;
@@ -40,12 +41,19 @@ class GajiHrController extends Controller
             ->get()
             ->keyBy('karyawan_id');
         
-        // PERBAIKAN: Ambil data tunjangan dengan relasi yang benar
-        $tunjanganData = TunjanganKaryawan::where('bulan', $bulan)
-            ->where('tahun', $tahun)
-            ->with('tunjanganMaster')  // <-- Gunakan relasi tunjanganMaster
+        // PERBAIKAN: baca tunjangan dari karyawan_tunjangan (pivot bersih, tanpa bulan/tahun)
+        // Map user.id → karyawan record → tunjangan master
+        $userIds = $karyawan->pluck('id');
+        $karyawanRecords = Karyawan::whereIn('user_id', $userIds)
             ->get()
-            ->groupBy('karyawan_id');
+            ->keyBy('user_id'); // [user_id => Karyawan]
+
+        // Ambil tunjangan default (dari karyawan_tunjangan) per karyawan, di-key oleh user_id
+        $tunjanganData = collect();
+        foreach ($karyawanRecords as $userId => $karyawanRecord) {
+            // tunjanganDefault() mengembalikan TunjanganMaster objects (via karyawan_tunjangan)
+            $tunjanganData[$userId] = $karyawanRecord->tunjanganDefault()->get();
+        }
         
         // Hitung grand total
         $grandTotal = 0;

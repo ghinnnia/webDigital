@@ -93,6 +93,20 @@ class Karyawan extends Model
     }
 
     /**
+     * Relasi ke tabel karyawan_tunjangan (pivot simpel, tanpa bulan/tahun)
+     * Digunakan untuk menyimpan tunjangan default/template karyawan
+     */
+    public function tunjanganDefault()
+    {
+        return $this->belongsToMany(
+            TunjanganMaster::class,
+            'karyawan_tunjangan',
+            'karyawan_id',
+            'tunjangan_id'
+        )->withTimestamps();
+    }
+
+    /**
      * Tunjangan berdasarkan periode
      */
     public function tunjanganPeriode($bulan, $tahun)
