@@ -13,82 +13,201 @@ class Karyawan extends Model
     protected $table = 'karyawan';
 
     protected $fillable = [
-        'user_id', 'nama', 'role', 'divisi', 'divisi_id', 'tim_id',
-        'gaji', 'kontrak_mulai', 'kontrak_selesai', 'alamat',
-        'kontak', 'foto', 'email', 'status_kerja', 'status_karyawan',
-        'tunjangan_tetap_ids', 'tunjangan_tidak_tetap_ids'
+        'user_id',
+        'nama',
+        'role',
+        'divisi',
+        'divisi_id',
+        'tim_id',
+        'gaji',
+        'kontrak_mulai',
+        'kontrak_selesai',
+        'alamat',
+        'kontak',
+        'foto',
+        'email',
+        'status_kerja',
+        'status_karyawan'
     ];
 
     protected $casts = [
-        // Laravel otomatis handle json_encode/decode jika di-cast ke array
-        'tunjangan_tetap_ids' => 'array',
-        'tunjangan_tidak_tetap_ids' => 'array',
         'kontrak_mulai' => 'datetime',
         'kontrak_selesai' => 'datetime',
         'gaji' => 'integer',
     ];
 
-    // Relasi
-    public function user() { return $this->belongsTo(User::class, 'user_id'); }
-    public function divisiRelation() { return $this->belongsTo(Divisi::class, 'divisi_id'); }
-    public function tim() { return $this->belongsTo(Tim::class, 'tim_id'); }
+    // =========================
+    // RELASI
+    // =========================
 
-    // --- RELASI TUNJANGAN ---
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function divisiRelation()
+    {
+        return $this->belongsTo(Divisi::class, 'divisi_id');
+    }
+
+    public function tim()
+    {
+        return $this->belongsTo(Tim::class, 'tim_id');
+    }
+
+    /**
+     * Relasi ke tabel tunjangan_karyawan
+     */
+    public function tunjanganKaryawan()
+    {
+        return $this->hasMany(TunjanganKaryawan::class, 'karyawan_id');
+    }
+
+    /**
+     * Relasi utama ke Tunjangan Master
+     */
+    public function tunjangan()
+    {
+        return $this->belongsToMany(
+            TunjanganMaster::class,
+            'tunjangan_karyawan',
+            'karyawan_id',
+            'tunjangan_id'
+        )
+        ->withPivot(
+            'id',
+            'nominal',
+            'bulan',
+            'tahun',
+            'diberikan'
+        )
+        ->withTimestamps();
+    }
+
+    /**
+     * Alias relasi lama
+     */
     public function tunjanganMaster()
     {
-        return $this->belongsToMany(TunjanganMaster::class, 'karyawan_tunjangan', 'karyawan_id', 'tunjangan_id');
+        return $this->tunjangan();
     }
 
-    // Relasi untuk eager loading fixed allowances
-    public function tunjanganTetapRelation()
+    /**
+     * Tunjangan berdasarkan periode
+     */
+    public function tunjanganPeriode($bulan, $tahun)
     {
-        return $this->tunjanganMaster()->where('tipe', 'bulanan');
+        return $this->tunjangan()
+            ->wherePivot('bulan', $bulan)
+            ->wherePivot('tahun', $tahun)
+            ->wherePivot('diberikan', 1);
     }
 
-    // Relasi untuk eager loading variable allowances
-    public function tunjanganTidakTetapRelation()
-    {
-        return $this->tunjanganMaster()->whereIn('tipe', ['bonus', 'insentif']);
-    }
-
+    /**
+     * Semua tunjangan tetap
+     */
     public function tunjanganTetap()
     {
-        return $this->tunjanganMaster()->where('tipe', 'bulanan');
+        return $this->tunjangan()
+            ->where('tipe', 'bulanan');
     }
 
+    /**
+     * Tunjangan tetap bulan ini
+     */
+    public function tunjanganTetapBulanIni()
+    {
+        $now = Carbon::now();
+
+        return $this->tunjangan()
+            ->where('tipe', 'bulanan')
+            ->wherePivot('bulan', $now->month)
+            ->wherePivot('tahun', $now->year)
+            ->wherePivot('diberikan', true);
+    }
+
+    /**
+     * Semua tunjangan bonus/insentif
+     */
     public function tunjanganTidakTetap()
     {
-        return $this->tunjanganMaster()->whereIn('tipe', ['bonus', 'insentif']);
+        return $this->tunjangan()
+            ->whereIn('tipe', ['bonus', 'insentif']);
     }
 
-    // --- ACCESSOR UNTUK TUNJANGAN ---
+    /**
+     * Tunjangan bonus/insentif bulan ini
+     */
+    public function tunjanganTidakTetapBulanIni()
+    {
+        $now = Carbon::now();
+
+        return $this->tunjangan()
+            ->whereIn('tipe', ['bonus', 'insentif'])
+            ->wherePivot('bulan', $now->month)
+            ->wherePivot('tahun', $now->year)
+            ->wherePivot('diberikan', true);
+    }
+
+    // =========================
+    // ACCESSOR
+    // =========================
+
     public function getTunjanganTetapListAttribute()
     {
-        return $this->tunjanganMaster()->where('tipe', 'bulanan')->get();
-    }
+        $now = Carbon::now();
 
-    public function getTunjanganTetapTotalAttribute()
-    {
-        return $this->tunjanganMaster()->where('tipe', 'bulanan')->sum('nominal');
+        return TunjanganMaster::where('tipe', 'bulanan')
+            ->whereHas('tunjanganKaryawan', function ($q) use ($now) {
+                $q->where('karyawan_id', $this->id)
+                    ->where('bulan', $now->month)
+                    ->where('tahun', $now->year)
+                    ->where('diberikan', 1);
+            })
+            ->get();
     }
 
     public function getTunjanganTidakTetapListAttribute()
     {
-        return $this->tunjanganMaster()->whereIn('tipe', ['bonus', 'insentif'])->get();
+        $now = Carbon::now();
+
+        return TunjanganMaster::whereIn('tipe', ['bonus', 'insentif'])
+            ->whereHas('tunjanganKaryawan', function ($q) use ($now) {
+                $q->where('karyawan_id', $this->id)
+                    ->where('bulan', $now->month)
+                    ->where('tahun', $now->year)
+                    ->where('diberikan', 1);
+            })
+            ->get();
+    }
+
+    public function getTunjanganTetapTotalAttribute()
+    {
+        return $this->tunjangan_tetap_list->sum('nominal');
     }
 
     public function getTunjanganTidakTetapTotalAttribute()
     {
-        return $this->tunjanganMaster()->whereIn('tipe', ['bonus', 'insentif'])->sum('nominal');
+        return $this->tunjangan_tidak_tetap_list->sum('nominal');
     }
 
-    // --- LOGIKA OTOMATIS NONAKTIF KONTRAK ---
+    // =========================
+    // AUTO NONAKTIF KONTRAK
+    // =========================
+
     protected static function boot()
     {
         parent::boot();
+
         static::retrieved(function ($model) {
-            if ($model->status_karyawan === 'kontrak' && $model->kontrak_selesai) {
-                if ($model->kontrak_selesai->isPast() && $model->status_kerja !== 'nonaktif') {
+            if (
+                $model->status_karyawan === 'kontrak' &&
+                $model->kontrak_selesai
+            ) {
+                if (
+                    $model->kontrak_selesai->isPast() &&
+                    $model->status_kerja !== 'nonaktif'
+                ) {
                     $model->status_kerja = 'nonaktif';
                     $model->saveQuietly();
                 }

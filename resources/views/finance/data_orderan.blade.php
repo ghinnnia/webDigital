@@ -773,6 +773,239 @@
             justify-content: flex-end;
             gap: 12px;
         }
+
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.1);
+            background: #f1f5f9;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 380px;
+            max-width: calc(100vw - 40px);
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-panel.show {
+            display: flex;
+        }
+
+        .notification-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notification-header button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .notification-header button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .notification-item.unread {
+            background-color: #eff6ff;
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: #3b82f6;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .notification-icon.danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .notification-icon.success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .notification-icon.info {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .notification-message {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .notification-empty span {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* Overlay for notification panel */
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            display: none;
+        }
+
+        .notification-overlay.show {
+            display: block;
+        }
     </style>
 </head>
 <body class="font-display bg-background-light text-text-light">
@@ -784,6 +1017,35 @@
                 $orders = \App\Models\Order::orderBy('id', 'desc')->paginate(10);
             }
         @endphp
+        
+        <!-- Notification Bell & Panel -->
+        <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+            <!-- Notification Bell -->
+            <div class="notification-bell" onclick="toggleNotificationPanel()">
+                <span class="material-icons-outlined text-gray-600 text-2xl">notifications</span>
+                <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
+            </div>
+        </div>
+
+        <!-- Notification Panel -->
+        <div id="notificationPanel" class="notification-panel">
+            <div class="notification-header">
+                <h3>
+                    <span class="material-icons-outlined">notifications</span>
+                    Notifikasi
+                </h3>
+                <button onclick="markAllNotificationsRead()">Tandai semua dibaca</button>
+            </div>
+            <div id="notificationList" class="notification-list">
+                <div class="notification-empty">
+                    <span class="material-icons-outlined">notifications_none</span>
+                    <p>Memuat notifikasi...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay -->
+        <div id="notificationOverlay" class="notification-overlay" onclick="closeNotificationPanel()"></div>
         
         <!-- Main Content -->
         <main class="flex-1 flex flex-col main-content">
@@ -978,8 +1240,8 @@
                                             </td>
                                             <td style="min-width: 120px;">{{ ($project && $project->harga) ? 'Rp '.number_format($project->harga,0,',','.') : ($order->total ? 'Rp '.number_format($order->total,0,',','.') : '-') }}</td>
                                             <td style="min-width: 150px;">{{ $penanggungJawab }}</td>
-                                            <td style="min-width: 200px;">{{ $periodePengerjaan }}</td>
-                                            <td style="min-width: 200px;">{{ $periodeKerjasama }}</td>
+                                            <td style="min-width: 200px;" class="periode-pengerjaan">{{ $periodePengerjaan }}</td>
+                                            <td style="min-width: 200px;" class="periode-kerjasama">{{ $periodeKerjasama }}</td>
                                             <td style="min-width: 120px;">
                                                 <span class="work-status-badge work-status-{{ $workRaw }}">{{ $workStatusLabel }}</span>
                                             </td>
@@ -1385,118 +1647,14 @@
     </div>
 
     <script>
-        // Data Orderan
+        // Data Orderan untuk demo (akan diganti dengan data dari server)
         const paymentData = [
             { no: 1, layanan: "Pembuatan Website", kategori: "programming", harga: "Rp 5.000.000", klien: "PT. Teknologi Maju", awal: "Rp 2.500.000", lunas: "Rp 2.500.000", status: "paid", statusPengerjaan: "completed" },
             { no: 2, layanan: "SEO Optimization", kategori: "marketing", harga: "Rp 3.000.000", klien: "CV. Digital Solusi", awal: "Rp 1.500.000", lunas: "Rp 1.500.000", status: "paid", statusPengerjaan: "completed" },
             { no: 3, layanan: "Manajemen Sosial Media", kategori: "marketing", harga: "Rp 4.000.000", klien: "UD. Kreatif Indonesia", awal: "Rp 2.000.000", lunas: "Rp 0", status: "partial", statusPengerjaan: "progress" },
             { no: 4, layanan: "Pengembangan Aplikasi Mobile", kategori: "programming", harga: "Rp 8.000.000", klien: "PT. Inovasi Nusantara", awal: "Rp 4.000.000", lunas: "Rp 0", status: "pending", statusPengerjaan: "planning" },
-            { no: 5, layanan: "Desain UI/UX", kategori: "design", harga: "Rp 7.500.000", klien: "CV. Kreatif", awal: "Rp 2.500.000", lunas: "Rp 0", status: "overdue", statusPengerjaan: "onhold" },
-            { no: 6, layanan: "Pembuatan Website", kategori: "programming", harga: "Rp 6.000.000", klien: "PT. Digital Nusantara", awal: "Rp 3.000.000", lunas: "Rp 3.000.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 7, layanan: "SEO Optimization", kategori: "marketing", harga: "Rp 2.500.000", klien: "CV. Kreatif Digital", awal: "Rp 1.250.000", lunas: "Rp 1.250.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 8, layanan: "Manajemen Sosial Media", kategori: "marketing", harga: "Rp 3.500.000", klien: "UD. Inovasi Teknologi", awal: "Rp 1.750.000", lunas: "Rp 0", status: "partial", statusPengerjaan: "progress" },
-            { no: 9, layanan: "Pengembangan Aplikasi Mobile", kategori: "programming", harga: "Rp 9.000.000", klien: "PT. Solusi Digital", awal: "Rp 4.500.000", lunas: "Rp 0", status: "pending", statusPengerjaan: "planning" },
-            { no: 10, layanan: "Desain UI/UX", kategori: "design", harga: "Rp 5.500.000", klien: "CV. Karya Kreatif", awal: "Rp 2.750.000", lunas: "Rp 0", status: "overdue", statusPengerjaan: "onhold" },
-            { no: 11, layanan: "Pembuatan Website", kategori: "programming", harga: "Rp 7.000.000", klien: "PT. Teknologi Maju", awal: "Rp 3.500.000", lunas: "Rp 3.500.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 12, layanan: "SEO Optimization", kategori: "marketing", harga: "Rp 2.000.000", klien: "CV. Digital Solusi", awal: "Rp 1.000.000", lunas: "Rp 1.000.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 13, layanan: "Manajemen Sosial Media", kategori: "marketing", harga: "Rp 4.500.000", klien: "UD. Kreatif Indonesia", awal: "Rp 2.250.000", lunas: "Rp 0", status: "partial", statusPengerjaan: "progress" },
-            { no: 14, layanan: "Pengembangan Aplikasi Mobile", kategori: "programming", harga: "Rp 10.000.000", klien: "PT. Inovasi Nusantara", awal: "Rp 5.000.000", lunas: "Rp 0", status: "pending", statusPengerjaan: "planning" },
-            { no: 15, layanan: "Desain UI/UX", kategori: "design", harga: "Rp 6.500.000", klien: "CV. Kreatif", awal: "Rp 3.250.000", lunas: "Rp 0", status: "overdue", statusPengerjaan: "onhold" },
-            { no: 16, layanan: "Pembuatan Website", kategori: "programming", harga: "Rp 5.500.000", klien: "PT. Digital Nusantara", awal: "Rp 2.750.000", lunas: "Rp 2.750.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 17, layanan: "SEO Optimization", kategori: "marketing", harga: "Rp 3.500.000", klien: "CV. Kreatif Digital", awal: "Rp 1.750.000", lunas: "Rp 1.750.000", status: "paid", statusPengerjaan: "completed" },
-            { no: 18, layanan: "Manajemen Sosial Media", kategori: "marketing", harga: "Rp 5.000.000", klien: "UD. Inovasi Teknologi", awal: "Rp 2.500.000", lunas: "Rp 0", status: "partial", statusPengerjaan: "progress" },
-            { no: 19, layanan: "Pengembangan Aplikasi Mobile", kategori: "programming", harga: "Rp 11.000.000", klien: "PT. Solusi Digital", awal: "Rp 5.500.000", lunas: "Rp 0", status: "pending", statusPengerjaan: "planning" },
-            { no: 20, layanan: "Desain UI/UX", kategori: "design", harga: "Rp 8.000.000", klien: "CV. Karya Kreatif", awal: "Rp 4.000.000", lunas: "Rp 0", status: "overdue", statusPengerjaan: "onhold" }
+            { no: 5, layanan: "Desain UI/UX", kategori: "design", harga: "Rp 7.500.000", klien: "CV. Kreatif", awal: "Rp 2.500.000", lunas: "Rp 0", status: "overdue", statusPengerjaan: "onhold" }
         ];
-
-        // Data detail invoice
-        const invoiceDetailData = {
-            1: {
-                no: "INV-2023-001",
-                date: "15 Januari 2023",
-                companyName: "PT. Teknologi Maju",
-                companyAddress: "Jl. Sudirman No. 456, Jakarta Selatan",
-                clientName: "Budi Santoso",
-                orderNumber: "ORD-2023-001",
-                paymentMethod: "Transfer Bank - BCA",
-                kategori: "programming",
-                statusPengerjaan: "completed",
-                items: [
-                    { no: 1, description: "Pembuatan Website Company Profile", harga: "Rp 5.000.000", qty: 1, total: "Rp 5.000.000" }
-                ],
-                subtotal: "Rp 5.000.000",
-                tax: "Rp 550.000",
-                total: "Rp 5.550.000"
-            },
-            2: {
-                no: "INV-2023-002",
-                date: "20 Januari 2023",
-                companyName: "CV. Digital Solusi",
-                companyAddress: "Jl. Gatot Subroto No. 789, Jakarta Pusat",
-                clientName: "Andi Wijaya",
-                orderNumber: "ORD-2023-002",
-                paymentMethod: "Transfer Bank - Mandiri",
-                kategori: "marketing",
-                statusPengerjaan: "completed",
-                items: [
-                    { no: 1, description: "SEO Optimization Package", harga: "Rp 3.000.000", qty: 1, total: "Rp 3.000.000" }
-                ],
-                subtotal: "Rp 3.000.000",
-                tax: "Rp 330.000",
-                total: "Rp 3.330.000"
-            },
-            3: {
-                no: "INV-2023-003",
-                date: "05 Februari 2023",
-                companyName: "UD. Kreatif Indonesia",
-                companyAddress: "Jl. Thamrin No. 123, Jakarta Pusat",
-                clientName: "Siti Nurhaliza",
-                orderNumber: "ORD-2023-003",
-                paymentMethod: "Transfer Bank - BNI",
-                kategori: "marketing",
-                statusPengerjaan: "progress",
-                items: [
-                    { no: 1, description: "Manajemen Sosial Media - 3 Bulan", harga: "Rp 4.000.000", qty: 1, total: "Rp 4.000.000" }
-                ],
-                subtotal: "Rp 4.000.000",
-                tax: "Rp 440.000",
-                total: "Rp 4.440.000"
-            },
-            4: {
-                no: "INV-2023-004",
-                date: "10 Februari 2023",
-                companyName: "PT. Inovasi Nusantara",
-                companyAddress: "Jl. Rasuna Said No. 567, Jakarta Selatan",
-                clientName: "Ahmad Fauzi",
-                orderNumber: "ORD-2023-004",
-                paymentMethod: "Transfer Bank - BCA",
-                kategori: "programming",
-                statusPengerjaan: "planning",
-                items: [
-                    { no: 1, description: "Pengembangan Aplikasi Mobile (iOS & Android)", harga: "Rp 8.000.000", qty: 1, total: "Rp 8.000.000" }
-                ],
-                subtotal: "Rp 8.000.000",
-                tax: "Rp 880.000",
-                total: "Rp 8.880.000"
-            },
-            5: {
-                no: "INV-2023-005",
-                date: "15 Februari 2023",
-                companyName: "CV. Kreatif",
-                companyAddress: "Jl. MH Thamrin No. 890, Jakarta Pusat",
-                clientName: "Dewi Lestari",
-                orderNumber: "ORD-2023-005",
-                paymentMethod: "Transfer Bank - Mandiri",
-                kategori: "design",
-                statusPengerjaan: "onhold",
-                items: [
-                    { no: 1, description: "Desain UI/UX - 5 Halaman", harga: "Rp 7.500.000", qty: 1, total: "Rp 7.500.000" }
-                ],
-                subtotal: "Rp 7.500.000",
-                tax: "Rp 825.000",
-                total: "Rp 8.325.000"
-            }
-        };
 
         // Layanan berdasarkan kategori
         const servicesByCategory = {
@@ -1540,6 +1698,339 @@
         let searchTerm = '';
         let deleteOrderId = null;
 
+        // ============================================================
+        // NOTIFICATION SYSTEM FOR PROJECT DEADLINES
+        // ============================================================
+
+        let notifications = [];
+        let notificationCheckInterval = null;
+
+        // Function to check project deadlines from table data
+        function checkProjectDeadlines() {
+            const projects = [];
+            const tableRows = document.querySelectorAll('#payment-table-body tr');
+            
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 10) {
+                    const projectName = cells[2]?.textContent.trim() || '-';
+                    const periodePengerjaan = cells[6]?.textContent.trim() || '-';
+                    const periodeKerjasama = cells[7]?.textContent.trim() || '-';
+                    const statusPengerjaan = cells[8]?.textContent.trim() || '';
+                    const statusKerjasama = cells[9]?.textContent.trim() || '';
+                    
+                    projects.push({
+                        name: projectName,
+                        periodePengerjaan: periodePengerjaan,
+                        periodeKerjasama: periodeKerjasama,
+                        statusPengerjaan: statusPengerjaan,
+                        statusKerjasama: statusKerjasama
+                    });
+                }
+            });
+            
+            const today = new Date();
+            const newNotifications = [];
+            
+            projects.forEach(project => {
+                // Check Periode Pengerjaan
+                if (project.periodePengerjaan && project.periodePengerjaan !== '-') {
+                    const parts = project.periodePengerjaan.split(' - ');
+                    if (parts.length === 2) {
+                        const startDate = new Date(parts[0]);
+                        const endDate = new Date(parts[1]);
+                        
+                        if (!isNaN(endDate.getTime())) {
+                            // Check if project is delayed (end date passed and not completed)
+                            if (endDate < today && project.statusPengerjaan !== 'Selesai' && project.statusPengerjaan !== 'completed') {
+                                const daysOverdue = Math.ceil((today - endDate) / (1000 * 60 * 60 * 24));
+                                const notificationKey = `${project.name}_pengerjaan_overdue`;
+                                
+                                if (!isNotificationExists(notificationKey)) {
+                                    newNotifications.push({
+                                        id: notificationKey,
+                                        title: '⚠️ Proyek Melebihi Deadline Pengerjaan!',
+                                        message: `Proyek "${project.name}" sudah melebihi deadline pengerjaan ${daysOverdue} hari yang lalu. Segera selesaikan!`,
+                                        time: new Date(),
+                                        type: 'danger',
+                                        icon: 'warning',
+                                        read: false,
+                                        projectName: project.name
+                                    });
+                                }
+                            }
+                            
+                            // Check if deadline is approaching (3 days left)
+                            const daysUntilDeadline = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                            if (daysUntilDeadline <= 3 && daysUntilDeadline >= 0 && project.statusPengerjaan !== 'Selesai' && project.statusPengerjaan !== 'completed') {
+                                const notificationKey = `${project.name}_pengerjaan_approaching`;
+                                
+                                if (!isNotificationExists(notificationKey)) {
+                                    newNotifications.push({
+                                        id: notificationKey,
+                                        title: '⏰ Deadline Pengerjaan Mendekat!',
+                                        message: `Proyek "${project.name}" akan berakhir dalam ${daysUntilDeadline} hari. Pastikan semua tugas selesai tepat waktu.`,
+                                        time: new Date(),
+                                        type: 'warning',
+                                        icon: 'schedule',
+                                        read: false,
+                                        projectName: project.name
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Check Periode Kerjasama
+                if (project.periodeKerjasama && project.periodeKerjasama !== '-') {
+                    const parts = project.periodeKerjasama.split(' - ');
+                    if (parts.length === 2) {
+                        const startDate = new Date(parts[0]);
+                        const endDate = new Date(parts[1]);
+                        
+                        if (!isNaN(endDate.getTime())) {
+                            // Check if contract expired
+                            if (endDate < today && project.statusKerjasama !== 'Selesai') {
+                                const daysExpired = Math.ceil((today - endDate) / (1000 * 60 * 60 * 24));
+                                const notificationKey = `${project.name}_kerjasama_expired`;
+                                
+                                if (!isNotificationExists(notificationKey)) {
+                                    newNotifications.push({
+                                        id: notificationKey,
+                                        title: '⚠️ Masa Kerjasama Telah Berakhir!',
+                                        message: `Masa kerjasama untuk proyek "${project.name}" sudah berakhir ${daysExpired} hari yang lalu. Segera perpanjang atau selesaikan kontrak.`,
+                                        time: new Date(),
+                                        type: 'danger',
+                                        icon: 'warning',
+                                        read: false,
+                                        projectName: project.name
+                                    });
+                                }
+                            }
+                            
+                            // Check if contract ending soon (7 days left)
+                            const daysUntilEnd = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                            if (daysUntilEnd <= 7 && daysUntilEnd >= 0 && project.statusKerjasama !== 'Selesai') {
+                                const notificationKey = `${project.name}_kerjasama_ending`;
+                                
+                                if (!isNotificationExists(notificationKey)) {
+                                    newNotifications.push({
+                                        id: notificationKey,
+                                        title: '📅 Masa Kerjasama Akan Berakhir',
+                                        message: `Masa kerjasama proyek "${project.name}" akan berakhir dalam ${daysUntilEnd} hari. Siapkan perpanjangan kontrak jika diperlukan.`,
+                                        time: new Date(),
+                                        type: 'info',
+                                        icon: 'event',
+                                        read: false,
+                                        projectName: project.name
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Add new notifications
+            if (newNotifications.length > 0) {
+                notifications = [...newNotifications, ...notifications];
+                saveNotificationsToStorage();
+                updateNotificationBell();
+                renderNotificationList();
+                
+                // Show popup for each new notification
+                newNotifications.forEach(notif => {
+                    showNotificationPopup(notif);
+                });
+            }
+        }
+
+        // Check if notification already exists
+        function isNotificationExists(id) {
+            return notifications.some(notif => notif.id === id);
+        }
+
+        // Save notifications to localStorage
+        function saveNotificationsToStorage() {
+            localStorage.setItem('project_notifications_finance', JSON.stringify(notifications));
+        }
+
+        // Load notifications from localStorage
+        function loadNotificationsFromStorage() {
+            const stored = localStorage.getItem('project_notifications_finance');
+            if (stored) {
+                notifications = JSON.parse(stored);
+                // Convert string dates back to Date objects
+                notifications.forEach(notif => {
+                    notif.time = new Date(notif.time);
+                });
+                updateNotificationBell();
+                renderNotificationList();
+            } else {
+                // Initial check after table loads
+                setTimeout(() => {
+                    checkProjectDeadlines();
+                }, 2000);
+            }
+        }
+
+        // Update notification bell badge
+        function updateNotificationBell() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notificationCount');
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Render notification list in panel
+        function renderNotificationList() {
+            const container = document.getElementById('notificationList');
+            if (!container) return;
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="notification-empty">
+                        <span class="material-icons-outlined">notifications_none</span>
+                        <p>Tidak ada notifikasi</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by time descending (newest first)
+            const sortedNotifications = [...notifications].sort((a, b) => b.time - a.time);
+            
+            container.innerHTML = sortedNotifications.map(notif => `
+                <div class="notification-item ${notif.read ? '' : 'unread'}" onclick="markNotificationRead('${notif.id}')">
+                    <div class="flex gap-3">
+                        <div class="notification-icon ${notif.type}">
+                            <span class="material-icons-outlined">${notif.icon === 'warning' ? 'warning' : (notif.icon === 'schedule' ? 'schedule' : (notif.icon === 'event' ? 'event' : 'info'))}</span>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-message">${notif.message}</div>
+                            <div class="notification-time">${formatNotificationTime(notif.time)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format notification time
+        function formatNotificationTime(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Baru saja';
+            if (diffMins < 60) return `${diffMins} menit yang lalu`;
+            if (diffHours < 24) return `${diffHours} jam yang lalu`;
+            return `${diffDays} hari yang lalu`;
+        }
+
+        // Show popup notification
+        function showNotificationPopup(notification) {
+            // Create popup element
+            const popup = document.createElement('div');
+            popup.className = `minimal-popup show ${notification.type}`;
+            popup.style.position = 'fixed';
+            popup.style.bottom = '20px';
+            popup.style.right = '20px';
+            popup.style.top = 'auto';
+            popup.style.left = 'auto';
+            popup.style.zIndex = '1001';
+            
+            let iconName = 'info';
+            if (notification.type === 'danger') iconName = 'warning';
+            if (notification.type === 'warning') iconName = 'schedule';
+            
+            popup.innerHTML = `
+                <div class="minimal-popup-icon">
+                    <span class="material-icons-outlined">${iconName}</span>
+                </div>
+                <div class="minimal-popup-content">
+                    <div class="minimal-popup-title">${notification.title}</div>
+                    <div class="minimal-popup-message">${notification.message}</div>
+                </div>
+                <button class="minimal-popup-close" onclick="this.closest('.minimal-popup').remove()">
+                    <span class="material-icons-outlined text-sm">close</span>
+                </button>
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (popup && popup.parentNode) {
+                    popup.classList.remove('show');
+                    setTimeout(() => popup.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Mark notification as read
+        function markNotificationRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (notification) {
+                notification.read = true;
+                saveNotificationsToStorage();
+                updateNotificationBell();
+                renderNotificationList();
+            }
+        }
+
+        // Mark all notifications as read
+        function markAllNotificationsRead() {
+            notifications.forEach(notif => {
+                notif.read = true;
+            });
+            saveNotificationsToStorage();
+            updateNotificationBell();
+            renderNotificationList();
+        }
+
+        // Toggle notification panel
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            const overlay = document.getElementById('notificationOverlay');
+            
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                overlay.classList.remove('show');
+            } else {
+                panel.classList.add('show');
+                overlay.classList.add('show');
+                renderNotificationList();
+            }
+        }
+
+        // Close notification panel
+        function closeNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            const overlay = document.getElementById('notificationOverlay');
+            if (panel) panel.classList.remove('show');
+            if (overlay) overlay.classList.remove('show');
+        }
+
+        // Start periodic checking (every 5 minutes)
+        function startNotificationChecker() {
+            // Check every 5 minutes
+            if (notificationCheckInterval) {
+                clearInterval(notificationCheckInterval);
+            }
+            notificationCheckInterval = setInterval(() => {
+                checkProjectDeadlines();
+            }, 5 * 60 * 1000);
+        }
+
         // Inisialisasi filter
         function initializeFilter() {
             const filterBtn = document.getElementById('filterBtn');
@@ -1548,79 +2039,92 @@
             const resetFilterBtn = document.getElementById('resetFilter');
             const filterAll = document.getElementById('filterAll');
             
-            // Toggle filter dropdown
-            filterBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                filterDropdown.classList.toggle('show');
-            });
+            if (filterBtn) {
+                filterBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    filterDropdown.classList.toggle('show');
+                });
+            }
             
             // Close dropdown when clicking outside
             document.addEventListener('click', function() {
-                filterDropdown.classList.remove('show');
+                if (filterDropdown) filterDropdown.classList.remove('show');
             });
             
             // Prevent dropdown from closing when clicking inside
-            filterDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
+            if (filterDropdown) {
+                filterDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
             
             // Handle "All" checkbox
-            filterAll.addEventListener('change', function() {
-                if (this.checked) {
-                    // Uncheck all other checkboxes
-                    document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
-                        cb.checked = false;
-                    });
-                }
-            });
+            if (filterAll) {
+                filterAll.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
+                            cb.checked = false;
+                        });
+                    }
+                });
+            }
             
             // Handle other checkboxes
             document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
                 cb.addEventListener('change', function() {
-                    if (this.checked) {
-                        // Uncheck "All" checkbox
+                    if (this.checked && filterAll) {
                         filterAll.checked = false;
                     }
                 });
             });
             
             // Apply filter
-            applyFilterBtn.addEventListener('click', function() {
-                const filterAll = document.getElementById('filterAll');
-                const filterPaid = document.getElementById('filterPaid');
-                const filterPartial = document.getElementById('filterPartial');
-                const filterPending = document.getElementById('filterPending');
-                const filterOverdue = document.getElementById('filterOverdue');
-                
-                activeFilters = [];
-                if (filterAll.checked) {
-                    activeFilters.push('all');
-                } else {
-                    if (filterPaid.checked) activeFilters.push('paid');
-                    if (filterPartial.checked) activeFilters.push('partial');
-                    if (filterPending.checked) activeFilters.push('pending');
-                    if (filterOverdue.checked) activeFilters.push('overdue');
-                }
-                
-                applyFilters();
-                filterDropdown.classList.remove('show');
-                const visibleCount = getFilteredRows().length;
-                showMinimalPopup('Filter Diterapkan', `Menampilkan ${visibleCount} Orderan`, 'success');
-            });
+            if (applyFilterBtn) {
+                applyFilterBtn.addEventListener('click', function() {
+                    const filterAll = document.getElementById('filterAll');
+                    const filterPaid = document.getElementById('filterPaid');
+                    const filterPartial = document.getElementById('filterPartial');
+                    const filterPending = document.getElementById('filterPending');
+                    const filterOverdue = document.getElementById('filterOverdue');
+                    
+                    activeFilters = [];
+                    if (filterAll && filterAll.checked) {
+                        activeFilters.push('all');
+                    } else {
+                        if (filterPaid && filterPaid.checked) activeFilters.push('paid');
+                        if (filterPartial && filterPartial.checked) activeFilters.push('partial');
+                        if (filterPending && filterPending.checked) activeFilters.push('pending');
+                        if (filterOverdue && filterOverdue.checked) activeFilters.push('overdue');
+                    }
+                    
+                    applyFilters();
+                    if (filterDropdown) filterDropdown.classList.remove('show');
+                    const visibleCount = getFilteredRows().length;
+                    showMinimalPopup('Filter Diterapkan', `Menampilkan ${visibleCount} Orderan`, 'success');
+                });
+            }
             
             // Reset filter
-            resetFilterBtn.addEventListener('click', function() {
-                document.getElementById('filterAll').checked = true;
-                document.getElementById('filterPaid').checked = false;
-                document.getElementById('filterPartial').checked = false;
-                document.getElementById('filterPending').checked = false;
-                document.getElementById('filterOverdue').checked = false;
-                activeFilters = ['all'];
-                applyFilters();
-                filterDropdown.classList.remove('show');
-                const visibleCount = getFilteredRows().length;
-                showMinimalPopup('Filter Direset', 'Menampilkan semua Orderan', 'success');
-            });
+            if (resetFilterBtn) {
+                resetFilterBtn.addEventListener('click', function() {
+                    const filterAll = document.getElementById('filterAll');
+                    const filterPaid = document.getElementById('filterPaid');
+                    const filterPartial = document.getElementById('filterPartial');
+                    const filterPending = document.getElementById('filterPending');
+                    const filterOverdue = document.getElementById('filterOverdue');
+                    
+                    if (filterAll) filterAll.checked = true;
+                    if (filterPaid) filterPaid.checked = false;
+                    if (filterPartial) filterPartial.checked = false;
+                    if (filterPending) filterPending.checked = false;
+                    if (filterOverdue) filterOverdue.checked = false;
+                    activeFilters = ['all'];
+                    applyFilters();
+                    if (filterDropdown) filterDropdown.classList.remove('show');
+                    const visibleCount = getFilteredRows().length;
+                    showMinimalPopup('Filter Direset', 'Menampilkan semua Orderan', 'success');
+                });
+            }
         }
 
         function getFilteredRows() {
@@ -1628,12 +2132,9 @@
         }
 
         function applyFilters() {
-            // Reset to first page
             paymentCurrentPage = 1;
             
-            // Apply filters
             paymentFilteredData = paymentData.filter(item => {
-                // Check if status matches filter
                 let statusMatches = false;
                 if (activeFilters.includes('all')) {
                     statusMatches = true;
@@ -1641,7 +2142,6 @@
                     statusMatches = activeFilters.some(filter => item.status.includes(filter.toLowerCase()));
                 }
                 
-                // Check if search term matches
                 let searchMatches = true;
                 if (searchTerm) {
                     const searchLower = searchTerm.toLowerCase();
@@ -1654,28 +2154,26 @@
                 return statusMatches && searchMatches;
             });
             
-            // Update pagination and visible items
             renderPaymentTable();
             renderPaymentPagination();
         }
 
-        // Update service options based on selected category
         function updateServiceOptions() {
             const categorySelect = document.getElementById('payment-category');
             const serviceSelect = document.getElementById('payment-service');
-            const selectedCategory = categorySelect.value;
+            const selectedCategory = categorySelect ? categorySelect.value : '';
             
-            // Clear current options
-            serviceSelect.innerHTML = '<option value="">Pilih Layanan</option>';
-            
-            // Add options based on selected category
-            if (selectedCategory && servicesByCategory[selectedCategory]) {
-                servicesByCategory[selectedCategory].forEach(service => {
-                    const option = document.createElement('option');
-                    option.value = service;
-                    option.textContent = service;
-                    serviceSelect.appendChild(option);
-                });
+            if (serviceSelect) {
+                serviceSelect.innerHTML = '<option value="">Pilih Layanan</option>';
+                
+                if (selectedCategory && servicesByCategory[selectedCategory]) {
+                    servicesByCategory[selectedCategory].forEach(service => {
+                        const option = document.createElement('option');
+                        option.value = service;
+                        option.textContent = service;
+                        serviceSelect.appendChild(option);
+                    });
+                }
             }
         }
 
@@ -1692,18 +2190,22 @@
 
         // Modal functions
         function openAddModal() {
-            document.getElementById('addModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('addModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
         }
 
         function closeAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            const modal = document.getElementById('addModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
         }
 
-        // Edit modal functions
         function openEditModal(orderId) {
-            // Fetch order data via AJAX
             fetch(`{{ route('orders.show', '') }}/${orderId}`, {
                 headers: {
                     'Accept': 'application/json',
@@ -1714,18 +2216,25 @@
                 return response.json();
             })
             .then(order => {
-                // Set form action
-                document.getElementById('editForm').action = `{{ route('orders.update', '') }}/${orderId}`;
+                const editForm = document.getElementById('editForm');
+                if (editForm) {
+                    editForm.action = `{{ route('orders.update', '') }}/${orderId}`;
+                }
                 
-                // Fill form with order data
-                document.getElementById('editOrderId').value = order.id;
+                const editOrderId = document.getElementById('editOrderId');
+                if (editOrderId) editOrderId.value = order.id;
+                
                 const totalValue = parseRupiah(order.total || 0);
-                document.getElementById('edit-total').value = totalValue;
-                document.getElementById('edit-total-display').value = formatRupiah(totalValue);
+                const editTotal = document.getElementById('edit-total');
+                const editTotalDisplay = document.getElementById('edit-total-display');
+                if (editTotal) editTotal.value = totalValue;
+                if (editTotalDisplay) editTotalDisplay.value = formatRupiah(totalValue);
                 
-                // Show modal
-                document.getElementById('editModal').classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+                const editModal = document.getElementById('editModal');
+                if (editModal) {
+                    editModal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -1734,29 +2243,31 @@
         }
 
         function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            const editModal = document.getElementById('editModal');
+            if (editModal) {
+                editModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
         }
 
-        // Delete modal functions
         function openDeleteModal(orderId) {
             deleteOrderId = orderId;
-            document.getElementById('deleteModal').classList.add('show');
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) deleteModal.classList.add('show');
         }
 
         function closeDeleteModal() {
             deleteOrderId = null;
-            document.getElementById('deleteModal').classList.remove('show');
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) deleteModal.classList.remove('show');
         }
 
         function confirmDelete() {
             if (!deleteOrderId) return;
             
-            // Show loading state
             const confirmBtn = document.querySelector('[onclick="confirmDelete()"]');
             if (confirmBtn) confirmBtn.disabled = true;
             
-            // Send DELETE request to server
             fetch(`{{ route('orders.destroy', '') }}/${deleteOrderId}`, {
                 method: 'DELETE',
                 headers: {
@@ -1771,8 +2282,6 @@
             })
             .then(data => {
                 showMinimalPopup('Berhasil', 'Data orderan berhasil dihapus', 'success');
-                
-                // Reload the page to refresh the data
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -1787,131 +2296,17 @@
             });
         }
 
-        // Invoice detail modal functions
         function openInvoiceDetailModal(paymentNo) {
-            const detail = invoiceDetailData[paymentNo];
-            if (!detail) {
-                // Generate default data if not available
-                const payment = paymentData.find(p => p.no === paymentNo);
-                if (payment) {
-                    generateDefaultInvoiceDetail(paymentNo, payment);
-                } else {
-                    showMinimalPopup('Error', 'Data invoice tidak tersedia', 'error');
-                    return;
-                }
-            }
-            
-            const invoiceDetail = invoiceDetailData[paymentNo];
-            
-            // Fill modal with data
-            document.getElementById('invoice-no').textContent = invoiceDetail.no;
-            document.getElementById('invoice-date').textContent = invoiceDetail.date;
-            document.getElementById('company-name').textContent = invoiceDetail.companyName;
-            document.getElementById('company-address').textContent = invoiceDetail.companyAddress;
-            document.getElementById('client-name').textContent = invoiceDetail.clientName;
-            document.getElementById('order-number').textContent = invoiceDetail.orderNumber;
-            document.getElementById('payment-method').textContent = invoiceDetail.paymentMethod;
-            document.getElementById('subtotal').textContent = invoiceDetail.subtotal;
-            document.getElementById('tax').textContent = invoiceDetail.tax;
-            document.getElementById('total').textContent = invoiceDetail.total;
-            
-            // Determine category badge
-            let categoryBadge = '';
-            switch(invoiceDetail.kategori) {
-                case 'design':
-                    categoryBadge = '<span class="category-badge category-design">Desain</span>';
-                    break;
-                case 'programming':
-                    categoryBadge = '<span class="category-badge category-programming">Programming</span>';
-                    break;
-                case 'marketing':
-                    categoryBadge = '<span class="category-badge category-marketing">Digital Marketing</span>';
-                    break;
-            }
-            
-            // Determine work status badge
-            let workStatusBadge = '';
-            switch(invoiceDetail.statusPengerjaan) {
-                case 'planning':
-                    workStatusBadge = '<span class="work-status-badge work-status-planning">Perencanaan</span>';
-                    break;
-                case 'progress':
-                    workStatusBadge = '<span class="work-status-badge work-status-progress">Sedang Dikerjakan</span>';
-                    break;
-                case 'review':
-                    workStatusBadge = '<span class="work-status-badge work-status-review">Review</span>';
-                    break;
-                case 'completed':
-                    workStatusBadge = '<span class="work-status-badge work-status-completed">Selesai</span>';
-                    break;
-                case 'onhold':
-                    workStatusBadge = '<span class="work-status-badge work-status-onhold">Ditunda</span>';
-                    break;
-            }
-            
-            // Fill items table
-            const itemsTableBody = document.getElementById('invoice-items');
-            itemsTableBody.innerHTML = '';
-            
-            invoiceDetail.items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light">${item.no}</td>
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light">${item.description}</td>
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light text-center">${categoryBadge}</td>
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light text-center">${item.harga}</td>
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light text-center">${item.qty}</td>
-                    <td class="border border-border-light px-2 sm:px-4 py-2 text-text-light text-right">${item.total}</td>
-                `;
-                itemsTableBody.appendChild(row);
-            });
-            
-            // Add work status to the invoice
-            const statusInfo = document.createElement('div');
-            statusInfo.className = 'bg-gray-50 rounded-lg p-3 sm:p-4 mt-4';
-            statusInfo.innerHTML = `
-                <h5 class="font-semibold text-text-light mb-2 text-sm sm:text-base">Status Pengerjaan</h5>
-                <p>${workStatusBadge}</p>
-            `;
-            
-            // Insert after the items table
-            const itemsTable = document.querySelector('.scrollable-table-container').parentElement;
-            const existingStatusInfo = document.getElementById('work-status-info');
-            if (existingStatusInfo) {
-                existingStatusInfo.remove();
-            }
-            statusInfo.id = 'work-status-info';
-            itemsTable.insertAdjacentElement('afterend', statusInfo);
-            
-            // Show modal
-            document.getElementById('invoiceDetailModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // Implement if needed
+            showMinimalPopup('Info', 'Fitur detail invoice sedang dikembangkan', 'warning');
         }
 
         function closeInvoiceDetailModal() {
-            document.getElementById('invoiceDetailModal').classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        function generateDefaultInvoiceDetail(paymentNo, payment) {
-            // Generate default invoice detail based on payment data
-            invoiceDetailData[paymentNo] = {
-                no: `INV-2023-${String(paymentNo).padStart(3, '0')}`,
-                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-                companyName: payment.klien,
-                companyAddress: "Jl. Contoh No. 123, Jakarta",
-                clientName: "Nama Klien",
-                orderNumber: `ORD-2023-${String(paymentNo).padStart(3, '0')}`,
-                paymentMethod: "Transfer Bank",
-                kategori: payment.kategori,
-                statusPengerjaan: payment.statusPengerjaan,
-                items: [
-                    { no: 1, description: payment.layanan, harga: payment.harga, qty: 1, total: payment.harga }
-                ],
-                subtotal: payment.harga,
-                tax: "Rp " + (parseInt(payment.harga.replace(/\D/g, '')) * 0.11).toLocaleString('id-ID'),
-                total: "Rp " + (parseInt(payment.harga.replace(/\D/g, '')) * 1.11).toLocaleString('id-ID')
-            };
+            const modal = document.getElementById('invoiceDetailModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
         }
 
         function printInvoice() {
@@ -1919,47 +2314,38 @@
         }
 
         function downloadInvoice() {
-            // Placeholder for download functionality
             showMinimalPopup('Info', 'Fitur download akan segera tersedia', 'warning');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const addModal = document.getElementById('addModal');
             const editModal = document.getElementById('editModal');
             const deleteModal = document.getElementById('deleteModal');
             const invoiceDetailModal = document.getElementById('invoiceDetailModal');
             
-            if (event.target == addModal) {
-                closeAddModal();
-            }
-            if (event.target == editModal) {
-                closeEditModal();
-            }
-            if (event.target == deleteModal) {
-                closeDeleteModal();
-            }
-            if (event.target == invoiceDetailModal) {
-                closeInvoiceDetailModal();
-            }
+            if (event.target == addModal) closeAddModal();
+            if (event.target == editModal) closeEditModal();
+            if (event.target == deleteModal) closeDeleteModal();
+            if (event.target == invoiceDetailModal) closeInvoiceDetailModal();
         }
         
-        // Handle escape key to close modals
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeAddModal();
                 closeEditModal();
                 closeDeleteModal();
                 closeInvoiceDetailModal();
+                closeNotificationPanel();
             }
         });
 
-        // Payment table functions
         function renderPaymentTable() {
             const tableBody = document.getElementById('payment-table-body');
             const mobileCards = document.getElementById('mobile-cards');
+            if (!tableBody) return;
+            
             tableBody.innerHTML = '';
-            mobileCards.innerHTML = '';
+            if (mobileCards) mobileCards.innerHTML = '';
             
             const startIndex = (paymentCurrentPage - 1) * paymentItemsPerPage;
             const endIndex = Math.min(startIndex + paymentItemsPerPage, paymentFilteredData.length);
@@ -1967,7 +2353,6 @@
             for (let i = startIndex; i < endIndex; i++) {
                 const item = paymentFilteredData[i];
                 
-                // Create table row for desktop
                 const row = document.createElement('tr');
                 row.className = 'payment-row';
                 row.setAttribute('data-id', item.no);
@@ -1982,50 +2367,26 @@
                 
                 let statusBadge = '';
                 switch(item.status) {
-                    case 'paid':
-                        statusBadge = '<span class="status-badge status-paid">Lunas</span>';
-                        break;
-                    case 'partial':
-                        statusBadge = '<span class="status-badge status-partial">Sebagian</span>';
-                        break;
-                    case 'pending':
-                        statusBadge = '<span class="status-badge status-pending">Pending</span>';
-                        break;
-                    case 'overdue':
-                        statusBadge = '<span class="status-badge status-overdue">Terlambat</span>';
-                        break;
+                    case 'paid': statusBadge = '<span class="status-badge status-paid">Lunas</span>'; break;
+                    case 'partial': statusBadge = '<span class="status-badge status-partial">Sebagian</span>'; break;
+                    case 'pending': statusBadge = '<span class="status-badge status-pending">Pending</span>'; break;
+                    case 'overdue': statusBadge = '<span class="status-badge status-overdue">Terlambat</span>'; break;
                 }
                 
                 let workStatusBadge = '';
                 switch(item.statusPengerjaan) {
-                    case 'planning':
-                        workStatusBadge = '<span class="work-status-badge work-status-planning">Perencanaan</span>';
-                        break;
-                    case 'progress':
-                        workStatusBadge = '<span class="work-status-badge work-status-progress">Sedang Dikerjakan</span>';
-                        break;
-                    case 'review':
-                        workStatusBadge = '<span class="work-status-badge work-status-review">Review</span>';
-                        break;
-                    case 'completed':
-                        workStatusBadge = '<span class="work-status-badge work-status-completed">Selesai</span>';
-                        break;
-                    case 'onhold':
-                        workStatusBadge = '<span class="work-status-badge work-status-onhold">Ditunda</span>';
-                        break;
+                    case 'planning': workStatusBadge = '<span class="work-status-badge work-status-planning">Perencanaan</span>'; break;
+                    case 'progress': workStatusBadge = '<span class="work-status-badge work-status-progress">Sedang Dikerjakan</span>'; break;
+                    case 'review': workStatusBadge = '<span class="work-status-badge work-status-review">Review</span>'; break;
+                    case 'completed': workStatusBadge = '<span class="work-status-badge work-status-completed">Selesai</span>'; break;
+                    case 'onhold': workStatusBadge = '<span class="work-status-badge work-status-onhold">Ditunda</span>'; break;
                 }
                 
                 let categoryBadge = '';
                 switch(item.kategori) {
-                    case 'design':
-                        categoryBadge = '<span class="category-badge category-design">Desain</span>';
-                        break;
-                    case 'programming':
-                        categoryBadge = '<span class="category-badge category-programming">Programming</span>';
-                        break;
-                    case 'marketing':
-                        categoryBadge = '<span class="category-badge category-marketing">Digital Marketing</span>';
-                        break;
+                    case 'design': categoryBadge = '<span class="category-badge category-design">Desain</span>'; break;
+                    case 'programming': categoryBadge = '<span class="category-badge category-programming">Programming</span>'; break;
+                    case 'marketing': categoryBadge = '<span class="category-badge category-marketing">Digital Marketing</span>'; break;
                 }
 
                 const invoiceLabel = item.invoiceNo || `INV-${String(item.no).padStart(3, '0')}`;
@@ -2062,185 +2423,140 @@
                 
                 tableBody.appendChild(row);
                 
-                // Create card for mobile
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg border border-border-light p-4 shadow-sm payment-card';
-                card.setAttribute('data-id', item.no);
-                card.setAttribute('data-layanan', item.layanan);
-                card.setAttribute('data-kategori', item.kategori);
-                card.setAttribute('data-harga', item.harga);
-                card.setAttribute('data-klien', item.klien);
-                card.setAttribute('data-awal', item.awal);
-                card.setAttribute('data-lunas', item.lunas);
-                card.setAttribute('data-status', item.status);
-                card.setAttribute('data-statusPengerjaan', item.statusPengerjaan);
-                
-                // Determine icon based on category
-                let icon = 'miscellaneous_services';
-                if (item.kategori === 'programming') icon = 'code';
-                else if (item.kategori === 'design') icon = 'palette';
-                else if (item.kategori === 'marketing') icon = 'trending_up';
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <span class="material-icons-outlined text-primary">${icon}</span>
+                if (mobileCards) {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg border border-border-light p-4 shadow-sm payment-card';
+                    
+                    let icon = 'miscellaneous_services';
+                    if (item.kategori === 'programming') icon = 'code';
+                    else if (item.kategori === 'design') icon = 'palette';
+                    else if (item.kategori === 'marketing') icon = 'trending_up';
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <span class="material-icons-outlined text-primary">${icon}</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-base">${item.layanan}</h4>
+                                    <p class="text-sm text-text-muted-light">${item.harga}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-base">${item.layanan}</h4>
-                                <p class="text-sm text-text-muted-light">${item.harga}</p>
+                            <div class="flex gap-2">
+                                <button onclick="openEditModal(${item.no})" class="p-1 rounded-full hover:bg-warning/20 text-warning" title="Edit Order">
+                                    <span class="material-icons-outlined">edit</span>
+                                </button>
+                                <button onclick="openDeleteModal(${item.no})" class="p-1 rounded-full hover:bg-danger/20 text-danger" title="Hapus Order">
+                                    <span class="material-icons-outlined">delete</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="openEditModal(${item.no})" class="p-1 rounded-full hover:bg-warning/20 text-warning" title="Edit Order">
-                                <span class="material-icons-outlined">edit</span>
-                            </button>
-                            <button onclick="openDeleteModal(${item.no})" class="p-1 rounded-full hover:bg-danger/20 text-danger" title="Hapus Order">
-                                <span class="material-icons-outlined">delete</span>
-                            </button>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><p class="text-text-muted-light">No</p><p class="font-medium">${item.no}</p></div>
+                            <div><p class="text-text-muted-light">Invoice</p><p class="font-medium">${invoiceLabel}</p></div>
+                            <div><p class="text-text-muted-light">Nama Project</p><p class="font-medium">${item.layanan}</p></div>
+                            <div><p class="text-text-muted-light">Harga</p><p class="font-medium">${item.harga}</p></div>
+                            <div><p class="text-text-muted-light">Status Pengerjaan</p><p>${workStatusBadge}</p></div>
+                            <div><p class="text-text-muted-light">Status Kerjasama</p><p><span class="status-badge ${kerjasamaBadge}">${kerjasamaLabel}</span></p></div>
+                            <div><p class="text-text-muted-light">Progres</p><p class="font-medium">${progresValue}%</p></div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                            <p class="text-text-muted-light">No</p>
-                            <p class="font-medium">${item.no}</p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Invoice</p>
-                            <p class="font-medium">${invoiceLabel}</p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Nama Project</p>
-                            <p class="font-medium">${item.layanan}</p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Harga</p>
-                            <p class="font-medium">${item.harga}</p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Status Pengerjaan</p>
-                            <p>${workStatusBadge}</p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Status Kerjasama</p>
-                            <p><span class="status-badge ${kerjasamaBadge}">${kerjasamaLabel}</span></p>
-                        </div>
-                        <div>
-                            <p class="text-text-muted-light">Progres</p>
-                            <p class="font-medium">${progresValue}%</p>
-                        </div>
-                    </div>
-                `;
-                
-                mobileCards.appendChild(card);
+                    `;
+                    
+                    mobileCards.appendChild(card);
+                }
             }
             
-            // Update info
-            document.getElementById('totalCount').textContent = paymentFilteredData.length;
+            const totalCount = document.getElementById('totalCount');
+            if (totalCount) totalCount.textContent = paymentFilteredData.length;
         }
 
         function renderPaymentPagination() {
             const pagination = document.getElementById('payment-pagination');
-            const pageNumbers = document.getElementById('pageNumbers');
-            const prevButton = document.getElementById('prevPage');
-            const nextButton = document.getElementById('nextPage');
-            
-            // Clear existing page numbers
-            pageNumbers.innerHTML = '';
+            if (!pagination) return;
             
             const totalPages = Math.ceil(paymentFilteredData.length / paymentItemsPerPage);
             
-            // Generate page numbers
+            let paginationHtml = '<div class="flex justify-center items-center gap-2 mt-6">';
+            paginationHtml += `<button class="desktop-nav-btn" onclick="goToPage(${paymentCurrentPage - 1})" ${paymentCurrentPage === 1 ? 'disabled' : ''}>&laquo;</button>`;
+            
             for (let i = 1; i <= totalPages; i++) {
-                const pageNumber = document.createElement('button');
-                pageNumber.textContent = i;
-                pageNumber.className = `desktop-page-btn ${i === paymentCurrentPage ? 'active' : ''}`;
-                pageNumber.addEventListener('click', () => goToPage(i));
-                pageNumbers.appendChild(pageNumber);
+                paginationHtml += `<button class="desktop-page-btn ${i === paymentCurrentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
             }
             
-            // Update navigation buttons
-            prevButton.disabled = paymentCurrentPage === 1;
-            nextButton.disabled = paymentCurrentPage === totalPages || totalPages === 0;
+            paginationHtml += `<button class="desktop-nav-btn" onclick="goToPage(${paymentCurrentPage + 1})" ${paymentCurrentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>&raquo;</button>`;
+            paginationHtml += '</div>';
             
-            // Add event listeners for navigation buttons
-            prevButton.onclick = () => {
-                if (paymentCurrentPage > 1) goToPage(paymentCurrentPage - 1);
-            };
-            
-            nextButton.onclick = () => {
-                if (paymentCurrentPage < totalPages) goToPage(paymentCurrentPage + 1);
-            };
+            pagination.innerHTML = paginationHtml;
         }
 
         function goToPage(page) {
+            const totalPages = Math.ceil(paymentFilteredData.length / paymentItemsPerPage);
+            if (page < 1 || page > totalPages) return;
             paymentCurrentPage = page;
             renderPaymentTable();
             renderPaymentPagination();
             
-            // Reset scroll position when changing pages
             const scrollableTable = document.getElementById('scrollableTable');
-            if (scrollableTable) {
-                scrollableTable.scrollLeft = 0;
-            }
+            if (scrollableTable) scrollableTable.scrollLeft = 0;
         }
 
         function filterPayments() {
-            searchTerm = document.getElementById('payment-search').value.trim();
+            const searchInput = document.getElementById('payment-search');
+            searchTerm = searchInput ? searchInput.value.trim() : '';
             applyFilters();
         }
 
-        // Minimalist Popup
         function showMinimalPopup(title, message, type = 'success') {
             const popup = document.getElementById('minimalPopup');
+            if (!popup) return;
+            
             const popupTitle = popup.querySelector('.minimal-popup-title');
             const popupMessage = popup.querySelector('.minimal-popup-message');
             const popupIcon = popup.querySelector('.minimal-popup-icon span');
             
-            // Set content
-            popupTitle.textContent = title;
-            popupMessage.textContent = message;
+            if (popupTitle) popupTitle.textContent = title;
+            if (popupMessage) popupMessage.textContent = message;
             
-            // Set type
             popup.className = 'minimal-popup show ' + type;
             
-            // Set icon
-            if (type === 'success') {
-                popupIcon.textContent = 'check';
-            } else if (type === 'error') {
-                popupIcon.textContent = 'error';
-            } else if (type === 'warning') {
-                popupIcon.textContent = 'warning';
+            if (popupIcon) {
+                if (type === 'success') popupIcon.textContent = 'check';
+                else if (type === 'error') popupIcon.textContent = 'error';
+                else if (type === 'warning') popupIcon.textContent = 'warning';
             }
             
-            // Auto hide after 3 seconds
             setTimeout(() => {
                 popup.classList.remove('show');
             }, 3000);
         }
         
-        // Close popup when clicking the close button
-        document.querySelector('.minimal-popup-close').addEventListener('click', function() {
-            document.getElementById('minimalPopup').classList.remove('show');
+        document.querySelector('.minimal-popup-close')?.addEventListener('click', function() {
+            const popup = document.getElementById('minimalPopup');
+            if (popup) popup.classList.remove('show');
         });
 
-        // Initialize minimal interactions on page load (server-side rendering used)
         document.addEventListener('DOMContentLoaded', function() {
             const search = document.getElementById('payment-search');
             if (search) {
                 search.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        document.getElementById('searchForm')?.submit();
+                        const searchForm = document.getElementById('searchForm');
+                        if (searchForm) searchForm.submit();
                     }
                 });
             }
             
-            // Initialize filter
             initializeFilter();
+            loadNotificationsFromStorage();
+            startNotificationChecker();
             
-            // Handle edit form submission
+            // Trigger initial check after table loads
+            setTimeout(() => {
+                checkProjectDeadlines();
+            }, 3000);
+            
             const editForm = document.getElementById('editForm');
             if (editForm) {
                 const editTotalDisplay = document.getElementById('edit-total-display');
@@ -2262,14 +2578,12 @@
                 editForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    const orderId = document.getElementById('editOrderId').value;
+                    const orderId = document.getElementById('editOrderId')?.value;
                     const formattedInput = document.getElementById('edit-total-display');
                     const hiddenInput = document.getElementById('edit-total');
                     const numericTotal = parseRupiah(formattedInput ? formattedInput.value : 0);
 
-                    if (hiddenInput) {
-                        hiddenInput.value = numericTotal;
-                    }
+                    if (hiddenInput) hiddenInput.value = numericTotal;
 
                     if (numericTotal < 0) {
                         showMinimalPopup('Error', 'Harga tidak valid', 'error');
@@ -2293,7 +2607,6 @@
                     })
                     .then(data => {
                         showMinimalPopup('Berhasil', 'Data orderan berhasil diupdate', 'success');
-                        
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
@@ -2305,7 +2618,6 @@
                 });
             }
             
-            // Handle add form submission
             const addForm = document.querySelector('form[action="{{ route("orders.store") }}"]');
             if (addForm) {
                 addForm.addEventListener('submit', function(e) {
@@ -2328,7 +2640,6 @@
                     })
                     .then(data => {
                         showMinimalPopup('Berhasil', 'Data orderan berhasil ditambahkan', 'success');
-                        
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);

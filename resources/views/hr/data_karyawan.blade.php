@@ -57,7 +57,6 @@
             vertical-align: middle;
         }
 
-        /* Card hover effects */
         .stat-card {
             transition: all 0.3s ease;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -68,7 +67,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        /* Table styles */
         .order-table {
             transition: all 0.2s ease;
         }
@@ -77,7 +75,6 @@
             background-color: rgba(59, 130, 246, 0.05);
         }
 
-        /* Button styles */
         .btn-primary {
             background-color: #3b82f6;
             color: white;
@@ -98,7 +95,6 @@
             background-color: #e2e8f0;
         }
 
-        /* Modal styles */
         .modal {
             transition: opacity 0.25s ease;
         }
@@ -108,7 +104,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Status Badge Styles */
         .status-badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -132,12 +127,10 @@
             color: #92400e;
         }
 
-        /* Custom styles untuk transisi */
         .sidebar-transition {
             transition: transform 0.3s ease-in-out;
         }
 
-        /* Animasi hamburger */
         .hamburger-line {
             transition: all 0.3s ease-in-out;
         }
@@ -154,13 +147,11 @@
             transform: rotate(-45deg) translate(7px, -6px);
         }
 
-        /* Style untuk efek hover yang lebih menonjol */
         .nav-item {
             position: relative;
             overflow: hidden;
         }
 
-        /* Gaya untuk indikator aktif/hover */
         .nav-item::before {
             content: '';
             position: absolute;
@@ -186,7 +177,6 @@
             transform: translateX(0);
         }
 
-        /* Memastikan sidebar tetap di posisinya saat scroll */
         .sidebar-fixed {
             position: fixed;
             height: 100vh;
@@ -194,7 +184,6 @@
             z-index: 40;
         }
 
-        /* Menyesuaikan konten utama agar tidak tertutup sidebar */
         .main-content {
             margin-left: 0;
             transition: margin-left 0.3s ease-in-out;
@@ -206,7 +195,6 @@
             }
         }
 
-        /* Scrollbar kustom untuk sidebar */
         .sidebar-fixed::-webkit-scrollbar {
             width: 6px;
         }
@@ -224,7 +212,6 @@
             background: #555;
         }
 
-        /* Table mobile adjustments */
         @media (max-width: 639px) {
             .desktop-table {
                 display: none;
@@ -236,6 +223,10 @@
 
             .desktop-pagination {
                 display: none !important;
+            }
+            
+            .mobile-pagination {
+                display: block !important;
             }
         }
 
@@ -251,9 +242,12 @@
             .mobile-pagination {
                 display: none !important;
             }
+            
+            .desktop-pagination {
+                display: flex !important;
+            }
         }
 
-        /* Form input styles */
         .form-input {
             border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
@@ -272,7 +266,6 @@
             opacity: 0.7;
         }
 
-        /* Pagination styles */
         .page-btn {
             transition: all 0.2s ease;
         }
@@ -286,57 +279,59 @@
             cursor: not-allowed;
         }
 
-        /* Desktop pagination styles */
         .desktop-pagination {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             margin-top: 24px;
+            margin-bottom: 8px;
         }
 
         .desktop-page-btn {
-            min-width: 32px;
-            height: 32px;
+            min-width: 36px;
+            height: 36px;
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 50%;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
             cursor: pointer;
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
         }
 
         .desktop-page-btn.active {
             background-color: #3b82f6;
             color: white;
-        }
-
-        .desktop-page-btn:not(.active) {
-            background-color: #f1f5f9;
-            color: #64748b;
+            border-color: #3b82f6;
         }
 
         .desktop-page-btn:not(.active):hover {
             background-color: #e2e8f0;
+            transform: translateY(-2px);
         }
 
         .desktop-nav-btn {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             background-color: #f1f5f9;
             color: #64748b;
             transition: all 0.2s ease;
             cursor: pointer;
+            border: 1px solid #e2e8f0;
         }
 
         .desktop-nav-btn:hover:not(:disabled) {
             background-color: #e2e8f0;
+            transform: translateY(-2px);
         }
 
         .desktop-nav-btn:disabled {
@@ -344,7 +339,83 @@
             cursor: not-allowed;
         }
 
-        /* Panel Styles */
+        .page-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+            padding-left: 16px;
+            border-left: 1px solid #e2e8f0;
+        }
+        
+        .page-selector select {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .page-selector select:hover {
+            border-color: #3b82f6;
+        }
+        
+        .page-info {
+            font-size: 14px;
+            color: #64748b;
+            margin-left: 16px;
+        }
+
+        .mobile-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .mobile-page-btn {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            background-color: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .mobile-page-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .mobile-nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            background-color: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .mobile-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .panel {
             background: white;
             border-radius: 0.75rem;
@@ -360,6 +431,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .panel-title {
@@ -376,7 +449,6 @@
             padding: 1.5rem;
         }
 
-        /* SIMPLIFIED SCROLLABLE TABLE */
         .scrollable-table-container {
             width: 100%;
             overflow-x: auto;
@@ -411,10 +483,9 @@
             background: #94a3b8;
         }
 
-        /* Table with fixed width to ensure scrolling */
         .data-table {
             width: 100%;
-            min-width: 1200px;
+            min-width: 1300px;
             border-collapse: collapse;
         }
 
@@ -443,12 +514,10 @@
             background: #f3f4f6;
         }
 
-        /* Shadow effect */
         .table-shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        /* Minimalist Popup Styles */
         .minimal-popup {
             position: fixed;
             top: 20px;
@@ -535,7 +604,6 @@
             color: #64748b;
         }
 
-        /* Filter Dropdown Styles */
         .filter-dropdown {
             position: absolute;
             top: 100%;
@@ -615,12 +683,10 @@
             background-color: #e2e8f0;
         }
 
-        /* Hidden class for filtering */
         .hidden-by-filter {
             display: none !important;
         }
 
-        /* Responsive table improvements */
         @media (max-width: 1024px) {
             .data-table {
                 min-width: 1000px;
@@ -633,7 +699,6 @@
             }
         }
 
-        /* Better mobile card layout */
         @media (max-width: 640px) {
             .karyawan-card .grid {
                 grid-template-columns: 1fr;
@@ -645,13 +710,11 @@
             }
         }
 
-        /* Loading states */
         .loading {
             opacity: 0.7;
             pointer-events: none;
         }
 
-        /* Form validation styles */
         .input-error {
             border-color: #ef4444 !important;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
@@ -668,7 +731,6 @@
             display: block;
         }
 
-        /* Loading overlay */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -700,7 +762,6 @@
             }
         }
         
-        /* Gaji field disabled style */
         .gaji-disabled {
             position: relative;
         }
@@ -726,7 +787,6 @@
             margin-right: 6px;
         }
 
-        /* Allowance card styles */
         .allowance-card {
             background: #f8fafc;
             border-radius: 0.75rem;
@@ -756,8 +816,27 @@
         .btn-allowance-edit:hover {
             background: #cbd5e1;
         }
+
+        .allowance-badge {
+            display: inline-block;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            margin: 0.1rem 0.2rem;
+            white-space: nowrap;
+        }
+        .allowance-badge.tetap {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .allowance-badge.tidak-tetap {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
     </style>
-    <!-- Add CSRF token meta tag -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
@@ -773,8 +852,7 @@
                 <!-- Search and Filter Section -->
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div class="relative w-full md:w-1/3">
-                        <span
-                            class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
                         <input id="searchInput"
                             class="w-full pl-10 pr-4 py-2 bg-white border border-border-light rounded-lg focus:ring-2 focus:ring-primary focus:border-primary form-input"
                             placeholder="Cari nama, role, atau alamat..." type="text" />
@@ -787,30 +865,22 @@
                                 Filter
                             </button>
                             <div id="filterDropdown" class="filter-dropdown">
-                                <!-- ROLE FILTER -->
                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                                     <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: #1e293b;">Filter Role</div>
                                     <div class="filter-option">
                                         <input type="checkbox" id="filterAll" value="all" checked>
                                         <label for="filterAll">Semua Role</label>
                                     </div>
-                                    <div id="roleFilterContainer">
-                                        <!-- Role options akan diload dari database -->
-                                    </div>
+                                    <div id="roleFilterContainer"></div>
                                 </div>
-
-                                <!-- DIVISI FILTER -->
                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                                     <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: #1e293b;">Filter Divisi</div>
                                     <div class="filter-option">
                                         <input type="checkbox" id="filterAllDivisi" value="all" checked>
                                         <label for="filterAllDivisi">Semua Divisi</label>
                                     </div>
-                                    <div id="divisiFilterContainer">
-                                        <!-- Divisi options akan diload dari database -->
-                                    </div>
+                                    <div id="divisiFilterContainer"></div>
                                 </div>
-
                                 <div class="filter-actions">
                                     <button id="applyFilter" class="filter-apply">Terapkan</button>
                                     <button id="resetFilter" class="filter-reset">Reset</button>
@@ -853,11 +923,12 @@
                                             <th style="min-width: 150px;">Tim</th>
                                             <th style="min-width: 250px;">Alamat</th>
                                             <th style="min-width: 150px;">Kontak</th>
+                                            <th style="min-width: 150px;">Gaji</th>
                                             <th style="min-width: 180px;">Kontrak</th>
                                             <th style="min-width: 120px;">Status Kerja</th>
                                             <th style="min-width: 150px;">Status Karyawan</th>
-                                            <th style="min-width: 150px;">Tunjangan Tetap</th>
-                                            <th style="min-width: 150px;">Tunjangan Tidak Tetap</th>
+                                            <th style="min-width: 200px;">Tunjangan Tetap</th>
+                                            <th style="min-width: 200px;">Tunjangan Tidak Tetap</th>
                                             <th style="min-width: 100px; text-align: center;">Aksi</th>
                                         </tr>
                                     </thead>
@@ -865,12 +936,11 @@
                                         @if (isset($karyawan) && count($karyawan) > 0)
                                             @php 
                                                 $no = 1; 
-                                                $currentUserRole = auth()->user()->role;
                                             @endphp
                                             @foreach ($karyawan as $item)
                                                 @php
-                                                    $tetapNames = $item->tunjangan_tetap_list ? $item->tunjangan_tetap_list->pluck('nama')->toArray() : [];
-                                                    $tidakTetapNames = $item->tunjangan_tidak_tetap_list ? $item->tunjangan_tidak_tetap_list->pluck('nama')->toArray() : [];
+                                                    $tetapList = $item->tunjanganTetap ?? [];
+                                                    $tidakTetapList = $item->tunjanganTidakTetap ?? [];
                                                 @endphp
                                                 <tr class="karyawan-row" data-id="{{ $item->user_id }}"
                                                     data-nama="{{ $item->nama }}" data-email="{{ $item->email }}"
@@ -880,9 +950,7 @@
                                                     data-foto="{{ $item->foto ?? '' }}"
                                                     data-gaji="{{ $item->gaji }}"
                                                     data-status_kerja="{{ $item->status_kerja }}"
-                                                    data-status_karyawan="{{ $item->status_karyawan }}"
-                                                    data-tunjangan_tetap_ids='{{ json_encode($item->tunjangan_tetap_ids) }}'
-                                                    data-tunjangan_tidak_tetap_ids='{{ json_encode($item->tunjangan_tidak_tetap_ids) }}'>
+                                                    data-status_karyawan="{{ $item->status_karyawan }}">
                                                     <td style="min-width: 60px;">{{ $no++ }}</td>
                                                     <td style="min-width: 200px;">
                                                         <div class="flex items-center gap-3">
@@ -919,6 +987,11 @@
                                                     <td style="min-width: 150px;">{{ $item->tim ? $item->tim->tim : '-' }}</td>
                                                     <td style="min-width: 250px;">{{ $item->alamat }}</td>
                                                     <td style="min-width: 150px;">{{ $item->kontak }}</td>
+                                                    <td style="min-width: 150px;">
+                                                        <div class="text-sm font-semibold text-green-600">
+                                                            Rp {{ number_format($item->gaji, 0, ',', '.') }}
+                                                        </div>
+                                                    </td>
                                                     <td style="min-width: 180px;">
                                                         @php
                                                             $kontrakText = '-';
@@ -962,16 +1035,45 @@
                                                             {{ ucfirst($item->status_karyawan ?? 'tetap') }}
                                                         </span>
                                                     </td>
-                                                    <td style="min-width: 150px;">
-                                                        {{ implode(', ', $tetapNames) ?: '-' }}
+                                                    <td style="min-width: 200px;">
+                                                        @php
+                                                            $tetapList = $item->tunjanganTetapBulanIni ?? collect();
+                                                        @endphp
+                                                        @if($tetapList->count() > 0)
+                                                            @foreach($tetapList as $tunjangan)
+                                                                <span class="allowance-badge tetap">
+                                                                    {{ $tunjangan->nama }}
+                                                                    @if($tunjangan->pivot && $tunjangan->pivot->nominal)
+                                                                        (Rp {{ number_format($tunjangan->pivot->nominal, 0, ',', '.') }})
+                                                                    @endif
+                                                                </span>
+                                                            @endforeach
+                                                        @else
+                                                            <span class="text-gray-400 text-sm">-</span>
+                                                        @endif
                                                     </td>
-                                                    <td style="min-width: 150px;">
-                                                        {{ implode(', ', $tidakTetapNames) ?: '-' }}
+                                                    <td style="min-width: 200px;">
+                                                        @php
+                                                            $tidakTetapList = $item->tunjanganTidakTetapBulanIni ?? collect();
+                                                        @endphp
+                                                        @if($tidakTetapList->count() > 0)
+                                                            @foreach($tidakTetapList as $tunjangan)
+                                                                <span class="allowance-badge tidak-tetap">
+                                                                    {{ $tunjangan->nama }}
+                                                                    @if($tunjangan->pivot && $tunjangan->pivot->nominal)
+                                                                        (Rp {{ number_format($tunjangan->pivot->nominal, 0, ',', '.') }})
+                                                                    @endif
+                                                                </span>
+                                                            @endforeach
+                                                        @else
+                                                            <span class="text-gray-400 text-sm">-</span>
+                                                        @endif
                                                     </td>
                                                     <td style="min-width: 100px; text-align: center;">
                                                         <div class="flex justify-center gap-2">
                                                             <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
                                                                 data-id="{{ $item->user_id }}"
+                                                                data-user_id="{{ $item->user_id }}"
                                                                 data-nama="{{ $item->nama }}"
                                                                 data-email="{{ $item->email }}"
                                                                 data-role="{{ $item->role }}"
@@ -984,9 +1086,7 @@
                                                                 data-gaji="{{ $item->gaji }}"
                                                                 data-kontrak_mulai="{{ $item->kontrak_mulai ?? '' }}"
                                                                 data-kontrak_selesai="{{ $item->kontrak_selesai ?? '' }}"
-                                                                data-foto="{{ $item->foto ?? '' }}"
-                                                                data-tunjangan_tetap_ids='{{ json_encode($item->tunjangan_tetap_list ? $item->tunjangan_tetap_list->pluck('id')->toArray() : []) }}'
-                                                                data-tunjangan_tidak_tetap_ids='{{ json_encode($item->tunjangan_tidak_tetap_list ? $item->tunjangan_tidak_tetap_list->pluck('id')->toArray() : []) }}'>
+                                                                data-foto="{{ $item->foto ?? '' }}">
                                                                 <span class="material-icons-outlined">edit</span>
                                                             </button>
                                                             <button class="delete-btn p-1 rounded-full hover:bg-red-500/20 text-gray-700"
@@ -1000,7 +1100,7 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td colspan="14" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                <td colspan="15" class="px-6 py-4 text-center text-sm text-gray-500">
                                                     Tidak ada data karyawan
                                                 </td>
                                             </tr>
@@ -1018,8 +1118,8 @@
                                 @endphp
                                 @foreach ($karyawan as $item)
                                     @php
-                                        $tetapNames = $item->tunjangan_tetap_list ? $item->tunjangan_tetap_list->pluck('nama')->toArray() : [];
-                                        $tidakTetapNames = $item->tunjangan_tidak_tetap_list ? $item->tunjangan_tidak_tetap_list->pluck('nama')->toArray() : [];
+                                        $tetapList = $item->tunjanganTetap ?? [];
+                                        $tidakTetapList = $item->tunjanganTidakTetap ?? [];
                                     @endphp
                                     <div class="bg-white rounded-lg border border-border-light p-4 shadow-sm karyawan-card"
                                         data-id="{{ $item->user_id }}" data-nama="{{ $item->nama }}"
@@ -1047,6 +1147,7 @@
                                             <div class="flex gap-2">
                                                 <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
                                                     data-id="{{ $item->user_id }}"
+                                                    data-user_id="{{ $item->user_id }}"
                                                     data-nama="{{ $item->nama }}"
                                                     data-email="{{ $item->email }}"
                                                     data-role="{{ $item->role }}"
@@ -1056,9 +1157,7 @@
                                                     data-status_kerja="{{ $item->status_kerja }}"
                                                     data-status_karyawan="{{ $item->status_karyawan }}"
                                                     data-gaji="{{ $item->gaji }}"
-                                                    data-foto="{{ $item->foto ?? '' }}"
-                                                    data-tunjangan_tetap_ids='{{ json_encode($item->tunjangan_tetap_list ? $item->tunjangan_tetap_list->pluck('id')->toArray() : []) }}'
-                                                    data-tunjangan_tidak_tetap_ids='{{ json_encode($item->tunjangan_tidak_tetap_list ? $item->tunjangan_tidak_tetap_list->pluck('id')->toArray() : []) }}'>
+                                                    data-foto="{{ $item->foto ?? '' }}">
                                                     <span class="material-icons-outlined">edit</span>
                                                 </button>
                                                 <button class="delete-btn p-1 rounded-full hover:bg-red-500/20 text-gray-700"
@@ -1073,8 +1172,29 @@
                                             <div><p class="text-text-muted-light">Status Kerja</p><p>{{ ucfirst($item->status_kerja) }}</p></div>
                                             <div><p class="text-text-muted-light">Divisi</p><p class="font-medium">{{ $item->divisi ?? '-' }}</p></div>
                                             <div><p class="text-text-muted-light">Alamat</p><p class="font-medium truncate">{{ $item->alamat }}</p></div>
-                                            <div><p class="text-text-muted-light">Tunjangan Tetap</p><p>{{ implode(', ', $tetapNames) ?: '-' }}</p></div>
-                                            <div><p class="text-text-muted-light">Tunjangan Tidak Tetap</p><p>{{ implode(', ', $tidakTetapNames) ?: '-' }}</p></div>
+                                            <div><p class="text-text-muted-light">Gaji</p><p class="font-medium text-green-600">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p></div>
+                                            <div><p class="text-text-muted-light">Tunjangan Tetap</p>
+                                                <p class="text-xs">
+                                                    @if($tetapList && count($tetapList) > 0)
+                                                        @foreach($tetapList as $tunjangan)
+                                                            <span class="allowance-badge tetap inline-block mr-1 mb-1">
+                                                                {{ $tunjangan->nama_tunjangan ?? $tunjangan->nama }}
+                                                            </span>
+                                                        @endforeach
+                                                    @else - @endif
+                                                </p>
+                                            </div>
+                                            <div><p class="text-text-muted-light">Tunjangan Tidak Tetap</p>
+                                                <p class="text-xs">
+                                                    @if($tidakTetapList && count($tidakTetapList) > 0)
+                                                        @foreach($tidakTetapList as $tunjangan)
+                                                            <span class="allowance-badge tidak-tetap inline-block mr-1 mb-1">
+                                                                {{ $tunjangan->nama_tunjangan ?? $tunjangan->nama }}
+                                                            </span>
+                                                        @endforeach
+                                                    @else - @endif
+                                                </p>
+                                            </div>
                                         </div>
                                         @if($item->gaji)
                                             <div class="mt-3 pt-3 border-t border-gray-100">
@@ -1092,15 +1212,24 @@
                             @endif
                         </div>
 
-                        <!-- Pagination -->
-                        <div id="paginationContainer" class="desktop-pagination">
+                        <!-- Desktop Pagination with Page Selector -->
+                        <div id="desktopPaginationContainer" class="desktop-pagination">
                             <button id="prevPage" class="desktop-nav-btn">
                                 <span class="material-icons-outlined text-sm">chevron_left</span>
                             </button>
-                            <div id="pageNumbers" class="flex gap-1">
-                                <!-- Page numbers will be generated by JavaScript -->
-                            </div>
+                            <div id="pageNumbers" class="flex gap-1"></div>
                             <button id="nextPage" class="desktop-nav-btn">
+                                <span class="material-icons-outlined text-sm">chevron_right</span>
+                            </button>
+                        </div>
+
+                        <!-- Mobile Pagination -->
+                        <div id="mobilePaginationContainer" class="mobile-pagination">
+                            <button id="mobilePrevPage" class="mobile-nav-btn">
+                                <span class="material-icons-outlined text-sm">chevron_left</span>
+                            </button>
+                            <div id="mobilePageNumbers" class="flex gap-1"></div>
+                            <button id="mobileNextPage" class="mobile-nav-btn">
                                 <span class="material-icons-outlined text-sm">chevron_right</span>
                             </button>
                         </div>
@@ -1113,7 +1242,7 @@
         </main>
     </div>
 
-    <!-- Popup Modal untuk Tambah/Edit Karyawan dengan Tunjangan -->
+    <!-- Popup Modal untuk Tambah/Edit Karyawan -->
     <div id="karyawanModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
             <div class="p-6">
@@ -1129,23 +1258,16 @@
                     <input type="hidden" id="formUserId" name="user_id">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Nama -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama *</label>
                             <input type="text" name="name" id="formNama" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan nama karyawan">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         </div>
-
-                        <!-- Email -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                             <input type="email" name="email" id="formEmail" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan email">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         </div>
-
-                        <!-- Password -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                             <input type="password" name="password" id="formPassword"
@@ -1153,8 +1275,6 @@
                                 placeholder="Kosongkan jika tidak diubah">
                             <p class="text-xs text-gray-500 mt-1">Minimal 6 karakter (isi hanya jika ingin mengubah)</p>
                         </div>
-
-                        <!-- Role -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
                             <select name="role" id="formRole" required
@@ -1167,8 +1287,6 @@
                                 <option value="hr">HR</option>
                             </select>
                         </div>
-
-                        <!-- Divisi -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
                             <select name="divisi_id" id="formDivisi"
@@ -1181,8 +1299,6 @@
                                 @endif
                             </select>
                         </div>
-
-                        <!-- Tim -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tim</label>
                             <select name="tim_id" id="formTim"
@@ -1190,8 +1306,6 @@
                                 <option value="">Pilih Tim (opsional)</option>
                             </select>
                         </div>
-
-                        <!-- Gaji -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
                             <input type="number" name="gaji" id="formGaji"
@@ -1199,16 +1313,11 @@
                                 placeholder="Masukkan gaji (angka tanpa titik/koma)">
                             <p class="text-xs text-gray-500 mt-1">Isi dengan angka, contoh: 5000000</p>
                         </div>
-
-                        <!-- Kontak -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
                             <input type="text" name="kontak" id="formKontak"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan nomor telepon">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         </div>
-
-                        <!-- Status Kerja -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status Kerja</label>
                             <select name="status_kerja" id="formStatusKerja"
@@ -1218,8 +1327,6 @@
                                 <option value="phk">PHK</option>
                             </select>
                         </div>
-
-                        <!-- Status Karyawan -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status Karyawan</label>
                             <select name="status_karyawan" id="formStatusKaryawan"
@@ -1229,13 +1336,10 @@
                                 <option value="freelance">Freelance</option>
                             </select>
                         </div>
-
-                        <!-- Alamat -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
                             <textarea name="alamat" id="formAlamat" rows="2"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan alamat lengkap"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
                         </div>
                     </div>
 
@@ -1344,8 +1448,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Tunjangan *</label>
                             <input type="text" name="nama" id="allowanceNama" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Contoh: Transportasi, Makan, Bonus Tahunan">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tipe *</label>
@@ -1359,8 +1462,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nominal Default (Rp) *</label>
                             <input type="number" name="nominal" id="allowanceNominal" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Contoh: 500000">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         </div>
                         <div class="flex justify-end gap-2 mt-6">
                             <button type="button" id="cancelAllowanceBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
@@ -1382,7 +1484,6 @@
                         <span class="material-icons-outlined">close</span>
                     </button>
                 </div>
-
                 <div class="mb-6 text-center">
                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span class="material-icons-outlined text-red-500 text-3xl">warning</span>
@@ -1392,7 +1493,6 @@
                     <p class="text-xs text-gray-400">Tindakan ini tidak dapat dibatalkan dan data akan dihapus permanen.</p>
                     <input type="hidden" id="deleteId" name="id">
                 </div>
-
                 <div class="flex justify-center gap-3">
                     <button type="button" id="cancelDeleteBtn" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">Batal</button>
                     <button type="button" id="confirmDeleteBtn" class="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium">Hapus Data</button>
@@ -1416,212 +1516,220 @@
         <div class="loading-spinner"></div>
     </div>
 
-<script>
-    // Inisialisasi variabel untuk pagination, filter, dan search
-    let currentPage = 1;
-    const itemsPerPage = 5;
-    let activeFilters = ['all'];
-    let activeDivisiFilters = ['all'];
-    let searchTerm = '';
+    <script>
+        // Inisialisasi variabel
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let activeFilters = ['all'];
+        let activeDivisiFilters = ['all'];
+        let searchTerm = '';
 
-    // Dapatkan semua elemen karyawan
-    let karyawanRows = document.querySelectorAll('.karyawan-row');
-    let karyawanCards = document.querySelectorAll('.karyawan-card');
-    
-    // Variabel untuk tunjangan
-    let fixedAllowanceSelections = new Set();
-    let variableAllowanceSelections = new Set();
-    let currentModalMode = 'create'; // create or edit
-
-    // === UTILITY FUNCTIONS ===
-    function getCsrfToken() {
-        const m = document.querySelector('meta[name="csrf-token"]');
-        return m ? m.getAttribute('content') : '';
-    }
-
-    function showLoading(show = true) {
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            if (show) {
-                loadingOverlay.classList.remove('hidden');
-            } else {
-                loadingOverlay.classList.add('hidden');
-            }
-        }
-    }
-    // Saat edit karyawan, ambil gaji dari data gaji HR
-async function loadGajiFromHR(userId) {
-    try {
-        const response = await fetch(`/admin/karyawan/get-gaji/${userId}`);
-        const data = await response.json();
+        let karyawanRows = document.querySelectorAll('.karyawan-row');
+        let karyawanCards = document.querySelectorAll('.karyawan-card');
         
-        if (data.success && data.gaji_pokok) {
-            document.getElementById('formGaji').value = data.gaji_pokok;
-            showMinimalPopup('Info', `Gaji terupdate dari HR: Rp ${new Intl.NumberFormat('id-ID').format(data.gaji_pokok)}`, 'success');
-        }
-    } catch (error) {
-        console.error('Error loading gaji:', error);
-    }
-}
+        let fixedAllowanceSelections = new Set();
+        let variableAllowanceSelections = new Set();
+        let currentModalMode = 'create';
 
-// Panggil fungsi ini saat open edit modal
-function openKaryawanModal(mode = 'create', data = null) {
-    // ... kode yang sudah ada ...
-    
-    if (mode === 'edit' && data && data.id) {
-        // ... isi form ...
-        
-        // Ambil gaji dari data gaji HR
-        loadGajiFromHR(data.id);
-    }
-}
-
-    function showMinimalPopup(title, message, type = 'success') {
-        const popup = document.getElementById('minimalPopup');
-        if (!popup) {
-            console.log(`${title}: ${message}`);
-            return;
+        function getCsrfToken() {
+            const m = document.querySelector('meta[name="csrf-token"]');
+            return m ? m.getAttribute('content') : '';
         }
 
-        const popupTitle = popup.querySelector('.minimal-popup-title');
-        const popupMessage = popup.querySelector('.minimal-popup-message');
-        const popupIcon = popup.querySelector('.minimal-popup-icon span');
-
-        if (popupTitle) popupTitle.textContent = title;
-        if (popupMessage) popupMessage.textContent = message;
-
-        popup.className = 'minimal-popup show ' + type;
-
-        if (popupIcon) {
-            if (type === 'success') {
-                popupIcon.textContent = 'check';
-            } else if (type === 'error') {
-                popupIcon.textContent = 'error';
-            } else if (type === 'warning') {
-                popupIcon.textContent = 'warning';
+        function showLoading(show = true) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                if (show) loadingOverlay.classList.remove('hidden');
+                else loadingOverlay.classList.add('hidden');
             }
         }
 
-        setTimeout(() => {
-            popup.classList.remove('show');
-        }, 3000);
-    }
+        function showMinimalPopup(title, message, type = 'success') {
+            const popup = document.getElementById('minimalPopup');
+            if (!popup) { console.log(`${title}: ${message}`); return; }
 
-    // === PAGINATION ===
-    function initializePagination() {
-        renderPagination();
-        updateVisibleItems();
-    }
+            const popupTitle = popup.querySelector('.minimal-popup-title');
+            const popupMessage = popup.querySelector('.minimal-popup-message');
+            const popupIcon = popup.querySelector('.minimal-popup-icon span');
 
-    function getFilteredRows() {
-        return Array.from(karyawanRows).filter(row => !row.classList.contains('hidden-by-filter'));
-    }
+            if (popupTitle) popupTitle.textContent = title;
+            if (popupMessage) popupMessage.textContent = message;
 
-    function getFilteredCards() {
-        return Array.from(karyawanCards).filter(card => !card.classList.contains('hidden-by-filter'));
-    }
+            popup.className = 'minimal-popup show ' + type;
 
-    function renderPagination() {
-        const visibleRows = getFilteredRows();
-        const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-        const pageNumbersContainer = document.getElementById('pageNumbers');
-        const prevButton = document.getElementById('prevPage');
-        const nextButton = document.getElementById('nextPage');
+            if (popupIcon) {
+                if (type === 'success') popupIcon.textContent = 'check';
+                else if (type === 'error') popupIcon.textContent = 'error';
+                else if (type === 'warning') popupIcon.textContent = 'warning';
+            }
 
-        if (!pageNumbersContainer) return;
-
-        pageNumbersContainer.innerHTML = '';
-
-        for (let i = 1; i <= totalPages; i++) {
-            const pageNumber = document.createElement('button');
-            pageNumber.textContent = i;
-            pageNumber.className = `desktop-page-btn ${i === currentPage ? 'active' : ''}`;
-            pageNumber.addEventListener('click', () => goToPage(i));
-            pageNumbersContainer.appendChild(pageNumber);
+            setTimeout(() => popup.classList.remove('show'), 3000);
         }
 
-        if (prevButton) prevButton.disabled = currentPage === 1;
-        if (nextButton) nextButton.disabled = currentPage === totalPages || totalPages === 0;
-
-        if (prevButton) {
-            prevButton.onclick = () => {
-                if (currentPage > 1) goToPage(currentPage - 1);
-            };
+        // PAGINATION
+        function getFilteredRows() {
+            return Array.from(karyawanRows).filter(row => !row.classList.contains('hidden-by-filter'));
         }
 
-        if (nextButton) {
-            nextButton.onclick = () => {
-                if (currentPage < totalPages) goToPage(currentPage + 1);
-            };
+        function getFilteredCards() {
+            return Array.from(karyawanCards).filter(card => !card.classList.contains('hidden-by-filter'));
         }
-    }
 
-    function goToPage(page) {
-        currentPage = page;
-        renderPagination();
-        updateVisibleItems();
-
-        const scrollableTable = document.getElementById('scrollableTable');
-        if (scrollableTable) {
-            scrollableTable.scrollLeft = 0;
-        }
-    }
-
-    function updateVisibleItems() {
-        const visibleRows = getFilteredRows();
-        const visibleCards = getFilteredCards();
-
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-
-        karyawanRows.forEach(row => row.style.display = 'none');
-        karyawanCards.forEach(card => card.style.display = 'none');
-
-        let displayNumber = startIndex + 1;
-        visibleRows.forEach((row, index) => {
-            if (index >= startIndex && index < endIndex) {
-                row.style.display = '';
-                const noCell = row.querySelector('td:first-child');
-                if (noCell) {
-                    noCell.textContent = displayNumber;
+        function updateShowingInfo(visibleCount) {
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, visibleCount);
+            const showingInfoSpan = document.getElementById('showingInfo');
+            if (showingInfoSpan) {
+                if (visibleCount === 0) {
+                    showingInfoSpan.textContent = 'Menampilkan 0-0 dari 0';
+                } else {
+                    showingInfoSpan.textContent = `Menampilkan ${startIndex}-${endIndex} dari ${visibleCount}`;
                 }
-                displayNumber++;
             }
-        });
-
-        let cardNumber = startIndex + 1;
-        visibleCards.forEach((card, index) => {
-            if (index >= startIndex && index < endIndex) {
-                card.style.display = 'block';
-                const noElement = card.querySelector('.grid > div:first-child p:last-child');
-                if (noElement) {
-                    noElement.textContent = cardNumber;
-                }
-                cardNumber++;
-            }
-        });
-
-        const totalCountElement = document.getElementById('totalCount');
-        if (totalCountElement) {
-            totalCountElement.textContent = visibleRows.length;
         }
-    }
 
-    // === FILTER ===
-    async function loadRoleFilters() {
-        try {
-            const response = await fetch('{{ url('/roles/list') }}', {
-                method: 'GET',
-                credentials: 'include',
-                headers: { "Accept": "application/json" }
+        function updatePageSelect(totalPages) {
+            const pageSelect = document.getElementById('pageSelect');
+            const totalPagesSpan = document.getElementById('totalPagesCount');
+            if (pageSelect) {
+                const currentValue = pageSelect.value;
+                pageSelect.innerHTML = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    if (i == currentPage) option.selected = true;
+                    pageSelect.appendChild(option);
+                }
+                pageSelect.value = currentPage;
+            }
+            if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+        }
+
+        function renderPagination() {
+            const visibleRows = getFilteredRows();
+            const totalPages = Math.ceil(visibleRows.length / itemsPerPage) || 1;
+            
+            const pageNumbersContainer = document.getElementById('pageNumbers');
+            const prevButton = document.getElementById('prevPage');
+            const nextButton = document.getElementById('nextPage');
+
+            if (pageNumbersContainer) {
+                pageNumbersContainer.innerHTML = '';
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageNumber = document.createElement('button');
+                    pageNumber.textContent = i;
+                    pageNumber.className = `desktop-page-btn ${i === currentPage ? 'active' : ''}`;
+                    pageNumber.addEventListener('click', () => goToPage(i));
+                    pageNumbersContainer.appendChild(pageNumber);
+                }
+            }
+
+            if (prevButton) prevButton.disabled = currentPage === 1;
+            if (nextButton) nextButton.disabled = currentPage === totalPages || totalPages === 0;
+
+            if (prevButton) prevButton.onclick = () => { if (currentPage > 1) goToPage(currentPage - 1); };
+            if (nextButton) nextButton.onclick = () => { if (currentPage < totalPages) goToPage(currentPage + 1); };
+
+            const mobilePageNumbers = document.getElementById('mobilePageNumbers');
+            const mobilePrevButton = document.getElementById('mobilePrevPage');
+            const mobileNextButton = document.getElementById('mobileNextPage');
+            
+            if (mobilePageNumbers) {
+                mobilePageNumbers.innerHTML = '';
+                const maxVisibleMobile = 3;
+                let startMobile = Math.max(1, currentPage - Math.floor(maxVisibleMobile / 2));
+                let endMobile = Math.min(totalPages, startMobile + maxVisibleMobile - 1);
+                if (endMobile - startMobile + 1 < maxVisibleMobile) {
+                    startMobile = Math.max(1, endMobile - maxVisibleMobile + 1);
+                }
+                
+                for (let i = startMobile; i <= endMobile; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = `mobile-page-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.addEventListener('click', () => goToPage(i));
+                    mobilePageNumbers.appendChild(pageBtn);
+                }
+            }
+            
+            if (mobilePrevButton) {
+                mobilePrevButton.disabled = currentPage === 1;
+                mobilePrevButton.onclick = () => { if (currentPage > 1) goToPage(currentPage - 1); };
+            }
+            if (mobileNextButton) {
+                mobileNextButton.disabled = currentPage === totalPages || totalPages === 0;
+                mobileNextButton.onclick = () => { if (currentPage < totalPages) goToPage(currentPage + 1); };
+            }
+
+            updatePageSelect(totalPages);
+            updateShowingInfo(visibleRows.length);
+        }
+
+        function goToPage(page) {
+            const visibleRows = getFilteredRows();
+            const totalPages = Math.ceil(visibleRows.length / itemsPerPage) || 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            currentPage = page;
+            renderPagination();
+            updateVisibleItems();
+            const scrollableTable = document.getElementById('scrollableTable');
+            if (scrollableTable) scrollableTable.scrollLeft = 0;
+        }
+
+        function updateVisibleItems() {
+            const visibleRows = getFilteredRows();
+            const visibleCards = getFilteredCards();
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            karyawanRows.forEach(row => row.style.display = 'none');
+            karyawanCards.forEach(card => card.style.display = 'none');
+
+            let displayNumber = startIndex + 1;
+            visibleRows.forEach((row, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    row.style.display = '';
+                    const noCell = row.querySelector('td:first-child');
+                    if (noCell) noCell.textContent = displayNumber;
+                    displayNumber++;
+                }
             });
-            if (!response.ok) return;
-            const data = await response.json();
-            const roleContainer = document.getElementById('roleFilterContainer');
-            if (!roleContainer) return;
-            roleContainer.innerHTML = '';
-            const roles = Array.isArray(data) ? data : (data.data || []);
-            if (Array.isArray(roles)) {
+
+            let cardNumber = startIndex + 1;
+            visibleCards.forEach((card, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    card.style.display = 'block';
+                    const noElement = card.querySelector('.grid > div:first-child p:last-child');
+                    if (noElement) noElement.textContent = cardNumber;
+                    cardNumber++;
+                }
+            });
+
+            const totalCountElement = document.getElementById('totalCount');
+            if (totalCountElement) totalCountElement.textContent = visibleRows.length;
+        }
+
+        // FILTER
+        async function loadRoleFilters() {
+            try {
+                const response = await fetch('{{ url('/roles/list') }}', {
+                    method: 'GET', credentials: 'include', headers: { "Accept": "application/json" }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                const roleContainer = document.getElementById('roleFilterContainer');
+                if (!roleContainer) return;
+                roleContainer.innerHTML = '';
+                const roles = Array.isArray(data) ? data : (data.data || []);
                 roles.forEach(role => {
                     const option = document.createElement('div');
                     option.className = 'filter-option';
@@ -1636,24 +1744,20 @@ function openKaryawanModal(mode = 'create', data = null) {
                         }
                     });
                 });
-            }
-        } catch (error) { console.error('Error loading role filters:', error); }
-    }
+            } catch (error) { console.error('Error loading role filters:', error); }
+        }
 
-    async function loadDivisionFilters() {
-        try {
-            const response = await fetch('{{ url('/divisis/list') }}', {
-                method: 'GET',
-                credentials: 'include',
-                headers: { "Accept": "application/json" }
-            });
-            if (!response.ok) return;
-            const data = await response.json();
-            const divisiContainer = document.getElementById('divisiFilterContainer');
-            if (!divisiContainer) return;
-            divisiContainer.innerHTML = '';
-            const divisis = Array.isArray(data) ? data : (data.data || []);
-            if (Array.isArray(divisis)) {
+        async function loadDivisionFilters() {
+            try {
+                const response = await fetch('{{ url('/divisis/list') }}', {
+                    method: 'GET', credentials: 'include', headers: { "Accept": "application/json" }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                const divisiContainer = document.getElementById('divisiFilterContainer');
+                if (!divisiContainer) return;
+                divisiContainer.innerHTML = '';
+                const divisis = Array.isArray(data) ? data : (data.data || []);
                 divisis.forEach(divisi => {
                     const option = document.createElement('div');
                     option.className = 'filter-option';
@@ -1668,705 +1772,552 @@ function openKaryawanModal(mode = 'create', data = null) {
                         }
                     });
                 });
-            }
-        } catch (error) { console.error('Error loading division filters:', error); }
-    }
-
-    function initializeFilter() {
-        const filterBtn = document.getElementById('filterBtn');
-        const filterDropdown = document.getElementById('filterDropdown');
-        const applyFilterBtn = document.getElementById('applyFilter');
-        const resetFilterBtn = document.getElementById('resetFilter');
-        const filterAll = document.getElementById('filterAll');
-        const filterAllDivisi = document.getElementById('filterAllDivisi');
-
-        if (!filterBtn || !filterDropdown) return;
-
-        filterBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            filterDropdown.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function() { filterDropdown.classList.remove('show'); });
-        filterDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
-
-        if (filterAll) {
-            filterAll.addEventListener('change', function() {
-                if (this.checked) {
-                    document.querySelectorAll('#roleFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-                }
-            });
-        }
-        
-        if (filterAllDivisi) {
-            filterAllDivisi.addEventListener('change', function() {
-                if (this.checked) {
-                    document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-                }
-            });
+            } catch (error) { console.error('Error loading division filters:', error); }
         }
 
-        if (applyFilterBtn) {
-            applyFilterBtn.addEventListener('click', function() {
-                activeFilters = [];
-                if (filterAll && filterAll.checked) {
-                    activeFilters.push('all');
-                } else {
-                    document.querySelectorAll('#roleFilterContainer input[type="checkbox"]:checked').forEach(cb => {
-                        activeFilters.push(cb.getAttribute('data-role-id'));
-                    });
-                }
-                activeDivisiFilters = [];
-                if (filterAllDivisi && filterAllDivisi.checked) {
-                    activeDivisiFilters.push('all');
-                } else {
-                    document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]:checked').forEach(cb => {
-                        activeDivisiFilters.push(cb.getAttribute('data-divisi-id'));
-                    });
-                }
-                applyFilters();
-                filterDropdown.classList.remove('show');
-                showMinimalPopup('Filter Diterapkan', `Menampilkan ${getFilteredRows().length} karyawan`, 'success');
-            });
-        }
+        function initializeFilter() {
+            const filterBtn = document.getElementById('filterBtn');
+            const filterDropdown = document.getElementById('filterDropdown');
+            const applyFilterBtn = document.getElementById('applyFilter');
+            const resetFilterBtn = document.getElementById('resetFilter');
+            const filterAll = document.getElementById('filterAll');
+            const filterAllDivisi = document.getElementById('filterAllDivisi');
 
-        if (resetFilterBtn) {
-            resetFilterBtn.addEventListener('click', function() {
-                if (filterAll) filterAll.checked = true;
-                document.querySelectorAll('#roleFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-                if (filterAllDivisi) filterAllDivisi.checked = true;
-                document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-                activeFilters = ['all'];
-                activeDivisiFilters = ['all'];
-                applyFilters();
-                filterDropdown.classList.remove('show');
-                showMinimalPopup('Filter Direset', 'Menampilkan semua karyawan', 'success');
-            });
-        }
-    }
+            if (!filterBtn || !filterDropdown) return;
 
-    function applyFilters() {
-        currentPage = 1;
-        karyawanRows.forEach(row => {
-            const role = row.getAttribute('data-role')?.toLowerCase() || '';
-            const nama = row.getAttribute('data-nama')?.toLowerCase() || '';
-            const alamat = row.getAttribute('data-alamat')?.toLowerCase() || '';
-            const divisiId = row.getAttribute('data-divisi-id') || '';
-            let roleMatches = activeFilters.includes('all') ? true : activeFilters.some(filter => role === filter.toLowerCase());
-            let divisiMatches = activeDivisiFilters.includes('all') ? true : activeDivisiFilters.includes(divisiId);
-            let searchMatches = true;
-            if (searchTerm) {
-                const searchLower = searchTerm.toLowerCase();
-                searchMatches = nama.includes(searchLower) || alamat.includes(searchLower) || role.includes(searchLower);
-            }
-            if (roleMatches && divisiMatches && searchMatches) row.classList.remove('hidden-by-filter');
-            else row.classList.add('hidden-by-filter');
-        });
-        karyawanCards.forEach(card => {
-            const role = card.getAttribute('data-role')?.toLowerCase() || '';
-            const nama = card.getAttribute('data-nama')?.toLowerCase() || '';
-            const alamat = card.getAttribute('data-alamat')?.toLowerCase() || '';
-            const divisiId = card.getAttribute('data-divisi-id') || '';
-            let roleMatches = activeFilters.includes('all') ? true : activeFilters.some(filter => role === filter.toLowerCase());
-            let divisiMatches = activeDivisiFilters.includes('all') ? true : activeDivisiFilters.includes(divisiId);
-            let searchMatches = true;
-            if (searchTerm) {
-                const searchLower = searchTerm.toLowerCase();
-                searchMatches = nama.includes(searchLower) || alamat.includes(searchLower) || role.includes(searchLower);
-            }
-            if (roleMatches && divisiMatches && searchMatches) card.classList.remove('hidden-by-filter');
-            else card.classList.add('hidden-by-filter');
-        });
-        renderPagination();
-        updateVisibleItems();
-    }
-
-    // === SEARCH ===
-    function initializeSearch() {
-        const searchInput = document.getElementById('searchInput');
-        if (!searchInput) return;
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                searchTerm = searchInput.value.trim();
-                applyFilters();
-            }, 300);
-        });
-    }
-
-    // === LOAD DIVISIS ===
-    async function loadDivisis(selectElementId = 'formDivisi') {
-        try {
-            const response = await fetch('{{ url('/divisis/list') }}', {
-                method: 'GET',
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
+            filterBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                filterDropdown.classList.toggle('show');
             });
-            if (!response.ok) return;
-            const data = await response.json();
-            const selectElement = document.getElementById(selectElementId);
-            if (!selectElement) return;
-            while (selectElement.options.length > 1) selectElement.remove(1);
-            const divisis = Array.isArray(data) ? data : (data.data || []);
-            divisis.forEach(divisi => {
-                const option = document.createElement('option');
-                option.value = divisi.id;
-                option.textContent = divisi.divisi || divisi.name;
-                selectElement.appendChild(option);
-            });
-        } catch (error) { console.error('Error loading divisis:', error); }
-    }
 
-    async function loadTims(selectElementId = 'formTim', divisiId, selectedTimId = null) {
-        try {
-            const selectElement = document.getElementById(selectElementId);
-            if (!selectElement) return;
-            while (selectElement.options.length > 1) selectElement.remove(1);
-            if (!divisiId) return;
-            const response = await fetch('{{ url('/tims/by-divisi') }}/' + divisiId, {
-                method: 'GET',
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!response.ok) return;
-            const payload = await response.json();
-            const tims = payload && payload.data ? payload.data : payload;
-            if (Array.isArray(tims)) {
-                tims.forEach(t => {
-                    const option = document.createElement('option');
-                    option.value = t.id || t.ID || t.id_tim || '';
-                    option.textContent = t.tim || t.name || t.tim_name || '';
-                    if (selectedTimId && selectedTimId == option.value) option.selected = true;
-                    selectElement.appendChild(option);
+            document.addEventListener('click', function() { filterDropdown.classList.remove('show'); });
+            filterDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+
+            if (filterAll) {
+                filterAll.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.querySelectorAll('#roleFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+                    }
                 });
             }
-        } catch (error) { console.error('Error loading tims:', error); }
-    }
-
-    // === ALLOWANCE FUNCTIONS ===
-    function initAllowanceSelections(fixedIds = [], variableIds = []) {
-        fixedAllowanceSelections.clear();
-        variableAllowanceSelections.clear();
-        document.querySelectorAll('.fixed-allowance-checkbox').forEach(cb => {
-            cb.checked = false;
-            const val = parseInt(cb.value);
-            if (fixedIds.includes(val)) {
-                cb.checked = true;
-                fixedAllowanceSelections.add(val);
-                cb.closest('.allowance-card')?.classList.add('selected');
-            } else {
-                cb.closest('.allowance-card')?.classList.remove('selected');
+            
+            if (filterAllDivisi) {
+                filterAllDivisi.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+                    }
+                });
             }
-        });
-        document.querySelectorAll('.variable-allowance-checkbox').forEach(cb => {
-            cb.checked = false;
-            const val = parseInt(cb.value);
-            if (variableIds.includes(val)) {
-                cb.checked = true;
-                variableAllowanceSelections.add(val);
-                cb.closest('.allowance-card')?.classList.add('selected');
-            } else {
-                cb.closest('.allowance-card')?.classList.remove('selected');
-            }
-        });
-    }
 
-    // Modal Karyawan
- function openKaryawanModal(mode = 'create', data = null) {
-    currentModalMode = mode;
-    const modal = document.getElementById('karyawanModal');
-    const form = document.getElementById('karyawanForm');
-    form.reset();
-    document.getElementById('formId').value = '';
-    document.getElementById('formUserId').value = '';
-    document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
-    initAllowanceSelections([], []);
-    
-    if (mode === 'edit' && data) {
-        document.getElementById('modalTitle').textContent = 'Edit Karyawan';
-        document.getElementById('formId').value = data.id;
-        document.getElementById('formUserId').value = data.user_id || '';
-        document.getElementById('formNama').value = data.nama || '';
-        document.getElementById('formEmail').value = data.email || '';
-        document.getElementById('formRole').value = data.role || '';
-        document.getElementById('formDivisi').value = data.divisi_id || '';
-        
-        // Set gaji - jika ada data gaji dari database, gunakan itu
-        if (data.gaji && data.gaji > 0) {
-            document.getElementById('formGaji').value = data.gaji;
-        } else {
-            // Jika tidak ada, coba auto-fill
-            document.getElementById('formGaji').value = '';
-            autoFillGaji(); // Panggil auto-fill setelah role dan divisi di-set
+            if (applyFilterBtn) {
+                applyFilterBtn.addEventListener('click', function() {
+                    activeFilters = [];
+                    if (filterAll && filterAll.checked) activeFilters.push('all');
+                    else {
+                        document.querySelectorAll('#roleFilterContainer input[type="checkbox"]:checked').forEach(cb => {
+                            activeFilters.push(cb.getAttribute('data-role-id'));
+                        });
+                    }
+                    activeDivisiFilters = [];
+                    if (filterAllDivisi && filterAllDivisi.checked) activeDivisiFilters.push('all');
+                    else {
+                        document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]:checked').forEach(cb => {
+                            activeDivisiFilters.push(cb.getAttribute('data-divisi-id'));
+                        });
+                    }
+                    applyFilters();
+                    filterDropdown.classList.remove('show');
+                    showMinimalPopup('Filter Diterapkan', `Menampilkan ${getFilteredRows().length} karyawan`, 'success');
+                });
+            }
+
+            if (resetFilterBtn) {
+                resetFilterBtn.addEventListener('click', function() {
+                    if (filterAll) filterAll.checked = true;
+                    document.querySelectorAll('#roleFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+                    if (filterAllDivisi) filterAllDivisi.checked = true;
+                    document.querySelectorAll('#divisiFilterContainer input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+                    activeFilters = ['all'];
+                    activeDivisiFilters = ['all'];
+                    applyFilters();
+                    filterDropdown.classList.remove('show');
+                    showMinimalPopup('Filter Direset', 'Menampilkan semua karyawan', 'success');
+                });
+            }
         }
-        
-        document.getElementById('formKontak').value = data.kontak || '';
-        document.getElementById('formAlamat').value = data.alamat || '';
-        document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
-        document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
-        
-        if (data.divisi_id) loadTims('formTim', data.divisi_id, data.tim_id);
-        
-        // Parse allowance ids
-        let fixedIds = [], variableIds = [];
-        try {
-            if (data.tunjangan_tetap_ids) {
-                let ft = typeof data.tunjangan_tetap_ids === 'string' ? JSON.parse(data.tunjangan_tetap_ids) : data.tunjangan_tetap_ids;
-                if (Array.isArray(ft)) fixedIds = ft.map(v => typeof v === 'object' ? v.id : v);
-            }
-            if (data.tunjangan_tidak_tetap_ids) {
-                let vt = typeof data.tunjangan_tidak_tetap_ids === 'string' ? JSON.parse(data.tunjangan_tidak_tetap_ids) : data.tunjangan_tidak_tetap_ids;
-                if (Array.isArray(vt)) variableIds = vt.map(v => typeof v === 'object' ? v.id : v);
-            }
-        } catch(e) { console.error('Parse error:', e); }
-        initAllowanceSelections(fixedIds, variableIds);
-    } else {
-        document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
-        // Reset gaji saat tambah baru
-        document.getElementById('formGaji').value = '';
-    }
-    modal.classList.remove('hidden');
-}
 
-
-    function closeKaryawanModal() {
-        document.getElementById('karyawanModal').classList.add('hidden');
-    }
-
-    // Modal Allowance Master
-    const allowanceModal = document.getElementById('allowanceMasterModal');
-    function closeAllowanceModal() { allowanceModal.classList.add('hidden'); allowanceModal.style.display = 'none'; }
-    function openAllowanceModal(id = null, nama = '', tipe = 'bulanan', nominal = '') {
-        document.getElementById('allowanceId').value = id || '';
-        document.getElementById('allowanceNama').value = nama;
-        document.getElementById('allowanceTipe').value = tipe;
-        document.getElementById('allowanceNominal').value = nominal;
-        document.getElementById('allowanceModalTitle').textContent = id ? 'Edit Tunjangan' : 'Tambah Tunjangan';
-        allowanceModal.classList.remove('hidden');
-        allowanceModal.style.display = 'flex';
-    }
-
-    // Delete handler
-    async function handleDeleteKaryawan(id) {
-        if (!id) { showMinimalPopup('Error', 'ID karyawan tidak ditemukan', 'error'); return; }
-        showLoading(true);
-        try {
-            const response = await fetch(`/admin/karyawan/delete/${id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        function applyFilters() {
+            currentPage = 1;
+            karyawanRows.forEach(row => {
+                const role = row.getAttribute('data-role')?.toLowerCase() || '';
+                const nama = row.getAttribute('data-nama')?.toLowerCase() || '';
+                const alamat = row.getAttribute('data-alamat')?.toLowerCase() || '';
+                const divisiId = row.getAttribute('data-divisi-id') || '';
+                let roleMatches = activeFilters.includes('all') ? true : activeFilters.some(filter => role === filter.toLowerCase());
+                let divisiMatches = activeDivisiFilters.includes('all') ? true : activeDivisiFilters.includes(divisiId);
+                let searchMatches = true;
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    searchMatches = nama.includes(searchLower) || alamat.includes(searchLower) || role.includes(searchLower);
+                }
+                if (roleMatches && divisiMatches && searchMatches) row.classList.remove('hidden-by-filter');
+                else row.classList.add('hidden-by-filter');
             });
-            const data = await response.json();
-            if (data.success) {
-                showMinimalPopup('Berhasil', data.message, 'success');
-                setTimeout(() => window.location.reload(), 600);
-            } else {
-                showMinimalPopup('Error', data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Delete error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan saat menghapus data', 'error');
-        } finally { showLoading(false); closeDeleteModal(); }
-    }
+            karyawanCards.forEach(card => {
+                const role = card.getAttribute('data-role')?.toLowerCase() || '';
+                const nama = card.getAttribute('data-nama')?.toLowerCase() || '';
+                const alamat = card.getAttribute('data-alamat')?.toLowerCase() || '';
+                const divisiId = card.getAttribute('data-divisi-id') || '';
+                let roleMatches = activeFilters.includes('all') ? true : activeFilters.some(filter => role === filter.toLowerCase());
+                let divisiMatches = activeDivisiFilters.includes('all') ? true : activeDivisiFilters.includes(divisiId);
+                let searchMatches = true;
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    searchMatches = nama.includes(searchLower) || alamat.includes(searchLower) || role.includes(searchLower);
+                }
+                if (roleMatches && divisiMatches && searchMatches) card.classList.remove('hidden-by-filter');
+                else card.classList.add('hidden-by-filter');
+            });
+            renderPagination();
+            updateVisibleItems();
+        }
 
-    function openDeleteModal(id, nama) {
-        const modal = document.getElementById('deleteKaryawanModal');
-        if (modal) {
-            document.getElementById('deleteId').value = id;
-            document.getElementById('deleteKaryawanName').textContent = `"${nama}"`;
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) return;
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchTerm = searchInput.value.trim();
+                    applyFilters();
+                }, 300);
+            });
+        }
+
+        // LOAD DATA
+        async function loadDivisis(selectElementId = 'formDivisi') {
+            try {
+                const response = await fetch('{{ url('/divisis/list') }}', {
+                    method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                const selectElement = document.getElementById(selectElementId);
+                if (!selectElement) return;
+                while (selectElement.options.length > 1) selectElement.remove(1);
+                const divisis = Array.isArray(data) ? data : (data.data || []);
+                divisis.forEach(divisi => {
+                    const option = document.createElement('option');
+                    option.value = divisi.id;
+                    option.textContent = divisi.divisi || divisi.name;
+                    selectElement.appendChild(option);
+                });
+            } catch (error) { console.error('Error loading divisis:', error); }
+        }
+
+        async function loadTims(selectElementId = 'formTim', divisiId, selectedTimId = null) {
+            try {
+                const selectElement = document.getElementById(selectElementId);
+                if (!selectElement) return;
+                while (selectElement.options.length > 1) selectElement.remove(1);
+                if (!divisiId) return;
+                const response = await fetch('{{ url('/tims/by-divisi') }}/' + divisiId, {
+                    method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) return;
+                const payload = await response.json();
+                const tims = payload && payload.data ? payload.data : payload;
+                if (Array.isArray(tims)) {
+                    tims.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t.id || t.ID || t.id_tim || '';
+                        option.textContent = t.tim || t.name || t.tim_name || '';
+                        if (selectedTimId && selectedTimId == option.value) option.selected = true;
+                        selectElement.appendChild(option);
+                    });
+                }
+            } catch (error) { console.error('Error loading tims:', error); }
+        }
+
+        // ALLOWANCE FUNCTIONS
+        function initAllowanceSelections(fixedIds = [], variableIds = []) {
+            fixedAllowanceSelections.clear();
+            variableAllowanceSelections.clear();
+            document.querySelectorAll('.fixed-allowance-checkbox').forEach(cb => {
+                cb.checked = false;
+                const val = parseInt(cb.value);
+                if (fixedIds.includes(val)) {
+                    cb.checked = true;
+                    fixedAllowanceSelections.add(val);
+                    cb.closest('.allowance-card')?.classList.add('selected');
+                } else {
+                    cb.closest('.allowance-card')?.classList.remove('selected');
+                }
+            });
+            document.querySelectorAll('.variable-allowance-checkbox').forEach(cb => {
+                cb.checked = false;
+                const val = parseInt(cb.value);
+                if (variableIds.includes(val)) {
+                    cb.checked = true;
+                    variableAllowanceSelections.add(val);
+                    cb.closest('.allowance-card')?.classList.add('selected');
+                } else {
+                    cb.closest('.allowance-card')?.classList.remove('selected');
+                }
+            });
+        }
+
+        // Auto-fill gaji
+        async function autoFillGaji() {
+            const role = document.getElementById('formRole').value;
+            const divisiId = document.getElementById('formDivisi').value;
+            const gajiInput = document.getElementById('formGaji');
+            
+            if (!role || !gajiInput) return;
+            
+            try {
+                let url = `/api/gaji-template?role=${role}`;
+                if (divisiId) url += `&divisi_id=${divisiId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() }
+                });
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.gaji_pokok) {
+                    gajiInput.value = result.data.gaji_pokok;
+                    showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(result.data.gaji_pokok)}`, 'success');
+                } else {
+                    const defaultGaji = {
+                        'general_manager': 15000000,
+                        'manager_divisi': 10000000,
+                        'finance': 8000000,
+                        'hr': 7000000,
+                        'karyawan': 5000000
+                    };
+                    if (defaultGaji[role]) {
+                        gajiInput.value = defaultGaji[role];
+                        showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(defaultGaji[role])}`, 'success');
+                    }
+                }
+            } catch (error) {
+                console.error('Auto-fill gaji error:', error);
+            }
+        }
+
+        // MODAL KARYAWAN
+        function openKaryawanModal(mode = 'create', data = null) {
+            currentModalMode = mode;
+            const modal = document.getElementById('karyawanModal');
+            const form = document.getElementById('karyawanForm');
+            form.reset();
+            document.getElementById('formId').value = '';
+            document.getElementById('formUserId').value = '';
+            document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
+            initAllowanceSelections([], []);
+            
+            if (mode === 'edit' && data) {
+                document.getElementById('modalTitle').textContent = 'Edit Karyawan';
+                document.getElementById('formId').value = data.id;
+                document.getElementById('formUserId').value = data.user_id || '';
+                document.getElementById('formNama').value = data.nama || '';
+                document.getElementById('formEmail').value = data.email || '';
+                document.getElementById('formRole').value = data.role || '';
+                document.getElementById('formDivisi').value = data.divisi_id || '';
+                document.getElementById('formGaji').value = data.gaji || '';
+                document.getElementById('formKontak').value = data.kontak || '';
+                document.getElementById('formAlamat').value = data.alamat || '';
+                document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
+                document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
+                
+                if (data.divisi_id) loadTims('formTim', data.divisi_id, data.tim_id);
+                
+                // Load tunjangan karyawan saat edit
+                if (data.id) {
+                    fetch(`/api/karyawan/${data.id}/tunjangan`)
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.success) {
+                                initAllowanceSelections(
+                                    result.data.tetap.map(t => t.id),
+                                    result.data.tidak_tetap.map(t => t.id)
+                                );
+                            }
+                        })
+                        .catch(err => console.error('Error loading allowances:', err));
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
+                document.getElementById('formGaji').value = '';
+            }
             modal.classList.remove('hidden');
         }
-    }
-    function closeDeleteModal() { document.getElementById('deleteKaryawanModal').classList.add('hidden'); }
 
-    // === FORM SUBMISSION ===
-    document.getElementById('karyawanForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const fixedIds = Array.from(fixedAllowanceSelections);
-        const variableIds = Array.from(variableAllowanceSelections);
-        formData.append('tunjangan_tetap_ids', JSON.stringify(fixedIds));
-        formData.append('tunjangan_tidak_tetap_ids', JSON.stringify(variableIds));
-        
-        const id = document.getElementById('formId').value;
-        let url = '/admin/karyawan/store';
-        if (currentModalMode === 'edit' && id) {
-            url = `/admin/karyawan/update/${id}`;
-            formData.append('_method', 'PUT');
+        function closeKaryawanModal() {
+            document.getElementById('karyawanModal').classList.add('hidden');
         }
-        
-        showLoading(true);
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
-                body: formData
-            });
-            const result = await response.json();
-            if (result.success) {
-                showMinimalPopup('Berhasil', result.message, 'success');
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                if (response.status === 422 && result.errors) {
-                    let errorMsg = Object.values(result.errors)[0];
-                    showMinimalPopup('Validasi Gagal', errorMsg, 'warning');
+
+        // MODAL ALLOWANCE MASTER
+        const allowanceModal = document.getElementById('allowanceMasterModal');
+        function closeAllowanceModal() { allowanceModal.classList.add('hidden'); allowanceModal.style.display = 'none'; }
+        function openAllowanceModal(id = null, nama = '', tipe = 'bulanan', nominal = '') {
+            document.getElementById('allowanceId').value = id || '';
+            document.getElementById('allowanceNama').value = nama;
+            document.getElementById('allowanceTipe').value = tipe;
+            document.getElementById('allowanceNominal').value = nominal;
+            document.getElementById('allowanceModalTitle').textContent = id ? 'Edit Tunjangan' : 'Tambah Tunjangan';
+            allowanceModal.classList.remove('hidden');
+            allowanceModal.style.display = 'flex';
+        }
+
+        // DELETE HANDLER
+        async function handleDeleteKaryawan(id) {
+            if (!id) { showMinimalPopup('Error', 'ID karyawan tidak ditemukan', 'error'); return; }
+            showLoading(true);
+            try {
+                const response = await fetch(`/admin/karyawan/delete/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showMinimalPopup('Berhasil', data.message, 'success');
+                    setTimeout(() => window.location.reload(), 600);
                 } else {
-                    showMinimalPopup('Error', result.message || 'Gagal menyimpan', 'error');
+                    showMinimalPopup('Error', data.message, 'error');
                 }
-            }
-        } catch (error) {
-            console.error('Submit error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan server', 'error');
-        } finally { showLoading(false); closeKaryawanModal(); }
-    });
-
-    // Allowance Master Form Submit
-    document.getElementById('allowanceMasterForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('allowanceId').value;
-        const formData = new FormData(this);
-        let url = '/hr/tunjangan/add';
-        if (id) {
-            url = `/hr/tunjangan/${id}`;
-            formData.append('_method', 'PUT');
+            } catch (error) {
+                console.error('Delete error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan saat menghapus data', 'error');
+            } finally { showLoading(false); closeDeleteModal(); }
         }
-        showLoading(true);
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
-                body: formData
+
+        function openDeleteModal(id, nama) {
+            const modal = document.getElementById('deleteKaryawanModal');
+            if (modal) {
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteKaryawanName').textContent = `"${nama}"`;
+                modal.classList.remove('hidden');
+            }
+        }
+        function closeDeleteModal() { document.getElementById('deleteKaryawanModal').classList.add('hidden'); }
+
+        // FORM SUBMISSION
+        document.getElementById('karyawanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const fixedIds = Array.from(fixedAllowanceSelections);
+            const variableIds = Array.from(variableAllowanceSelections);
+            formData.append('tunjangan_tetap_ids', JSON.stringify(fixedIds));
+            formData.append('tunjangan_tidak_tetap_ids', JSON.stringify(variableIds));
+            
+            const id = document.getElementById('formId').value;
+            let url = '/admin/karyawan/store';
+            if (currentModalMode === 'edit' && id) {
+                url = `/admin/karyawan/update/${id}`;
+                formData.append('_method', 'PUT');
+            }
+            
+            showLoading(true);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMinimalPopup('Berhasil', result.message, 'success');
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    if (response.status === 422 && result.errors) {
+                        let errorMsg = Object.values(result.errors)[0];
+                        showMinimalPopup('Validasi Gagal', errorMsg, 'warning');
+                    } else {
+                        showMinimalPopup('Error', result.message || 'Gagal menyimpan', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Submit error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan server', 'error');
+            } finally { showLoading(false); closeKaryawanModal(); }
+        });
+
+        document.getElementById('allowanceMasterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('allowanceId').value;
+            const formData = new FormData(this);
+            let url = '/hr/tunjangan/add';
+            if (id) {
+                url = `/hr/tunjangan/${id}`;
+                formData.append('_method', 'PUT');
+            }
+            showLoading(true);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMinimalPopup('Berhasil', result.message, 'success');
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showMinimalPopup('Error', result.message || 'Gagal menyimpan master tunjangan', 'error');
+                }
+            } catch (error) {
+                console.error('Allowance master error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan server', 'error');
+            } finally { showLoading(false); closeAllowanceModal(); }
+        });
+
+        // Page Select Event Listener
+        function initializePageSelect() {
+            const pageSelect = document.getElementById('pageSelect');
+            if (pageSelect) {
+                pageSelect.addEventListener('change', function() {
+                    goToPage(parseInt(this.value));
+                });
+            }
+        }
+
+        // EVENT LISTENERS
+        function setupAllowanceCheckboxListeners() {
+            document.querySelectorAll('.fixed-allowance-checkbox').forEach(cb => {
+                cb.removeEventListener('change', allowanceCheckboxChangeHandler);
+                cb.addEventListener('change', allowanceCheckboxChangeHandler);
             });
-            const result = await response.json();
-            if (result.success) {
-                showMinimalPopup('Berhasil', result.message, 'success');
-                setTimeout(() => window.location.reload(), 800);
+            document.querySelectorAll('.variable-allowance-checkbox').forEach(cb => {
+                cb.removeEventListener('change', allowanceCheckboxChangeHandler);
+                cb.addEventListener('change', allowanceCheckboxChangeHandler);
+            });
+        }
+        
+        function allowanceCheckboxChangeHandler(e) {
+            const card = e.target.closest('.allowance-card');
+            if (e.target.checked) {
+                card?.classList.add('selected');
+                const val = parseInt(e.target.value);
+                if (e.target.classList.contains('fixed-allowance-checkbox')) fixedAllowanceSelections.add(val);
+                else variableAllowanceSelections.add(val);
             } else {
-                showMinimalPopup('Error', result.message || 'Gagal menyimpan master tunjangan', 'error');
+                card?.classList.remove('selected');
+                const val = parseInt(e.target.value);
+                if (e.target.classList.contains('fixed-allowance-checkbox')) fixedAllowanceSelections.delete(val);
+                else variableAllowanceSelections.delete(val);
             }
-        } catch (error) {
-            console.error('Allowance master error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan server', 'error');
-        } finally { showLoading(false); closeAllowanceModal(); }
-    });
-
-    // Event Listeners for Checkboxes selection styling
-    function setupAllowanceCheckboxListeners() {
-        document.querySelectorAll('.fixed-allowance-checkbox').forEach(cb => {
-            cb.removeEventListener('change', allowanceCheckboxChangeHandler);
-            cb.addEventListener('change', allowanceCheckboxChangeHandler);
-        });
-        document.querySelectorAll('.variable-allowance-checkbox').forEach(cb => {
-            cb.removeEventListener('change', allowanceCheckboxChangeHandler);
-            cb.addEventListener('change', allowanceCheckboxChangeHandler);
-        });
-    }
-    
-    function allowanceCheckboxChangeHandler(e) {
-        const card = e.target.closest('.allowance-card');
-        if (e.target.checked) {
-            card?.classList.add('selected');
-            const val = parseInt(e.target.value);
-            if (e.target.classList.contains('fixed-allowance-checkbox')) fixedAllowanceSelections.add(val);
-            else variableAllowanceSelections.add(val);
-        } else {
-            card?.classList.remove('selected');
-            const val = parseInt(e.target.value);
-            if (e.target.classList.contains('fixed-allowance-checkbox')) fixedAllowanceSelections.delete(val);
-            else variableAllowanceSelections.delete(val);
         }
-    }
 
-    // === INITIALIZE ALL EVENT LISTENERS ===
-    function initializeEventListeners() {
-        // Modal buttons
-        document.getElementById('tambahKaryawanBtn').addEventListener('click', () => openKaryawanModal('create'));
-        document.getElementById('closeModalBtn').addEventListener('click', closeKaryawanModal);
-        document.getElementById('cancelModalBtn').addEventListener('click', closeKaryawanModal);
-        document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
-        document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
-        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-            const id = document.getElementById('deleteId').value;
-            if (id) handleDeleteKaryawan(id);
-        // Auto-fill gaji berdasarkan role (untuk modal tambah)
-const formRole = document.getElementById('formRole');
-const formDivisi = document.getElementById('formDivisi');
-if (formRole) {
-    formRole.addEventListener('change', autoFillGaji);
-}
-if (formDivisi) {
-    formDivisi.addEventListener('change', autoFillGaji);
-}
-
-// Untuk modal edit (jika ada editRoleSelect)
-const editRoleSelect = document.getElementById('editRoleSelect');
-const editDivisiSelect = document.getElementById('editDivisiSelect');
-if (editRoleSelect) {
-    editRoleSelect.addEventListener('change', autoFillEditGaji);
-}
-if (editDivisiSelect) {
-    editDivisiSelect.addEventListener('change', autoFillEditGaji);
-}
-        });
-        
-        // Edit and Delete buttons (delegated)
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.edit-btn')) {
-                const button = e.target.closest('.edit-btn');
-                const data = {
-                    id: button.dataset.id,
-                    user_id: button.dataset.user_id,
-                    nama: button.dataset.nama,
-                    email: button.dataset.email,
-                    role: button.dataset.role,
-                    divisi_id: button.dataset.divisi_id,
-                    alamat: button.dataset.alamat,
-                    kontak: button.dataset.kontak,
-                    gaji: button.dataset.gaji,
-                    status_kerja: button.dataset.status_kerja,
-                    status_karyawan: button.dataset.status_karyawan,
-                    tunjangan_tetap_ids: button.dataset.tunjangan_tetap_ids,
-                    tunjangan_tidak_tetap_ids: button.dataset.tunjangan_tidak_tetap_ids
-                };
-                openKaryawanModal('edit', data);
-            }
-            if (e.target.closest('.delete-btn')) {
-                const button = e.target.closest('.delete-btn');
-                openDeleteModal(button.dataset.id, button.dataset.nama);
-            }
-        });
-        
-        // Divisi change -> load tims
-        document.getElementById('formDivisi').addEventListener('change', function() {
-            loadTims('formTim', this.value);
-        });
-        
-        // Foto preview
-        const fotoInput = document.getElementById('fotoInput');
-        const pilihFotoBtn = document.getElementById('pilihFotoBtn');
-        if (pilihFotoBtn) pilihFotoBtn.addEventListener('click', () => fotoInput?.click());
-        if (fotoInput) {
-            fotoInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                const fotoPreview = document.getElementById('fotoPreview');
-                if (file && fotoPreview) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) { fotoPreview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="h-16 w-16 rounded-full object-cover">`; };
-                    reader.readAsDataURL(file);
+        function initializeEventListeners() {
+            document.getElementById('tambahKaryawanBtn').addEventListener('click', () => openKaryawanModal('create'));
+            document.getElementById('closeModalBtn').addEventListener('click', closeKaryawanModal);
+            document.getElementById('cancelModalBtn').addEventListener('click', closeKaryawanModal);
+            document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                const id = document.getElementById('deleteId').value;
+                if (id) handleDeleteKaryawan(id);
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.edit-btn')) {
+                    const button = e.target.closest('.edit-btn');
+                    const data = {
+                        id: button.dataset.id,
+                        user_id: button.dataset.user_id,
+                        nama: button.dataset.nama,
+                        email: button.dataset.email,
+                        role: button.dataset.role,
+                        divisi_id: button.dataset.divisi_id,
+                        alamat: button.dataset.alamat,
+                        kontak: button.dataset.kontak,
+                        gaji: button.dataset.gaji,
+                        status_kerja: button.dataset.status_kerja,
+                        status_karyawan: button.dataset.status_karyawan
+                    };
+                    openKaryawanModal('edit', data);
+                }
+                if (e.target.closest('.delete-btn')) {
+                    const button = e.target.closest('.delete-btn');
+                    openDeleteModal(button.dataset.id, button.dataset.nama);
                 }
             });
+            
+            document.getElementById('formDivisi').addEventListener('change', function() {
+                loadTims('formTim', this.value);
+            });
+            document.getElementById('formRole').addEventListener('change', autoFillGaji);
+            document.getElementById('formDivisi').addEventListener('change', autoFillGaji);
+            
+            const fotoInput = document.getElementById('fotoInput');
+            const pilihFotoBtn = document.getElementById('pilihFotoBtn');
+            if (pilihFotoBtn) pilihFotoBtn.addEventListener('click', () => fotoInput?.click());
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const fotoPreview = document.getElementById('fotoPreview');
+                    if (file && fotoPreview) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) { fotoPreview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="h-16 w-16 rounded-full object-cover">`; };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            document.getElementById('addFixedAllowanceBtn').addEventListener('click', () => openAllowanceModal(null, '', 'bulanan', ''));
+            document.getElementById('addVariableAllowanceBtn').addEventListener('click', () => openAllowanceModal(null, '', 'bonus', ''));
+            document.getElementById('closeAllowanceModal').addEventListener('click', closeAllowanceModal);
+            document.getElementById('cancelAllowanceBtn').addEventListener('click', closeAllowanceModal);
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-allowance-edit')) {
+                    const btn = e.target.closest('.btn-allowance-edit');
+                    openAllowanceModal(btn.dataset.id, btn.dataset.nama, btn.dataset.tipe, btn.dataset.nominal);
+                }
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) e.target.classList.add('hidden');
+                if (e.target === allowanceModal) closeAllowanceModal();
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
+                    closeAllowanceModal();
+                }
+            });
+            
+            document.querySelector('.minimal-popup-close')?.addEventListener('click', function() {
+                document.getElementById('minimalPopup')?.classList.remove('show');
+            });
+            
+            setupAllowanceCheckboxListeners();
+            initializePageSelect();
         }
-        
-        // Allowance buttons
-        document.getElementById('addFixedAllowanceBtn').addEventListener('click', () => openAllowanceModal(null, '', 'bulanan', ''));
-        document.getElementById('addVariableAllowanceBtn').addEventListener('click', () => openAllowanceModal(null, '', 'bonus', ''));
-        document.getElementById('closeAllowanceModal').addEventListener('click', closeAllowanceModal);
-        document.getElementById('cancelAllowanceBtn').addEventListener('click', closeAllowanceModal);
-        
-        // Allowance edit buttons (delegated)
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-allowance-edit')) {
-                const btn = e.target.closest('.btn-allowance-edit');
-                openAllowanceModal(btn.dataset.id, btn.dataset.nama, btn.dataset.tipe, btn.dataset.nominal);
-            }
-        });
-        
-        // Close modal on outside click
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) e.target.classList.add('hidden');
-            if (e.target === allowanceModal) closeAllowanceModal();
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
-                closeAllowanceModal();
-            }
-        });
-        
-        // Popup close
-        document.querySelector('.minimal-popup-close')?.addEventListener('click', function() {
-            document.getElementById('minimalPopup')?.classList.remove('show');
-        });
-        
-        setupAllowanceCheckboxListeners();
-    }
 
-    // === INITIALIZE ALL ===
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Data karyawan page loaded');
-        initializePagination();
-        Promise.all([loadRoleFilters(), loadDivisionFilters()]).then(() => { initializeFilter(); });
-        initializeSearch();
-        initializeEventListeners();
-        loadDivisis('formDivisi');
-        setupAllowanceCheckboxListeners();
-    });
-    // Auto-fill gaji berdasarkan role yang dipilih
-async function autoFillGaji() {
-    const role = document.getElementById('formRole').value;
-    const divisiId = document.getElementById('formDivisi').value;
-    const gajiInput = document.getElementById('formGaji');
-    
-    if (!role || !gajiInput) return;
-    
-    try {
-        // Panggil API untuk mendapatkan template gaji
-        let url = `/api/gaji-template?role=${role}`;
-        if (divisiId) url += `&divisi_id=${divisiId}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() }
+        function initializePagination() {
+            const visibleRows = getFilteredRows();
+            const totalPages = Math.ceil(visibleRows.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = 1;
+            renderPagination();
+            updateVisibleItems();
+        }
+
+        // INITIALIZE ALL
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Data karyawan page loaded');
+            initializePagination();
+            Promise.all([loadRoleFilters(), loadDivisionFilters()]).then(() => { initializeFilter(); });
+            initializeSearch();
+            initializeEventListeners();
+            loadDivisis('formDivisi');
+            setupAllowanceCheckboxListeners();
         });
-        const result = await response.json();
-        
-        if (result.success && result.data && result.data.gaji_pokok) {
-            gajiInput.value = result.data.gaji_pokok;
-            showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(result.data.gaji_pokok)}`, 'success');
-        } else {
-            // Default jika tidak ada template
-            const defaultGaji = {
-                'general_manager': 15000000,
-                'manager_divisi': 10000000,
-                'finance': 8000000,
-                'hr': 7000000,
-                'karyawan': 5000000
-            };
-            if (defaultGaji[role]) {
-                gajiInput.value = defaultGaji[role];
-                showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(defaultGaji[role])}`, 'success');
-            }
-        }
-    } catch (error) {
-        console.error('Auto-fill gaji error:', error);
-    }
-}
-
-// Event listener untuk role dan divisi
-document.getElementById('formRole')?.addEventListener('change', autoFillGaji);
-document.getElementById('formDivisi')?.addEventListener('change', autoFillGaji);
-
-
-// ============================================================
-// AUTO-FILL GAJI BERDASARKAN ROLE
-// ============================================================
-async function autoFillGaji() {
-    const roleSelect = document.getElementById('formRole');
-    const divisiSelect = document.getElementById('formDivisi');
-    const gajiInput = document.getElementById('formGaji');
-    
-    if (!roleSelect || !gajiInput) return;
-    
-    const role = roleSelect.value;
-    const divisiId = divisiSelect ? divisiSelect.value : '';
-    
-    if (!role) {
-        gajiInput.value = '';
-        return;
-    }
-    
-    try {
-        let url = `/api/gaji-template?role=${encodeURIComponent(role)}`;
-        if (divisiId) {
-            url += `&divisi_id=${encodeURIComponent(divisiId)}`;
-        }
-        
-        console.log('Fetching gaji template from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken()
-            }
-        });
-        
-        const result = await response.json();
-        console.log('Gaji template response:', result);
-        
-        if (result.success && result.data && result.data.gaji_pokok) {
-            gajiInput.value = result.data.gaji_pokok;
-            const roleName = role.replace('_', ' ').toUpperCase();
-            showMinimalPopup(
-                'Info', 
-                `💼 Gaji default untuk ${roleName}: ${result.data.gaji_formatted || 'Rp ' + new Intl.NumberFormat('id-ID').format(result.data.gaji_pokok)}`, 
-                'success'
-            );
-        } else {
-            // Fallback ke default
-            const defaultGaji = {
-                'general_manager': 15000000,
-                'manager_divisi': 10000000,
-                'finance': 8000000,
-                'hr': 7000000,
-                'karyawan': 5000000
-            };
-            if (defaultGaji[role]) {
-                gajiInput.value = defaultGaji[role];
-                showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(defaultGaji[role])}`, 'info');
-            }
-        }
-    } catch (error) {
-        console.error('Auto-fill gaji error:', error);
-        // Fallback jika API error
-        const defaultGaji = {
-            'general_manager': 15000000,
-            'manager_divisi': 10000000,
-            'finance': 8000000,
-            'hr': 7000000,
-            'karyawan': 5000000
-        };
-        if (defaultGaji[role]) {
-            gajiInput.value = defaultGaji[role];
-        }
-    }
-}
-
-// Fungsi untuk auto-fill gaji di edit modal
-async function autoFillEditGaji() {
-    const roleSelect = document.getElementById('editRoleSelect');
-    const divisiSelect = document.getElementById('editDivisiSelect');
-    const gajiInput = document.getElementById('editGaji');
-    
-    if (!roleSelect || !gajiInput) return;
-    
-    const role = roleSelect.value;
-    const divisiId = divisiSelect ? divisiSelect.value : '';
-    
-    if (!role) {
-        if (gajiInput) gajiInput.value = '';
-        return;
-    }
-    
-    try {
-        let url = `/api/gaji-template?role=${encodeURIComponent(role)}`;
-        if (divisiId) {
-            url += `&divisi_id=${encodeURIComponent(divisiId)}`;
-        }
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken()
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.data && result.data.gaji_pokok && gajiInput) {
-            // Hanya set jika field gaji masih kosong atau belum diisi manual
-            if (!gajiInput.value || gajiInput.value === '0' || gajiInput.value === '') {
-                gajiInput.value = result.data.gaji_pokok;
-            }
-        }
-    } catch (error) {
-        console.error('Auto-fill edit gaji error:', error);
-    }
-}
-</script>
-
+    </script>
 </body>
 </html>

@@ -12,6 +12,7 @@ use App\Models\Pengumuman;
 use App\Models\Absensi;
 use App\Models\CatatanRapat;
 use App\Models\CatatanRapatPenugasan;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -28,6 +29,7 @@ class User extends Authenticatable
         'password',
         'role',
         'divisi_id',
+        'tim_id',
         'gaji',
         'alamat',
         'kontak',
@@ -125,10 +127,10 @@ class User extends Authenticatable
     // RELASI
     // ============================================
 
-    public function karyawan()
-    {
-        return $this->hasOne(Karyawan::class, 'user_id');
-    }
+  public function karyawan()
+{
+    return $this->hasOne(Karyawan::class, 'user_id');
+}
 
     public function cuti()
     {
@@ -207,6 +209,61 @@ class User extends Authenticatable
         return $this->divisi();
     }
 
+    /**
+     * Relasi ke Tim
+     */
+    public function tim()
+    {
+        return $this->belongsTo(Tim::class, 'tim_id');
+    }
+
+   // HAPUS relasi tunjangan yang lama dan GANTI dengan ini:
+
+/**
+ * Relasi ke Tunjangan Tetap (melalui Karyawan)
+ */
+public function tunjanganTetap()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) {
+        return collect();
+    }
+    
+    return $karyawan->tunjanganTetap();
+}
+
+/**
+ * Relasi ke Tunjangan Tidak Tetap
+ */
+public function tunjanganTidakTetap()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) {
+        return collect();
+    }
+    
+    return $karyawan->tunjanganTidakTetap();
+}
+
+/**
+ * Relasi untuk tunjangan tetap bulan ini
+ */
+public function tunjanganTetapBulanIni()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) return collect();
+    return $karyawan->tunjanganTetapBulanIni();
+}
+
+/**
+ * Relasi untuk tunjangan tidak tetap bulan ini
+ */
+public function tunjanganTidakTetapBulanIni()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) return collect();
+    return $karyawan->tunjanganTidakTetapBulanIni();
+}
     // ============================================
     // HELPER METHODS & SCOPES
     // ============================================
@@ -281,30 +338,27 @@ class User extends Authenticatable
             $karyawan->save();
         }
     }
+
     /**
- * Relasi ke tabel kinerja_pegawai
- */
-public function kinerja()
-{
-    return $this->hasMany(KinerjaPegawai::class, 'karyawan_id');
-}
+     * Relasi ke tabel kinerja_pegawai
+     */
+    public function kinerja()
+    {
+        return $this->hasMany(KinerjaPegawai::class, 'karyawan_id');
+    }
 
-/**
- * Relasi ke tabel kinerja_pegawai untuk periode tertentu
- */
-public function kinerjaPeriode($bulan, $tahun)
-{
-    return $this->hasOne(KinerjaPegawai::class, 'karyawan_id')
-        ->where('bulan', $bulan)
-        ->where('tahun', $tahun);
-}
-public function tim()
-{
-    return $this->hasOneThrough(Tim::class, Karyawan::class, 'user_id', 'id', 'id', 'tim_id');
-}
+    /**
+     * Relasi ke tabel kinerja_pegawai untuk periode tertentu
+     */
+    public function kinerjaPeriode($bulan, $tahun)
+    {
+        return $this->hasOne(KinerjaPegawai::class, 'karyawan_id')
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun);
+    }
 
-public function getDivisiIdAttribute($value)
-{
-    return $value;
-}
+    public function getDivisiIdAttribute($value)
+    {
+        return $value;
+    }
 }

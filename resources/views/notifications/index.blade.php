@@ -81,6 +81,24 @@
         .data-table tr:hover {
             background-color: #f9fafb;
         }
+        
+        /* Badge styles */
+        .badge-payroll {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .badge-task {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -126,7 +144,7 @@
                 @elseif($userRole == 'manager_divisi')
                     Pantau notifikasi untuk divisi Anda
                 @else
-                    Notifikasi tugas dan update untuk Anda
+                    Notifikasi tugas, slip gaji, dan update untuk Anda
                 @endif
             </p>
         </div>
@@ -273,8 +291,8 @@
     </div>
 
 @else
-    {{-- STATISTIK KARYAWAN --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-in">
+    {{-- STATISTIK KARYAWAN (TAMBAHKAN UNTUK SLIP GAJI) --}}
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 fade-in">
         <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -305,6 +323,17 @@
                 <div>
                     <p class="text-gray-400 text-sm">Sudah Dibaca</p>
                     <p class="text-2xl font-bold text-green-600">{{ $notifications->total() - $unreadCount }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-emerald-50 rounded-xl shadow-sm border border-emerald-100 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <span class="material-icons-outlined text-emerald-600">receipt</span>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Slip Gaji</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ $notifications->where('type', 'payroll')->count() }}</p>
                 </div>
             </div>
         </div>
@@ -356,7 +385,9 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                @if($notif->type == 'deadline_warning')
+                                @if($notif->type == 'payroll')
+                                    <span class="material-icons-outlined text-emerald-500">receipt</span>
+                                @elseif($notif->type == 'deadline_warning')
                                     <span class="material-icons-outlined text-red-500">warning</span>
                                 @elseif($notif->type == 'task_submitted')
                                     <span class="material-icons-outlined text-green-500">cloud_upload</span>
@@ -370,7 +401,13 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            @if($notif->task_id)
+                            @if($notif->type == 'payroll')
+                                <a href="{{ $notif->link ?? '#' }}" 
+                                   class="text-emerald-600 hover:text-emerald-800 text-sm flex items-center gap-1">
+                                    <span class="material-icons-outlined text-sm">receipt</span>
+                                    Lihat Slip Gaji
+                                </a>
+                            @elseif($notif->task_id)
                                 <a href="{{ route('hr.tasks.show', $notif->task_id) }}" 
                                    class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                                     <span class="material-icons-outlined text-sm">visibility</span>
@@ -463,7 +500,9 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                @if($notif->type == 'task_revision')
+                                @if($notif->type == 'payroll')
+                                    <span class="material-icons-outlined text-emerald-500">receipt</span>
+                                @elseif($notif->type == 'task_revision')
                                     <span class="material-icons-outlined text-orange-500">edit_note</span>
                                 @elseif($notif->type == 'task_submitted')
                                     <span class="material-icons-outlined text-green-500">cloud_upload</span>
@@ -521,7 +560,7 @@
     </div>
 
 @else
-    {{-- TAMPILAN KARYAWAN: CARD VIEW PERSONAL --}}
+    {{-- TAMPILAN KARYAWAN: CARD VIEW PERSONAL (DENGAN SLIP GAJI) --}}
     <div class="space-y-4 fade-in">
         @forelse($notifications as $notif)
         <div class="notification-item {{ !$notif->is_read ? 'unread' : '' }} bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition"
@@ -530,7 +569,11 @@
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
-                        @if($notif->type == 'task_reminder' || $notif->type == 'deadline_reminder')
+                        {{-- ICON BERDASARKAN TYPE --}}
+                        @if($notif->type == 'payroll')
+                            <span class="material-icons-outlined text-emerald-500 text-lg">receipt</span>
+                            <span class="badge-payroll">Slip Gaji</span>
+                        @elseif($notif->type == 'task_reminder' || $notif->type == 'deadline_reminder')
                             <span class="material-icons-outlined text-yellow-500 text-lg">schedule</span>
                         @elseif($notif->type == 'deadline_warning')
                             <span class="material-icons-outlined text-red-500 text-lg">warning</span>
@@ -563,7 +606,14 @@
                             <span class="material-icons-outlined text-xs">event</span>
                             {{ $notif->created_at->format('d M Y H:i') }}
                         </span>
-                        @if($notif->task_id)
+                        @if($notif->type == 'payroll' && $notif->link)
+                            <a href="{{ $notif->link }}" 
+                               class="text-emerald-600 hover:text-emerald-800 flex items-center gap-1"
+                               onclick="event.stopPropagation()">
+                                <span class="material-icons-outlined text-xs">receipt</span>
+                                Lihat Slip Gaji
+                            </a>
+                        @elseif($notif->task_id)
                             <a href="{{ route('karyawan.tugas.show', $notif->task_id) }}" 
                                class="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                onclick="event.stopPropagation()">
@@ -595,7 +645,7 @@
             <div class="flex flex-col items-center gap-3">
                 <span class="material-icons-outlined text-gray-300 text-6xl">notifications_none</span>
                 <p class="text-gray-400 font-medium">Belum ada notifikasi</p>
-                <p class="text-sm text-gray-400">Notifikasi akan muncul saat ada tugas baru atau deadline mendekat</p>
+                <p class="text-sm text-gray-400">Notifikasi akan muncul saat ada tugas baru, deadline mendekat, atau slip gaji tersedia</p>
             </div>
         </div>
         @endforelse

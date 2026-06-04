@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -144,11 +147,10 @@
             color: #1f2937 !important;
         }
 
-        /* Memastikan ikon tidak berubah ukurannya */
+        /* FIX PERBAIKAN DI SINI: Menghapus width & height !important agar tidak merusak flexbox */
         .sidebar-icon {
             font-size: 1.25rem !important;
-            width: 1.25rem !important;
-            height: 1.25rem !important;
+            display: inline-block;
         }
 
         /* Memastikan padding dan margin tidak berubah */
@@ -174,7 +176,6 @@
         /* Logo styling */
         .sidebar-header img {
             max-height: 3rem;
-            /* 48px, sesuai dengan tinggi header */
             width: auto;
             object-fit: contain;
             transition: all 0.3s ease;
@@ -188,7 +189,6 @@
 </head>
 
 <body class="bg-gray-100" x-data="{ sidebarOpen: false }">
-    <!-- Tombol Hamburger untuk Mobile (sekarang di kanan) -->
     <button @click="sidebarOpen = !sidebarOpen"
         class="md:hidden fixed top-4 right-4 z-50 p-2 rounded-md bg-white shadow-md">
         <div class="w-6 h-6 flex flex-col justify-center space-y-1" :class="sidebarOpen ? 'hamburger-active' : ''">
@@ -198,28 +198,23 @@
         </div>
     </button>
 
-    <!-- Overlay untuk Mobile -->
     <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="sidebarOpen = false"
         class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"></div>
 
-    <!-- Container utama aplikasi -->
     <div class="app-container">
         <aside id="sidebar"
             class="sidebar-fixed bg-white flex flex-col sidebar-transition transform translate-x-full md:translate-x-0 right-0 md:left-0 md:right-auto shadow-lg"
             :class="sidebarOpen ? 'translate-x-0' : ''">
 
-            <!-- BRAND -->
             <div class="sidebar-header flex items-center justify-center border-b border-gray-200 flex-shrink-0">
                 <img src="{{ asset('images/logo_inovindo.jpg') }}" alt="Inovindo Logo"
                     class="h-12 w-auto object-contain">
             </div>
 
-            <!-- MENU -->
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
 
-                <!-- BERANDA -->
                 <a href="/manager-divisi/home"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     :class="window.location.pathname === '/manager-divisi/home' ? 'active' : ''">
@@ -227,7 +222,6 @@
                     <span class="sidebar-text">Beranda</span>
                 </a>
 
-                <!-- DATA PROJECT -->
                 <a href="/manager-divisi/data_project"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     :class="window.location.pathname === '/manager-divisi/data_project' ? 'active' : ''">
@@ -235,7 +229,6 @@
                     <span class="sidebar-text">Data Project</span>
                 </a>
 
-                <!-- KELOLA TUGAS -->
                 <a href="/manager-divisi/pengelola_tugas"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     :class="window.location.pathname === '/manager-divisi/pengelola_tugas' ? 'active' : ''">
@@ -243,7 +236,6 @@
                     <span class="sidebar-text">Kelola Tugas</span>
                 </a>
 
-                <!-- DATA KARYAWAN -->
                 <a href="/manager-divisi/daftar_karyawan"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     :class="window.location.pathname === '/manager-divisi/daftar_karyawan' ? 'active' : ''">
@@ -251,7 +243,6 @@
                     <span class="sidebar-text">Data Karyawan</span>
                 </a>
 
-                <!-- LAPORAN ABSENSI -->
                 <a href="/manager-divisi/kelola_absensi"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     :class="window.location.pathname === '/manager-divisi/kelola_absensi' ? 'active' : ''">
@@ -259,9 +250,15 @@
                     <span class="sidebar-text">Laporan Absensi</span>
                 </a>
 
+                <a href="{{ route('manager_divisi.top_low_grade') }}"
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    :class="window.location.pathname.includes('top-low-grade') ? 'active' : ''">
+                    <span class="material-symbols-outlined sidebar-icon">leaderboard</span>
+                    <span class="sidebar-text">Top & Low Grade</span>
+                </a>
+
             </nav>
 
-            <!-- LOGOUT -->
             <div class="sidebar-footer border-t border-gray-200 flex-shrink-0">
                 <a href="#" @click="event.preventDefault(); document.getElementById('logout-form').submit();"
                     class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -277,7 +274,6 @@
         </aside>
     </div>
 
-    <!-- ALPINE JS -->
     <script src="//unpkg.com/alpinejs" defer></script>
 </body>
 

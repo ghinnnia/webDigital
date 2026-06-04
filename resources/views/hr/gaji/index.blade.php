@@ -127,7 +127,6 @@
                                     <th class="px-4 py-4 text-left font-bold text-slate-700">Tunjangan yang Didapat</th>
                                     <th class="px-4 py-4 text-right font-bold text-slate-700">Gaji Pokok</th>
                                     <th class="px-4 py-4 text-right font-bold text-slate-700 bg-emerald-50 text-emerald-700">Total Tunjangan</th>
-                                    <th class="px-4 py-4 text-right font-bold text-slate-700">Potongan</th>
                                     <th class="px-4 py-4 text-right font-bold text-slate-700 bg-indigo-50 text-indigo-700">Total Gaji</th>
                                 </tr>
                             </thead>
@@ -143,8 +142,7 @@
                                     
                                     $gajiPokok = $gaji->gaji_pokok ?? ($template->gaji_pokok ?? 5000000);
                                     
-                                    $potongan = $gaji->potongan_bpjs ?? 0;
-                                    $total = $gaji->total_gaji ?? ($gajiPokok + $totalTunjangan - $potongan);
+                                    $total = $gaji->total_gaji ?? ($gajiPokok + $totalTunjangan);
                                 @endphp
                                 <tr class="hover:bg-indigo-50/30 transition-all duration-150">
                                     <td class="px-4 py-3 text-center">{{ $loop->iteration }}</td>
@@ -202,14 +200,6 @@
                                         <input type="hidden" name="tunjangan[{{ $k->id }}]" value="{{ $totalTunjangan }}" class="tunjangan-value">
                                         <input type="hidden" name="tunjangan_detail[{{ $k->id }}]" value='@json($tunjanganKaryawan->toArray())'>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <input type="number" 
-                                               name="potongan[{{ $k->id }}]" 
-                                               value="{{ $potongan }}"
-                                               class="potongan w-32 text-right bg-red-50 border-red-200 focus:ring-2 focus:ring-red-100 focus:border-red-500 rounded-lg px-3 py-1.5 text-sm transition-all duration-150"
-                                               step="10000" 
-                                               placeholder="0">
-                                    </td>
                                     <td class="px-4 py-3 text-right font-bold text-indigo-600 total-gaji">
                                         Rp {{ number_format($total, 0, ',', '.') }}
                                     </td>
@@ -218,7 +208,7 @@
                             </tbody>
                             <tfoot class="bg-slate-100 border-t-2 border-slate-200">
                                 <tr>
-                                    <td colspan="8" class="px-4 py-4 text-right font-bold text-slate-700">GRAND TOTAL:</td>
+                                    <td colspan="7" class="px-4 py-4 text-right font-bold text-slate-700">GRAND TOTAL:</td>
                                     <td class="px-4 py-4 text-right font-bold text-indigo-700 text-lg grand-total">
                                         Rp {{ number_format($grandTotal, 0, ',', '.') }}
                                     </td>
@@ -250,7 +240,7 @@
                         <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Informasi:</strong> 
                         <ul class="ml-4 mt-1">
                             <li>• Tunjangan yang didapat karyawan sudah ditentukan di halaman <strong>Data Karyawan</strong></li>
-                            <li>• Total Gaji = Gaji Pokok + Total Tunjangan - Potongan</li>
+                            <li>• Total Gaji = Gaji Pokok + Total Tunjangan</li>
                             <li>• Setelah klik "Simpan", data akan langsung masuk ke Finance</li>
                         </ul>
                     </span>
@@ -341,9 +331,8 @@
     function calculateRowTotal(row) {
         const gajiPokok = parseFloat(row.querySelector('.gaji-pokok')?.value) || 0;
         const tunjangan = parseFloat(row.querySelector('.tunjangan-value')?.value) || 0;
-        const potongan = parseFloat(row.querySelector('.potongan')?.value) || 0;
         
-        const total = gajiPokok + tunjangan - potongan;
+        const total = gajiPokok + tunjangan;
         const totalCell = row.querySelector('.total-gaji');
         if (totalCell) {
             totalCell.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
@@ -364,7 +353,7 @@
     }
 
     // Event listeners untuk input
-    document.querySelectorAll('.gaji-pokok, .potongan').forEach(input => {
+    document.querySelectorAll('.gaji-pokok').forEach(input => {
         input.addEventListener('input', function() {
             calculateRowTotal(this.closest('tr'));
             calculateGrandTotal();
@@ -376,35 +365,38 @@
         calculateGrandTotal();
     }, 100);
 
-    // Apply template ke semua karyawan
-    document.getElementById('applyTemplateToAll')?.addEventListener('click', async function() {
-        if (confirm('Yakin ingin menerapkan template gaji default ke semua karyawan?\n\nData gaji yang sudah diisi sebelumnya akan ditimpa!')) {
-            try {
-                const response = await fetch('{{ route("hr.gaji.apply-template") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        bulan: {{ $bulan }},
-                        tahun: {{ $tahun }},
-                        divisi_id: '{{ request('divisi_id') }}',
-                        role: '{{ request('role') }}'
-                    })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('Gagal menerapkan template: ' + result.message);
+      // Apply template ke semua karyawan
+    const applyTemplateBtn = document.getElementById('applyTemplateToAll');
+    if (applyTemplateBtn) {
+        applyTemplateBtn.addEventListener('click', async function() {
+            if (confirm('Yakin ingin menerapkan template gaji default ke semua karyawan?\n\nData gaji yang sudah diisi sebelumnya akan ditimpa!')) {
+                try {
+                    const response = await fetch('{{ route("hr.gaji.apply-template") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            bulan: {{ $bulan }},
+                            tahun: {{ $tahun }},
+                            divisi_id: '{{ request('divisi_id') }}',
+                            role: '{{ request('role') }}'
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Gagal menerapkan template: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Terjadi kesalahan: ' + error.message);
                 }
-            } catch (error) {
-                alert('Terjadi kesalahan: ' + error.message);
             }
-        }
-    });
+        });
+    }
 
     // Modal Template List
     const templateListModal = document.getElementById('templateListModal');
@@ -413,23 +405,35 @@
     const closeTemplateListModalBtn = document.getElementById('closeTemplateListModalBtn');
 
     function openTemplateListModal() {
-        templateListModal.classList.remove('hidden');
-        templateListModal.classList.add('flex');
+        if (templateListModal) {
+            templateListModal.classList.remove('hidden');
+            templateListModal.classList.add('flex');
+        }
     }
 
     function closeTemplateListModalFunc() {
-        templateListModal.classList.add('hidden');
-        templateListModal.classList.remove('flex');
+        if (templateListModal) {
+            templateListModal.classList.add('hidden');
+            templateListModal.classList.remove('flex');
+        }
     }
 
-    btnShowTemplateList?.addEventListener('click', openTemplateListModal);
-    closeTemplateListModal?.addEventListener('click', closeTemplateListModalFunc);
-    closeTemplateListModalBtn?.addEventListener('click', closeTemplateListModalFunc);
+    if (btnShowTemplateList) {
+        btnShowTemplateList.addEventListener('click', openTemplateListModal);
+    }
+    if (closeTemplateListModal) {
+        closeTemplateListModal.addEventListener('click', closeTemplateListModalFunc);
+    }
+    if (closeTemplateListModalBtn) {
+        closeTemplateListModalBtn.addEventListener('click', closeTemplateListModalFunc);
+    }
 
     // Tutup modal jika klik di luar
-    templateListModal?.addEventListener('click', function(e) {
-        if (e.target === templateListModal) {
-            closeTemplateListModalFunc();
-        }
-    });
+    if (templateListModal) {
+        templateListModal.addEventListener('click', function(e) {
+            if (e.target === templateListModal) {
+                closeTemplateListModalFunc();
+            }
+        });
+    }
 </script>
