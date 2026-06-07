@@ -263,8 +263,8 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
         Route::get('/', [LemburController::class, 'financeIndex'])->name('index');
         Route::post('/mark-paid', [LemburController::class, 'markAsPaid'])->name('mark-paid');
         // Di dalam group finance payroll
-Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
-Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
+// Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
+// Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
     });
 });
 
@@ -397,26 +397,40 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/admin/karyawan/get-gaji/{userId}', [AdminKaryawanController::class, 'getGajiTerbaru']);
 
+// Route untuk TTD Digital (Admin/HR)
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('ttd')->name('ttd.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\TtdSettingController::class, 'index'])->name('index');
+        Route::post('/store', [App\Http\Controllers\Admin\TtdSettingController::class, 'store'])->name('store');
+        Route::delete('/{id}', [App\Http\Controllers\Admin\TtdSettingController::class, 'destroy'])->name('destroy');
+    });
+});
+
 // ========== FINANCE - PENGGAJIAN ==========
 Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')->group(function () {
     
-    Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
-    Route::get('/payroll/create', [PayrollController::class, 'create'])->name('payroll.create');
-    Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
-    Route::get('/payroll/{id}', [PayrollController::class, 'show'])->name('payroll.show');
-    Route::get('/payroll/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('payroll.slip');
-    // Di dalam group finance payroll
-Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
-    // TAMBAHKAN ROUTE INI
-    Route::post('/payroll/{id}/hitung-potongan', [PayrollController::class, 'hitungSemuaPotongan'])->name('payroll.hitung-potongan');
-    
-    // Ambil data dari HR
-    Route::get('/payroll-dari-hr', [PayrollController::class, 'daftarDariHR'])->name('payroll.dari-hr');
-    Route::post('/payroll-ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('payroll.ambil-dari-hr');
-    
-    // Approve & Payment
-    Route::post('/payroll/{id}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
-    Route::post('/payroll/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('payroll.paid');
+    Route::prefix('payroll')->name('payroll.')->group(function () {
+        
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::get('/create', [PayrollController::class, 'create'])->name('create');
+        Route::post('/', [PayrollController::class, 'store'])->name('store');
+        Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
+        Route::get('/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('slip');
+        Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungSemuaPotongan'])->name('hitung-potongan');
+        
+        // Ambil data dari HR
+        Route::get('/dari-hr', [PayrollController::class, 'daftarDariHR'])->name('dari-hr');
+        Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
+        
+        // Approve & Payment
+        Route::post('/{id}/approve', [PayrollController::class, 'approve'])->name('approve');
+        Route::post('/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('paid');
+        
+        // ========== ROUTE KIRIM SLIP GAJI (DI DALAM GROUP PAYROLL) ==========
+        Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
+        Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
+        // ===================================================================
+    });
 });
 
 // Routes for getting lists (no auth required for these specific endpoints)
@@ -824,15 +838,15 @@ Route::middleware('auth')->group(function () {
         });
 
         // Divisi API (Global)
-        Route::get('/divisis/list', function () {
-            try {
-                $divisis = \App\Models\Divisi::select('id', 'divisi')->get();
-                return response()->json($divisis);
-            } catch (\Exception $e) {
-                \Log::error('Divisi list error: ' . $e->getMessage());
-                return response()->json(['error' => 'Failed to load divisis', 'message' => $e->getMessage()], 500);
-            }
-        })->name('divisis.list');
+        // Route::get('/divisis/list', function () {
+        //     try {
+        //         $divisis = \App\Models\Divisi::select('id', 'divisi')->get();
+        //         return response()->json($divisis);
+        //     } catch (\Exception $e) {
+        //         \Log::error('Divisi list error: ' . $e->getMessage());
+        //         return response()->json(['error' => 'Failed to load divisis', 'message' => $e->getMessage()], 500);
+        //     }
+        // })->name('divisis.list');
     });
 });
 
@@ -1244,10 +1258,10 @@ Route::middleware(['auth', 'role:general_manager'])
             Route::delete('/{id}', [TimDivisiController::class, 'destroyDivisi'])->name('divisi.destroy');
             Route::get('/search', [TimDivisiController::class, 'searchDivisi'])->name('divisi.search');
         });
-
-        // Utility route
-        Route::get('/divisis/list', [TimDivisiController::class, 'getDivisis'])->name('divisis.list');
     });
+    //     // Utility route
+    //     Route::get('/divisis/list', [TimDivisiController::class, 'getDivisis'])->name('divisis.list');
+    // });
 
 // Convenience route: Rekap Absensi (auth-only)
 Route::middleware(['auth'])->get('/rekap_absensi', [AbsensiController::class, 'rekapAbsensi'])->name('rekap_absensi');
@@ -1720,7 +1734,7 @@ Route::middleware(['auth'])->group(function () {
 
     // API endpoints
     Route::get('/users/data', [UserController::class, 'getData']);
-    Route::get('/divisis/list', [UserController::class, 'getDivisis'])->name('divisis.list');
+    // Route::get('/divisis/list', [UserController::class, 'getDivisis'])->name('divisis.list');
     Route::get('/roles/list', [UserController::class, 'getRoles'])->name('roles.list');
     Route::get('/tims/by-divisi/{id}', [TimDivisiController::class, 'getTimsByDivisi'])->name('tims.by_divisi');
 });

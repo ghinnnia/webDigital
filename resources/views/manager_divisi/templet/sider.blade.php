@@ -256,6 +256,12 @@
                     <span class="material-symbols-outlined sidebar-icon">leaderboard</span>
                     <span class="sidebar-text">Top & Low Grade</span>
                 </a>
+                <!-- Menu Approve Lembur -->
+<a href="{{ route('manager_divisi.lembur.index') }}" 
+   class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+    <span class="material-icons-outlined">schedule</span>
+    <span>Approve Lembur</span>
+</a>
 
             </nav>
 
