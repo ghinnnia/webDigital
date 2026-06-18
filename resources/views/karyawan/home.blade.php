@@ -17,7 +17,7 @@
                 extend: {
                     colors: {
                         primary: "#3b82f6",
-                        "background-light": "#f8fafc", // Slightly lighter slate
+                        "background-light": "#f8fafc",
                         "background-dark": "#0f172a",
                         "surface-light": "#ffffff",
                         "surface-dark": "#1e293b",
@@ -26,7 +26,7 @@
                         display: ["Poppins", "sans-serif"],
                     },
                     borderRadius: {
-                        DEFAULT: "1rem", // Slightly more rounded by default
+                        DEFAULT: "1rem",
                         '2xl': '1.5rem',
                     },
                     boxShadow: {
@@ -153,6 +153,14 @@
         .dark .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #475569;
         }
+
+        /* Line clamp for announcement text */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 
@@ -163,7 +171,6 @@
         <main class="flex-grow my-8 max-w-7xl mx-auto w-full">
             <!-- Hero Section with Glassmorphism -->
             <section class="reveal-on-load glass-panel dark:bg-surface-dark/80 rounded-3xl p-8 sm:p-12 lg:p-16 shadow-soft relative overflow-hidden">
-                <!-- Decorative background gradient -->
                 <div class="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 dark:bg-blue-400/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
                 <div class="max-w-4xl mx-auto relative z-10">
@@ -216,135 +223,132 @@
             </section>
 
             <!-- Stats Grid -->
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-
-    <!-- Status Presensi -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-blue-50 dark:bg-blue-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-blue-100 dark:ring-blue-800">
-            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">person</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Presensi</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="attendance-status">{{ $attendance_status }}</p>
-        </div>
-    </div>
-
-    <!-- Total Hadir -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-blue-50 dark:bg-blue-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-blue-100 dark:ring-blue-800">
-            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">check_circle</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Hadir</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-hadir">{{ $total_hadir }}</p>
-        </div>
-    </div>
-
-    <!-- Total Terlambat -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-red-50 dark:bg-red-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-red-100 dark:ring-red-800">
-            <span class="material-symbols-outlined text-red-600 dark:text-red-400">schedule</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Terlambat</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-terlambat">{{ $total_terlambat }}</p>
-        </div>
-    </div>
-
-    <!-- Total Sakit -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-orange-50 dark:bg-orange-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-orange-100 dark:ring-orange-800">
-            <span class="material-symbols-outlined text-orange-600 dark:text-orange-400">sick</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Sakit</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-sakit">{{ $total_sakit }}</p>
-        </div>
-    </div>
-
-    <!-- Total Izin -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-yellow-100 dark:ring-yellow-800">
-            <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">event_available</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Izin</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-izin">{{ $total_izin }}</p>
-        </div>
-    </div>
-
-    <!-- Total Cuti -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-green-50 dark:bg-green-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-green-100 dark:ring-green-800">
-            <span class="material-symbols-outlined text-green-600 dark:text-green-400">beach_access</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cuti</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-cuti">{{ $total_cuti }}</p>
-        </div>
-    </div>
-
-    <!-- Jumlah Tugas -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-purple-50 dark:bg-purple-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-purple-100 dark:ring-purple-800">
-            <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">assignment</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Jumlah Tugas</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="tugas-count">{{ $tugas_count }}</p>
-        </div>
-    </div>
-
-    <!-- Penanggung Jawab Project -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-start gap-4">
-        <div class="bg-indigo-50 dark:bg-indigo-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-indigo-100 dark:ring-indigo-800">
-            <span class="material-symbols-outlined text-indigo-600 dark:text-indigo-400">account_circle</span>
-        </div>
-        <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Penanggung Jawab Project</p>
-            @if(($penanggung_project_count ?? 0) > 0)
-                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">Ya</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $penanggung_project_count }} project</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Aktif: {{ $penanggung_project_aktif_count ?? 0 }} | Berjalan: {{ $penanggung_project_berjalan_count ?? 0 }}
-                </p>
-                @if(($penanggung_projects_preview ?? collect())->isNotEmpty())
-                    <div class="mt-2 space-y-1">
-                        @foreach(($penanggung_projects_preview ?? collect()) as $projectPreview)
-                            <p class="text-xs text-gray-600 dark:text-gray-300 truncate" title="{{ $projectPreview->nama }}">
-                                {{ \Illuminate\Support\Str::limit($projectPreview->nama, 24) }}
-                                ({{ (int) ($projectPreview->progres ?? 0) }}%)
-                            </p>
-                        @endforeach
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+                <!-- Status Presensi -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-blue-100 dark:ring-blue-800">
+                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">person</span>
                     </div>
-                @endif
-                <button
-                    type="button"
-                    id="openProjectDetail"
-                    class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
-                >
-                    <span class="material-symbols-outlined text-base">open_in_new</span>
-                    Lihat Detail
-                </button>
-            @else
-                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">Tidak</p>
-            @endif
-        </div>
-    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Presensi</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="attendance-status">{{ $attendance_status }}</p>
+                    </div>
+                </div>
 
-    <!-- Total Presensi -->
-    <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
-        <div class="bg-gray-100 dark:bg-gray-700 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-gray-200 dark:ring-gray-600">
-            <span class="material-symbols-outlined text-gray-600 dark:text-gray-400">event_busy</span>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Presensi</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-absen">Memuat...</p>
-        </div>
-    </div>
+                <!-- Total Hadir -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-blue-100 dark:ring-blue-800">
+                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">check_circle</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Hadir</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-hadir">{{ $total_hadir }}</p>
+                    </div>
+                </div>
 
-</section>
+                <!-- Total Terlambat -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-red-50 dark:bg-red-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-red-100 dark:ring-red-800">
+                        <span class="material-symbols-outlined text-red-600 dark:text-red-400">schedule</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Terlambat</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-terlambat">{{ $total_terlambat }}</p>
+                    </div>
+                </div>
 
+                <!-- Total Sakit -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-orange-100 dark:ring-orange-800">
+                        <span class="material-symbols-outlined text-orange-600 dark:text-orange-400">sick</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Sakit</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-sakit">{{ $total_sakit }}</p>
+                    </div>
+                </div>
+
+                <!-- Total Izin -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-yellow-100 dark:ring-yellow-800">
+                        <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">event_available</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Izin</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-izin">{{ $total_izin }}</p>
+                    </div>
+                </div>
+
+                <!-- Total Cuti -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-green-50 dark:bg-green-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-green-100 dark:ring-green-800">
+                        <span class="material-symbols-outlined text-green-600 dark:text-green-400">beach_access</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cuti</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-cuti">{{ $total_cuti }}</p>
+                    </div>
+                </div>
+
+                <!-- Jumlah Tugas -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-purple-100 dark:ring-purple-800">
+                        <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">assignment</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Jumlah Tugas</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="tugas-count">{{ $tugas_count }}</p>
+                    </div>
+                </div>
+
+                <!-- Penanggung Jawab Project -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-start gap-4">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-indigo-100 dark:ring-indigo-800">
+                        <span class="material-symbols-outlined text-indigo-600 dark:text-indigo-400">account_circle</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Penanggung Jawab Project</p>
+                        @if(($penanggung_project_count ?? 0) > 0)
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">Ya</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $penanggung_project_count }} project</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Aktif: {{ $penanggung_project_aktif_count ?? 0 }} | Berjalan: {{ $penanggung_project_berjalan_count ?? 0 }}
+                            </p>
+                            @if(($penanggung_projects_preview ?? collect())->isNotEmpty())
+                                <div class="mt-2 space-y-1">
+                                    @foreach(($penanggung_projects_preview ?? collect()) as $projectPreview)
+                                        <p class="text-xs text-gray-600 dark:text-gray-300 truncate" title="{{ $projectPreview->nama }}">
+                                            {{ \Illuminate\Support\Str::limit($projectPreview->nama, 24) }}
+                                            ({{ (int) ($projectPreview->progres ?? 0) }}%)
+                                        </p>
+                                    @endforeach
+                                </div>
+                            @endif
+                            <button
+                                type="button"
+                                id="openProjectDetail"
+                                class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
+                            >
+                                <span class="material-symbols-outlined text-base">open_in_new</span>
+                                Lihat Detail
+                            </button>
+                        @else
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">Tidak</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Total Presensi -->
+                <div class="modern-card bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 flex items-center gap-4">
+                    <div class="bg-gray-100 dark:bg-gray-700 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-gray-200 dark:ring-gray-600">
+                        <span class="material-symbols-outlined text-gray-600 dark:text-gray-400">event_busy</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Presensi</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="total-absen">Memuat...</p>
+                    </div>
+                </div>
+            </section>
 
             <!-- Main Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
@@ -399,13 +403,13 @@
                     <div id="meeting-notes-container" class="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-grow">
                         <div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
                             <span class="material-symbols-outlined text-5xl mb-2 opacity-50">event_note</span>
-                            <p class="text-sm">Tidak ada catatan pada tanggal ini</p>
+                            <p class="text-sm">Pilih tanggal untuk melihat catatan meeting</p>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <!-- Announcements Section -->
+            <!-- Announcements Section - DIPERBAIKI -->
             <section class="reveal-on-load bg-white dark:bg-surface-dark rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 p-6 mt-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -422,21 +426,25 @@
                             <div class="flex justify-between items-start mb-3">
                                 <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">{{ $announcement->judul ?? 'Tanpa Judul' }}</h4>
                                 <span class="text-xs font-medium bg-white dark:bg-gray-700 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
-                                    {{ $announcement->created_at->format('d M Y') }}
+                                    {{ is_object($announcement) && $announcement->created_at ? $announcement->created_at->format('d M Y') : (is_array($announcement) && isset($announcement['created_at']) ? date('d M Y', strtotime($announcement['created_at'])) : '-') }}
                                 </span>
                             </div>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                                {{ $announcement->ringkasan ?? $announcement->isi_pesan ?? 'Tidak ada pesan' }}
+                                {{ is_object($announcement) ? ($announcement->ringkasan ?? $announcement->isi_pesan ?? 'Tidak ada pesan') : (isset($announcement['isi_pesan']) ? $announcement['isi_pesan'] : (isset($announcement['ringkasan']) ? $announcement['ringkasan'] : 'Tidak ada pesan')) }}
                             </p>
                             <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-3 mt-auto">
                                 <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                                     <span class="material-symbols-outlined text-sm">person</span>
-                                    {{ $announcement->creator ?? 'System' }}
+                                    {{ is_object($announcement) ? ($announcement->creator ?? 'System') : (isset($announcement['creator']) ? $announcement['creator'] : 'System') }}
                                 </div>
-                                @if(isset($announcement->lampiran_url) && $announcement->lampiran_url)
-                                    <a href="{{ $announcement->lampiran_url }}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
+                                @php
+                                    $lampiranUrl = is_object($announcement) ? ($announcement->lampiran_url ?? null) : (isset($announcement['lampiran_url']) ? $announcement['lampiran_url'] : null);
+                                @endphp
+                                @if($lampiranUrl)
+                                    <a href="{{ $lampiranUrl }}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">attach_file</span>
-                                        Lampiran</a>
+                                        Lampiran
+                                    </a>
                                 @endif
                             </div>
                         </div>
@@ -528,7 +536,7 @@
                                 <th class="py-2 pr-3">Deskripsi</th>
                                 <th class="py-2 pr-3">Periode</th>
                                 <th class="py-2 pr-3">Status</th>
-                            </tr>
+                            </table>
                         </thead>
                         <tbody id="projectDetailBody"></tbody>
                     </table>
@@ -551,10 +559,25 @@
                     element.classList.add('reveal-active');
                 }, delay);
             });
+            
+            // Set total absen
+            const totalAbsenEl = document.getElementById('total-absen');
+            if (totalAbsenEl) {
+                const totalHadir = parseInt(document.getElementById('total-hadir')?.innerText || '0');
+                const totalSakit = parseInt(document.getElementById('total-sakit')?.innerText || '0');
+                const totalIzin = parseInt(document.getElementById('total-izin')?.innerText || '0');
+                const totalCuti = parseInt(document.getElementById('total-cuti')?.innerText || '0');
+                const total = totalHadir + totalSakit + totalIzin + totalCuti;
+                totalAbsenEl.innerText = total;
+            }
+            
+            // Initialize calendar
+            renderCalendar();
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            selectDate(todayStr);
         });
 
-        // --- JS LOGIC (Functional) ---
-        
         // Helper function to animate numbers
         function animateValue(obj, start, end, duration) {
             if (!obj) return;
@@ -635,17 +658,11 @@
             return data;
         }
 
-        async function fetchDashboardData() {
-            // Disabled to use MySQL data directly via Blade
-            return;
-        }
-
-
         // Calendar functionality
         let currentDate = new Date();
         let selectedDate = null;
-        let highlightedDates = @json($highlighted_dates);
-        let announcementDates = @json($announcement_dates);
+        let highlightedDates = @json($highlighted_dates ?? []);
+        let announcementDates = @json($announcement_dates ?? []);
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -721,23 +738,9 @@
         function selectDate(dateStr) {
             selectedDate = dateStr;
             renderCalendar();
+            loadMeetingNotes(dateStr);
+            loadAnnouncements(dateStr);
         }
-
-        async function loadHighlightedDates() {
-            // Disabled to use MySQL data directly via Blade
-            return;
-        }
-
-        async function loadAnnouncementDates() {
-            // Disabled to use MySQL data directly via Blade
-            return;
-        }
-
-        async function loadMeetingNotes(date) {
-            // Disabled to use MySQL data directly via Blade
-            return;
-        }
-
 
         function normalizeDate(value) {
             if (!value) return '';
@@ -750,53 +753,158 @@
                 return '';
             }
         }
-
-        async function loadAnnouncements(selectedDate = null) {
-            // Disabled to use MySQL data directly via Blade
-            return;
-        }
-
-
-        // Calendar navigation
-        document.getElementById('prev-month').addEventListener('click', function () {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
-        });
-
-        document.getElementById('next-month').addEventListener('click', function () {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
-        });
-
-        // Refresh buttons with simple spin animation
-        document.getElementById('refresh-notes')?.addEventListener('click', function () {
-            const icon = this.querySelector('.material-symbols-outlined');
-            icon.style.transition = 'transform 0.5s ease';
-            icon.style.transform = 'rotate(360deg)';
-            setTimeout(() => { icon.style.transition = 'none'; icon.style.transform = 'none'; }, 500);
-            
-            if (selectedDate) {
-                loadMeetingNotes(selectedDate);
+// Load meeting notes (langsung dari data Blade, tanpa API)
+function loadMeetingNotes(date) {
+    const container = document.getElementById('meeting-notes-container');
+    if (!container) return;
+    
+    // Data catatan meeting dari Blade
+    let meetingNotes = @json($meetingNotes ?? []);
+    
+    // Filter berdasarkan tanggal
+    if (date && meetingNotes && meetingNotes.length > 0) {
+        meetingNotes = meetingNotes.filter(note => {
+            let tanggalNote = note.tanggal || note.created_at;
+            if (tanggalNote) {
+                const dateOnly = normalizeDate(tanggalNote);
+                return dateOnly === date;
             }
+            return false;
         });
+    }
+    
+    if (!meetingNotes || meetingNotes.length === 0) {
+        container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+            <span class="material-symbols-outlined text-5xl mb-2 opacity-50">event_note</span>
+            <p class="text-sm">Tidak ada catatan meeting pada tanggal ini</p>
+        </div>`;
+        return;
+    }
+    
+    container.innerHTML = meetingNotes.map(note => `
+        <div class="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl list-indicator indicator-purple">
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">${escapeHtml(note.topik || 'Tanpa Topik')}</h4>
+            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                <div><span class="font-medium">Hasil Diskusi:</span><p class="mt-1">${escapeHtml(note.hasil_diskusi || '-')}</p></div>
+                <div><span class="font-medium">Keputusan:</span><p class="mt-1">${escapeHtml(note.keputusan || '-')}</p></div>
+            </div>
+            <div class="mt-2 text-xs text-gray-400">
+                📅 ${formatTanggal(note.tanggal || note.created_at)}
+            </div>
+        </div>
+    `).join('');
+}
 
-        document.getElementById('refresh-announcements')?.addEventListener('click', function () {
-            const icon = this.querySelector('.material-symbols-outlined');
-            icon.style.transition = 'transform 0.5s ease';
-            icon.style.transform = 'rotate(360deg)';
-            setTimeout(() => { icon.style.transition = 'none'; icon.style.transform = 'none'; }, 500);
-            
-            loadAnnouncements(selectedDate);
+// Load announcements (langsung dari data Blade, tanpa API)
+function loadAnnouncements(selectedDate = null) {
+    const container = document.getElementById('announcements-container');
+    if (!container) return;
+    
+    // Data pengumuman dari Blade
+    let announcements = @json($announcements ?? []);
+    
+    // Filter berdasarkan tanggal jika ada
+    if (selectedDate && announcements && announcements.length > 0) {
+        announcements = announcements.filter(a => {
+            let tanggal = a.tanggal || a.created_at || a.tanggal_indo;
+            if (tanggal) {
+                const dateOnly = normalizeDate(tanggal);
+                return dateOnly === selectedDate;
+            }
+            return false;
         });
+    }
+    
+    if (!announcements || announcements.length === 0) {
+        const msg = selectedDate ? 'Tidak ada pengumuman pada tanggal ini' : 'Tidak ada pengumuman';
+        container.innerHTML = `<div class="col-span-full h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+            <span class="material-symbols-outlined text-5xl mb-2 opacity-50">campaign</span>
+            <p class="text-sm">${msg}</p>
+        </div>`;
+        return;
+    }
+    
+    container.innerHTML = announcements.map(announcement => `
+        <div class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl list-indicator indicator-yellow hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+            <div class="flex justify-between items-start mb-3">
+                <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">${escapeHtml(announcement.judul || 'Tanpa Judul')}</h4>
+                <span class="text-xs font-medium bg-white dark:bg-gray-700 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+                    ${formatTanggal(announcement.tanggal_indo || announcement.tanggal || announcement.created_at)}
+                </span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                ${escapeHtml(announcement.ringkasan || announcement.isi_pesan || 'Tidak ada pesan')}
+            </p>
+            <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-3 mt-auto">
+                <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-sm">person</span>
+                    ${escapeHtml(announcement.creator || announcement.creator_name || 'System')}
+                </div>
+                ${announcement.lampiran_url ? `<a href="${escapeHtml(announcement.lampiran_url)}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">attach_file</span>
+                    Lampiran
+                </a>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
 
-        // Project detail modal (penanggung jawab)
-        const projectModal = document.getElementById('projectDetailModal');
-        const projectOpenBtn = document.getElementById('openProjectDetail');
-        const projectCloseBtn = document.getElementById('closeProjectDetail');
-        const projectBodyEl = document.getElementById('projectDetailBody');
-        const projectLoadingEl = document.getElementById('projectDetailLoading');
-        const projectEmptyEl = document.getElementById('projectDetailEmpty');
+// Helper functions
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
 
+function formatTanggal(tanggal) {
+    if (!tanggal) return '-';
+    try {
+        const date = new Date(tanggal);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+    } catch(e) {}
+    return tanggal;
+}
+
+function normalizeDate(value) {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+    }
+    try {
+        return new Date(value).toISOString().split('T')[0];
+    } catch (e) {
+        return '';
+    }
+}
+
+// Helper function untuk escape HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// Helper function format tanggal
+function formatTanggal(tanggal) {
+    if (!tanggal) return '-';
+    try {
+        const date = new Date(tanggal);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+    } catch(e) {}
+    return tanggal;
+}
         function formatProjectDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr);
@@ -864,18 +972,6 @@
                 }
             });
         }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function () {
-            renderCalendar();
-
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            selectDate(todayStr);
-        });
     </script>
-
-
 </body>
-
 </html>

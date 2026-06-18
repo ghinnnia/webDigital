@@ -5,9 +5,15 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
     <title>Top & Low Grade - Manager Divisi</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <script>
@@ -49,6 +55,9 @@
         .rank-1 { background: linear-gradient(135deg, #fcd34d, #f59e0b); }
         .rank-2 { background: linear-gradient(135deg, #cbd5e1, #64748b); }
         .rank-3 { background: linear-gradient(135deg, #fed7aa, #b45309); }
+        
+        /* Tambahan pencegah kedip layout sebelum alpine load */
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 

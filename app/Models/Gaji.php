@@ -1,5 +1,4 @@
 <?php
-// app/Models/Gaji.php
 
 namespace App\Models;
 
@@ -38,11 +37,18 @@ class Gaji extends Model
         'potongan_bpjs' => 'decimal:2',
         'potongan_lain' => 'decimal:2',
         'total_gaji' => 'decimal:2',
-        'tunjangan_detail' => 'array', // Auto cast JSON ke array
+        'tunjangan_detail' => 'array',
     ];
 
-    public function karyawan()
+    // Relasi ke User (karyawan) - karyawan_id = user_id
+    public function user()
     {
         return $this->belongsTo(User::class, 'karyawan_id');
+    }
+
+    // Relasi ke Karyawan (jika ada model Karyawan terpisah)
+    public function karyawan()
+    {
+        return $this->belongsTo(Karyawan::class, 'karyawan_id');
     }
 }

@@ -195,6 +195,12 @@
             justify-content: center;
         }
         
+        .ttd-image {
+            max-width: 130px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+        
         .ttd-name {
             font-weight: bold;
             color: #1e293b;
@@ -222,6 +228,13 @@
     </style>
 </head>
 <body>
+
+@php
+    // Ambil data TTD dari database
+    $ttdFinance = \App\Models\TtdSetting::where('role', 'finance')->where('is_active', true)->first();
+    $ttdHR = \App\Models\TtdSetting::where('role', 'hr')->where('is_active', true)->first();
+    $ttdKaryawan = \App\Models\TtdSetting::where('role', 'karyawan')->where('is_active', true)->first();
+@endphp
 
     <div class="header-container">
         <table class="header-table">
@@ -282,7 +295,7 @@
                         </tr>
                     </tbody>
                 </table>
-            </td>
+             </td>
             
             <td width="4%"></td>
             
@@ -298,9 +311,6 @@
                     <tbody>
                         <tr><td>Potongan Tidak Hadir</td><td class="text-right font-mono">Rp {{ number_format($detail->potongan_tidak_hadir ?? 0, 0, ',', '.') }}</td></tr>
                         <tr><td>Potongan BPJS</td><td class="text-right font-mono">Rp {{ number_format($detail->potongan_bpjs ?? 0, 0, ',', '.') }}</td></tr>
-                        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-                        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-                        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
                         <tr class="total-row">
                             <td><strong>Total Potongan</strong></td>
                             <td class="text-right font-mono" style="color: #dc2626;">Rp {{ number_format(($detail->potongan_tidak_hadir ?? 0) + ($detail->potongan_bpjs ?? 0), 0, ',', '.') }}</td>
@@ -318,37 +328,58 @@
         </tr>
     </table>
     
+    <!-- Tanda Tangan dengan Gambar Real dari Database -->
     <table class="ttd-table">
         <tr>
+            <!-- Finance -->
             <td>
                 <div class="ttd-label">Hormat Kami,</div>
                 <div class="signature-box">
-                    <svg width="130" height="45" viewBox="0 0 200 40">
-                        <path d="M10,25 Q40,10 70,25 T130,25 T190,20" fill="none" stroke="#4f46e5" stroke-width="1.8"/>
-                        <text x="10" y="38" font-size="8" fill="#94a3b8" letter-spacing="1">DIGITAL FINANCE SIGN</text>
-                    </svg>
+                    @if($ttdFinance && $ttdFinance->file_path)
+                        <img src="{{ asset('storage/' . $ttdFinance->file_path) }}" class="ttd-image" alt="TTD Finance">
+                    @else
+                        <svg width="130" height="45" viewBox="0 0 200 40">
+                            <path d="M10,25 Q40,10 70,25 T130,25 T190,20" fill="none" stroke="#4f46e5" stroke-width="1.8"/>
+                            <text x="10" y="38" font-size="8" fill="#94a3b8" letter-spacing="1">DIGITAL FINANCE SIGN</text>
+                        </svg>
+                    @endif
                 </div>
-                <div class="ttd-name">Finance Team</div>
+                <div class="ttd-name">{{ $ttdFinance->nama_pejabat ?? 'Finance Team' }}</div>
+                <div style="font-size: 9px; color: #64748b;">{{ $ttdFinance->jabatan ?? 'Finance Staff' }}</div>
             </td>
+            
+            <!-- HR -->
             <td>
                 <div class="ttd-label">Mengetahui,</div>
                 <div class="signature-box">
-                    <svg width="130" height="45" viewBox="0 0 200 40">
-                        <path d="M15,20 Q50,30 85,15 T155,20 T185,25" fill="none" stroke="#334155" stroke-width="1.8"/>
-                        <text x="15" y="38" font-size="8" fill="#94a3b8" letter-spacing="1">HR MANAGEMENT APP</text>
-                    </svg>
+                    @if($ttdHR && $ttdHR->file_path)
+                        <img src="{{ asset('storage/' . $ttdHR->file_path) }}" class="ttd-image" alt="TTD HR">
+                    @else
+                        <svg width="130" height="45" viewBox="0 0 200 40">
+                            <path d="M15,20 Q50,30 85,15 T155,20 T185,25" fill="none" stroke="#334155" stroke-width="1.8"/>
+                            <text x="15" y="38" font-size="8" fill="#94a3b8" letter-spacing="1">HR MANAGEMENT APP</text>
+                        </svg>
+                    @endif
                 </div>
-                <div class="ttd-name">HR Manager</div>
+                <div class="ttd-name">{{ $ttdHR->nama_pejabat ?? 'HR Manager' }}</div>
+                <div style="font-size: 9px; color: #64748b;">{{ $ttdHR->jabatan ?? 'HR Manager' }}</div>
             </td>
+            
+            <!-- Karyawan (Penerima) -->
             <td>
                 <div class="ttd-label">Penerima,</div>
                 <div class="signature-box">
-                    <svg width="130" height="45" viewBox="0 0 200 40">
-                        <path d="M20,22 Q60,15 100,25 T180,20" fill="none" stroke="#334155" stroke-width="1.5"/>
-                        <text x="20" y="38" font-size="8" fill="#94a3b8" letter-spacing="0.5">EMPLOYEE ID VERIFIED</text>
-                    </svg>
+                    @if($ttdKaryawan && $ttdKaryawan->file_path)
+                        <img src="{{ asset('storage/' . $ttdKaryawan->file_path) }}" class="ttd-image" alt="TTD Karyawan">
+                    @else
+                        <svg width="130" height="45" viewBox="0 0 200 40">
+                            <path d="M20,22 Q60,15 100,25 T180,20" fill="none" stroke="#334155" stroke-width="1.5"/>
+                            <text x="20" y="38" font-size="8" fill="#94a3b8" letter-spacing="0.5">EMPLOYEE ID VERIFIED</text>
+                        </svg>
+                    @endif
                 </div>
-                <div class="ttd-name">{{ substr($detail->user->name ?? 'Karyawan', 0, 20) }}</div>
+                <div class="ttd-name">{{ $detail->user->name ?? 'Karyawan' }}</div>
+                <div style="font-size: 9px; color: #64748b;">Karyawan Bersangkutan</div>
             </td>
         </tr>
     </table>

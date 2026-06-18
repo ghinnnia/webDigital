@@ -20,6 +20,7 @@ use App\Mail\SlipGajiMail;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class PayrollController extends Controller
 {
@@ -35,10 +36,6 @@ class PayrollController extends Controller
             return $next($request);
         });
     }
-
-    // ============================================================
-    // INDEX & CREATE
-    // ============================================================
 
     public function index()
     {
@@ -115,10 +112,6 @@ class PayrollController extends Controller
         }
     }
 
-    // ============================================================
-    // AMBIL DATA DARI HR
-    // ============================================================
-
     public function dariHr(Request $request)
     {
         $bulan = $request->get('bulan', now()->month);
@@ -135,134 +128,229 @@ class PayrollController extends Controller
         return view('finance.payroll.dari_hr', compact('dataGaji', 'bulan', 'tahun', 'totalGaji'));
     }
 
-    public function ambilDariHR(Request $request)
+    /**
+     * Menampilkan daftar data gaji dari HR (GET)
+     */
+    public function daftarDariHR(Request $request)
     {
         $bulan = $request->get('bulan', now()->month);
         $tahun = $request->get('tahun', now()->year);
 
-        $period = PayrollPeriod::where('bulan', $bulan)
-            ->where('tahun', $tahun)
-            ->first();
-
-        if (!$period) {
-            $tanggalMulai = Carbon::create($tahun, $bulan, 1);
-            $tanggalSelesai = $tanggalMulai->copy()->endOfMonth();
-            
-            $period = PayrollPeriod::create([
-                'bulan' => $bulan,
-                'tahun' => $tahun,
-                'tanggal_mulai' => $tanggalMulai,
-                'tanggal_selesai' => $tanggalSelesai,
-                'status' => 'draft',
-                'dibuat_oleh' => Auth::id(),
-            ]);
-        }
-
-        $dataGaji = Gaji::with('karyawan')
+        $dataGaji = Gaji::with('karyawan.divisi')
             ->where('bulan', $bulan)
             ->where('tahun', $tahun)
             ->where('status', 'menunggu_finance')
             ->get();
 
-        if ($dataGaji->isEmpty()) {
-            return redirect()->back()->with('error', 'Tidak ada data gaji dari HR untuk periode ini.');
-        }
+        $totalGaji = $dataGaji->sum('total_gaji');
 
-        DB::beginTransaction();
+        return view('finance.payroll.dari_hr', compact('dataGaji', 'bulan', 'tahun', 'totalGaji'));
+    }
+
+    /**
+     * Mengambil data dari HR dan menyimpan ke payroll (POST)
+     */
+    public function ambilDariHR(Request $request)
+    {
         try {
-            $selectedIds = $request->selected ?? $dataGaji->pluck('id')->toArray();
-            $count = 0;
-            
-            foreach ($dataGaji as $gaji) {
-                if (!in_array($gaji->id, $selectedIds)) continue;
-                
-                $exists = PayrollDetail::where('payroll_period_id', $period->id)
-                    ->where('user_id', $gaji->karyawan_id)
-                    ->exists();
+            // 1. Ambil data penggajian dari HR yang berstatus menunggu_finance
+            $dataHrTerbaru = Gaji::where('status', 'menunggu_finance')->get();
 
-                if (!$exists) {
-                    $tunjanganLain = TunjanganKaryawan::where('karyawan_id', $gaji->karyawan_id)
-                        ->where('bulan', $bulan)
-                        ->where('tahun', $tahun)
-                        ->sum('nominal');
+            if ($dataHrTerbaru->isEmpty()) {
+                return redirect()->back()->with('error', 'Tidak ada data penggajian terbaru dari HR untuk diambil.');
+            }
 
-                    PayrollDetail::create([
-                        'payroll_period_id' => $period->id,
+            $successCount = 0;
+            $failedCount = 0;
+            $failedList = [];
+
+            foreach ($dataHrTerbaru as $gaji) {
+                // Validasi: pastikan karyawan_id ada
+                if (!$gaji->karyawan_id) {
+                    $failedCount++;
+                    $failedList[] = 'Data gaji ID ' . $gaji->id . ' tidak memiliki karyawan_id';
+                    continue;
+                }
+
+                // Validasi: pastikan user exists
+                $user = \App\Models\User::find($gaji->karyawan_id);
+                if (!$user) {
+                    $failedCount++;
+                    $failedList[] = 'User dengan ID ' . $gaji->karyawan_id . ' tidak ditemukan';
+                    continue;
+                }
+
+                // Ambil nama divisi
+                $namaDivisi = '-';
+                if ($user->divisi) {
+                    $namaDivisi = $user->divisi->divisi ?? $user->divisi->nama_divisi ?? '-';
+                }
+
+                // Cari atau buat periode
+                $periode = PayrollPeriod::firstOrCreate(
+                    [
+                        'bulan' => $gaji->bulan,
+                        'tahun' => $gaji->tahun,
+                    ],
+                    [
+                        'nama_periode' => $this->getNamaBulan($gaji->bulan) . ' ' . $gaji->tahun,
+                        'tanggal_mulai' => Carbon::create($gaji->tahun, $gaji->bulan, 1)->format('Y-m-d'),
+                        'tanggal_selesai' => Carbon::create($gaji->tahun, $gaji->bulan, 1)->endOfMonth()->format('Y-m-d'),
+                        'status' => 'processed',
+                        'dibuat_oleh' => Auth::id(),
+                    ]
+                );
+
+                // Hitung nilai dengan abs() untuk menghindari nilai negatif
+                $gajiPokok = abs($gaji->gaji_pokok ?? 0);
+                $tunjanganTetap = abs($gaji->tunjangan_tetap ?? 0);
+                $tunjanganKinerja = abs($gaji->tunjangan_kinerja ?? 0);
+                $bonus = abs($gaji->bonus ?? 0);
+                $totalBersih = $gajiPokok + $tunjanganTetap + $tunjanganKinerja + $bonus;
+
+                // INSERT KE PAYROLL_DETAILS sesuai struktur tabel
+                $detail = PayrollDetail::updateOrCreate(
+                    [
+                        'payroll_period_id' => $periode->id,
                         'user_id' => $gaji->karyawan_id,
-                        'gaji_pokok' => $gaji->gaji_pokok,
-                        'tunjangan_tetap' => $gaji->tunjangan_tetap,
-                        'tunjangan_kinerja' => $gaji->tunjangan_kinerja,
-                        'bonus' => $gaji->bonus,
-                        'tunjangan_lain' => $tunjanganLain,
-                        'potongan_bpjs' => $gaji->potongan_bpjs,
-                        'potongan_lain' => $gaji->potongan_lain,
-                        'potongan_tidak_hadir' => 0,
+                        'karyawan_id' => $gaji->karyawan_id,
+                    ],
+                    [
+                        'nama_karyawan' => $user->name,
+                        'divisi' => $namaDivisi,
+                        'gaji_per_bulan' => $gajiPokok,
+                        'total_hari_kerja' => 25,
+                        'hari_hadir' => 0,
+                        'hari_alfa' => 0,
+                        'hari_sakit_tanpa_surat' => 0,
+                        'hari_izin_tanpa_ket' => 0,
+                        'hari_cuti' => 0,
+                        'hari_sakit_dengan_surat' => 0,
                         'jam_lembur' => 0,
+                        'gaji_pokok' => $gajiPokok,
+                        'potongan_tidak_hadir' => 0,
+                        'potongan_bpjs' => 0,
+                        'tunjangan_tetap' => $tunjanganTetap,
+                        'nilai_kpa' => 0,
+                        'persentase_tunjangan_kinerja' => 0,
+                        'tunjangan_kinerja' => $tunjanganKinerja,
+                        'tarif_lembur_per_jam' => 0,
                         'upah_lembur' => 0,
-                        'total_gaji_bersih' => $gaji->total_gaji + $tunjanganLain,
-                        'keterangan' => 'Data dari HR'
-                    ]);
-                    $count++;
+                        'total_gaji_bersih' => $totalBersih,
+                        'tunjangan_lain' => 0,
+                        'status' => 'draft',
+                    ]
+                );
+
+                if ($detail) {
+                    $successCount++;
+                    // Update status di tabel HR
+                    $gaji->update(['status' => 'terbaca_finance']);
                 }
             }
 
-            $period->update(['status' => 'processed']);
+            $message = "Berhasil menyinkronkan {$successCount} data dari HR!";
+            if ($failedCount > 0) {
+                $message .= " Gagal: {$failedCount} data. " . implode(', ', $failedList);
+            }
 
-            PayrollLog::create([
-                'payroll_period_id' => $period->id,
-                'user_id' => Auth::id(),
-                'aksi' => 'import_from_hr',
-                'keterangan' => "Mengambil {$count} data gaji dari HR"
-            ]);
-
-            DB::commit();
-            return redirect()->route('finance.payroll.show', $period->id)
-                ->with('success', "Berhasil mengambil {$count} data gaji dari HR.");
+            return redirect()->route('finance.payroll.index')->with('success', $message);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal mengambil data: ' . $e->getMessage());
+            Log::error('Error ambil data HR: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    // ============================================================
-    // HITUNG POTONGAN
-    // ============================================================
+    private function getNamaBulan($bulan)
+    {
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        return $months[$bulan] ?? $bulan;
+    }
 
+    /**
+     * HITUNG POTONGAN DAN LEMBUR
+     */
     public function hitungPotongan($id)
     {
-        $period = PayrollPeriod::findOrFail($id);
-        $tarifLembur = 30000; // Rp 30.000 per jam
-        $potonganBPJS = 100000; // Rp 100.000 per karyawan
+        $period = PayrollPeriod::with(['details.user'])->findOrFail($id);
+        $potonganBPJS = 100000; 
+        
+        $defaultOvertime = \App\Models\OvertimeSetting::whereNull('division_id')->first();
+        $defaultRate = $defaultOvertime ? $defaultOvertime->default_rate : 30000;
         
         DB::beginTransaction();
         try {
             foreach ($period->details as $detail) {
-                // ========== 1. HITUNG POTONGAN KEHADIRAN ==========
-                $absensi = Absensi::where('user_id', $detail->user_id)
+                if (!$detail->user) {
+                    continue;
+                }
+                
+                $karyawan = $detail->user;
+                $userId = $detail->user_id;
+                
+                // ============================================
+                // HITUNG LEMBUR
+                // ============================================
+                $lemburs = \App\Models\Lembur::where('user_id', $userId)
+                    ->whereIn('status', ['approved'])
+                    ->whereMonth('tanggal_lembur', $period->bulan)
+                    ->whereYear('tanggal_lembur', $period->tahun)
+                    ->where('durasi', '>', 0)
+                    ->get();
+                
+                $totalJamLembur = $lemburs->sum('durasi');
+                
+                $tarifLembur = $defaultRate;
+                if ($karyawan && $karyawan->divisi_id) {
+                    $divisionOvertime = \App\Models\OvertimeSetting::where('division_id', $karyawan->divisi_id)->first();
+                    if ($divisionOvertime) {
+                        $tarifLembur = $divisionOvertime->default_rate;
+                    }
+                }
+                
+                $firstLembur = $lemburs->first();
+                if ($firstLembur && $firstLembur->custom_rate) {
+                    $tarifLembur = $firstLembur->custom_rate;
+                }
+                
+                $upahLembur = $totalJamLembur * $tarifLembur;
+                
+                // ============================================
+                // HITUNG POTONGAN KEHADIRAN
+                // ============================================
+                $absensi = Absensi::where('user_id', $userId)
                     ->whereMonth('tanggal', $period->bulan)
                     ->whereYear('tanggal', $period->tahun)
                     ->get();
                 
                 $gajiPerHari = $detail->gaji_pokok / 25;
                 $totalPotonganHadir = 0;
+                $hariAlfa = 0;
+                $hariIzin = 0;
+                $hariSakitTanpaSurat = 0;
                 
                 foreach ($absensi as $absen) {
                     if ($absen->jenis_ketidakhadiran === 'alpha') {
                         $totalPotonganHadir += $gajiPerHari;
-                    } 
-                    elseif ($absen->jenis_ketidakhadiran === 'izin') {
+                        $hariAlfa++;
+                    } elseif ($absen->jenis_ketidakhadiran === 'izin') {
                         $totalPotonganHadir += $gajiPerHari;
-                    }
-                    elseif ($absen->jenis_ketidakhadiran === 'sakit') {
+                        $hariIzin++;
+                    } elseif ($absen->jenis_ketidakhadiran === 'sakit') {
                         if (!$absen->ada_surat_dokter || $absen->status_surat != 'approved') {
                             $totalPotonganHadir += $gajiPerHari;
+                            $hariSakitTanpaSurat++;
                         }
                     }
                 }
                 
-                // Telat > 12 siang
-                $telatLebih12Siang = Absensi::where('user_id', $detail->user_id)
+                $telatLebih12Siang = Absensi::where('user_id', $userId)
                     ->whereMonth('tanggal', $period->bulan)
                     ->whereYear('tanggal', $period->tahun)
                     ->whereNotNull('jam_masuk')
@@ -271,204 +359,152 @@ class PayrollController extends Controller
                 
                 $totalPotonganHadir += $telatLebih12Siang * $gajiPerHari;
                 
-                // ========== 2. HITUNG LEMBUR ==========
-                $lemburs = \App\Models\Lembur::where('user_id', $detail->user_id)
-                    ->where('status', 'approved')
-                    ->where('is_paid', false)
-                    ->whereMonth('tanggal_lembur', $period->bulan)
-                    ->whereYear('tanggal_lembur', $period->tahun)
-                    ->get();
-                
-                $totalJamLembur = $lemburs->sum('durasi');
-                $upahLembur = $totalJamLembur * $tarifLembur;
-                
-                // ========== 3. UPDATE DETAIL GAJI ==========
+                // ============================================
+                // UPDATE DETAIL GAJI - SESUAI STRUKTUR TABEL
+                // ============================================
+                $detail->gaji_per_bulan = $detail->gaji_pokok;
+                $detail->total_hari_kerja = 25;
+                $detail->hari_hadir = max(0, 25 - ($hariAlfa + $hariIzin + $hariSakitTanpaSurat + $telatLebih12Siang));
+                $detail->hari_alfa = $hariAlfa;
+                $detail->hari_sakit_tanpa_surat = $hariSakitTanpaSurat;
+                $detail->hari_izin_tanpa_ket = $hariIzin;
+                $detail->jam_lembur = $totalJamLembur;
                 $detail->potongan_tidak_hadir = min($totalPotonganHadir, $detail->gaji_pokok);
                 $detail->potongan_bpjs = $potonganBPJS;
-                $detail->jam_lembur = $totalJamLembur;
+                $detail->tarif_lembur_per_jam = $tarifLembur;
                 $detail->upah_lembur = $upahLembur;
                 $detail->total_gaji_bersih = max(0, 
                     $detail->gaji_pokok 
                     + ($detail->tunjangan_tetap ?? 0) 
                     + ($detail->tunjangan_kinerja ?? 0) 
-                    + ($detail->bonus ?? 0) 
                     + ($detail->tunjangan_lain ?? 0)
                     + $upahLembur
                     - $detail->potongan_tidak_hadir 
                     - $detail->potongan_bpjs 
-                    - ($detail->potongan_lain ?? 0)
                 );
                 $detail->save();
                 
-                // Tandai lembur sudah dibayar
                 if ($lemburs->count() > 0) {
                     \App\Models\Lembur::whereIn('id', $lemburs->pluck('id'))->update(['is_paid' => true]);
                 }
             }
             
             DB::commit();
-            return redirect()->back()->with('success', 'Potongan dan lembur berhasil dihitung!');
+            return redirect()->back()->with('success', 'Potongan dan upah lembur berhasil dihitung!');
             
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error hitung potongan: ' . $e->getMessage());
+            Log::error('Error hitung potongan: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal menghitung: ' . $e->getMessage());
         }
     }
 
-    // ============================================================
-    // NOTIFIKASI SLIP GAJI
-    // ============================================================
-
-    /**
-     * Kirim notifikasi slip gaji ke karyawan (via website notifikasi)
-     */
     public function sendNotificationSlip($periodId, $detailId)
-{
-    try {
-        \Log::info('=== MULAI KIRIM NOTIFIKASI ===');
-        
-        $period = PayrollPeriod::findOrFail($periodId);
-        $detail = PayrollDetail::with('user')->findOrFail($detailId);
-        
-        if (!$detail->user) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'User tidak ditemukan'
-            ], 400);
-        }
-        
-        // Cek apakah user punya email
-        if (!$detail->user->email) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Email karyawan tidak ditemukan'
-            ], 400);
-        }
-        
-        // Generate PDF
-        $pdf = Pdf::loadView('finance.payroll.slip_pdf', compact('period', 'detail'));
-        $pdfContent = $pdf->output();
-        
-        // Simpan PDF ke storage
-        $fileName = 'slip_gaji_' . $detail->user->id . '_' . $period->bulan . '_' . $period->tahun . '.pdf';
-        $filePath = 'slip_gaji/' . $fileName;
-        
-        // Buat folder jika belum ada
-        if (!\Storage::exists('public/slip_gaji')) {
-            \Storage::makeDirectory('public/slip_gaji');
-        }
-        
-        \Storage::put('public/' . $filePath, $pdfContent);
-        
-        // Buat notifikasi untuk karyawan
-        $notification = \App\Models\Notification::create([
-            'user_id' => $detail->user->id,
-            'title' => '📄 Slip Gaji Tersedia',
-            'message' => "Slip gaji untuk periode {$period->nama_periode} sudah tersedia. Klik untuk melihat detail.",
-            'type' => 'payroll',
-            'link' => route('karyawan.slip-gaji.show', $detail->id),
-            'is_read' => false,
-        ]);
-        
-        \Log::info('Notifikasi berhasil dibuat, ID: ' . $notification->id);
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Slip gaji telah dikirim ke {$detail->user->name}"
-        ]);
-        
-    } catch (\Exception $e) {
-        \Log::error('Gagal kirim notifikasi: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengirim: ' . $e->getMessage()
-        ], 500);
-    }
-}
-
-    /**
-     * Kirim notifikasi slip gaji MASSAL ke banyak karyawan
-     */
-   public function sendNotificationMass(Request $request, $periodId)
-{
-    try {
-        $ids = $request->ids;
-        if (empty($ids)) {
-            return response()->json(['success' => false, 'message' => 'Tidak ada data dipilih'], 400);
-        }
-        
-        $period = PayrollPeriod::findOrFail($periodId);
-        $details = PayrollDetail::with('user')->whereIn('id', $ids)->get();
-        
-        $successCount = 0;
-        $failedList = [];
-        
-        foreach ($details as $detail) {
-            if (!$detail->user) {
-                $failedList[] = 'User tidak ditemukan';
-                continue;
+    {
+        try {
+            Log::info('=== MULAI KIRIM NOTIFIKASI ===');
+            
+            $period = PayrollPeriod::findOrFail($periodId);
+            $detail = PayrollDetail::with('user')->findOrFail($detailId);
+            
+            if (!$detail->user || !$detail->user->email) {
+                return response()->json(['success' => false, 'message' => 'Email karyawan tidak ditemukan'], 400);
             }
             
-            try {
-                // Generate PDF
-                $pdf = Pdf::loadView('finance.payroll.slip_pdf', compact('period', 'detail'));
-                $pdfContent = $pdf->output();
-                
-                // Simpan PDF ke storage
-                $fileName = 'slip_gaji_' . $detail->user->id . '_' . $period->bulan . '_' . $period->tahun . '.pdf';
-                $filePath = 'slip_gaji/' . $fileName;
-                
-                if (!\Storage::exists('public/slip_gaji')) {
-                    \Storage::makeDirectory('public/slip_gaji');
+            $pdf = Pdf::loadView('finance.payroll.slip_pdf', compact('period', 'detail'));
+            $pdfContent = $pdf->output();
+            
+            $fileName = 'slip_gaji_' . $detail->user->id . '_' . $period->bulan . '_' . $period->tahun . '.pdf';
+            $filePath = 'slip_gaji/' . $fileName;
+            
+            if (!Storage::exists('public/slip_gaji')) {
+                Storage::makeDirectory('public/slip_gaji');
+            }
+            
+            Storage::put('public/' . $filePath, $pdfContent);
+            
+            $notification = \App\Models\Notification::create([
+                'user_id' => $detail->user->id,
+                'title' => '📄 Slip Gaji Tersedia',
+                'message' => "Slip gaji untuk periode {$period->nama_periode} sudah tersedia. Klik untuk melihat detail.",
+                'type' => 'payroll',
+                'link' => route('karyawan.slip-gaji.show', $detail->id),
+                'is_read' => false,
+            ]);
+            
+            Log::info('Notifikasi berhasil dibuat, ID: ' . $notification->id);
+            
+            return response()->json(['success' => true, 'message' => "Slip gaji telah dikirim ke {$detail->user->name}"]);
+            
+        } catch (\Exception $e) {
+            Log::error('Gagal kirim notifikasi: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function sendNotificationMass(Request $request, $periodId)
+    {
+        try {
+            $ids = $request->ids;
+            if (empty($ids)) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data dipilih'], 400);
+            }
+            
+            $period = PayrollPeriod::findOrFail($periodId);
+            $details = PayrollDetail::with('user')->whereIn('id', $ids)->get();
+            
+            $successCount = 0;
+            $failedList = [];
+            
+            foreach ($details as $detail) {
+                if (!$detail->user) {
+                    $failedList[] = 'User tidak ditemukan';
+                    continue;
                 }
                 
-                \Storage::put('public/' . $filePath, $pdfContent);
-                
-                // Buat notifikasi
-                \App\Models\Notification::create([
-                    'user_id' => $detail->user->id,
-                    'title' => '📄 Slip Gaji Tersedia',
-                    'message' => "Slip gaji untuk periode {$period->nama_periode} sudah tersedia. Klik untuk melihat detail.",
-                    'type' => 'payroll',
-                    'link' => route('karyawan.slip-gaji.show', $detail->id),
-                    'is_read' => false,
-                ]);
-                
-                $successCount++;
-            } catch (\Exception $e) {
-                $failedList[] = $detail->user->name . ': ' . $e->getMessage();
-                \Log::error('Gagal kirim untuk ' . ($detail->user->name ?? 'unknown') . ': ' . $e->getMessage());
+                try {
+                    $pdf = Pdf::loadView('finance.payroll.slip_pdf', compact('period', 'detail'));
+                    $pdfContent = $pdf->output();
+                    
+                    $fileName = 'slip_gaji_' . $detail->user->id . '_' . $period->bulan . '_' . $period->tahun . '.pdf';
+                    $filePath = 'slip_gaji/' . $fileName;
+                    
+                    if (!Storage::exists('public/slip_gaji')) {
+                        Storage::makeDirectory('public/slip_gaji');
+                    }
+                    
+                    Storage::put('public/' . $filePath, $pdfContent);
+                    
+                    \App\Models\Notification::create([
+                        'user_id' => $detail->user->id,
+                        'title' => '📄 Slip Gaji Tersedia',
+                        'message' => "Slip gaji untuk periode {$period->nama_periode} sudah tersedia. Klik untuk melihat detail.",
+                        'type' => 'payroll',
+                        'link' => route('karyawan.slip-gaji.show', $detail->id),
+                        'is_read' => false,
+                    ]);
+                    
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $failedList[] = $detail->user->name . ': ' . $e->getMessage();
+                }
             }
+            
+            $message = "Berhasil mengirim {$successCount} slip gaji";
+            if (!empty($failedList)) {
+                $message .= ", gagal: " . implode(', ', $failedList);
+            }
+            
+            return response()->json(['success' => true, 'message' => $message]);
+            
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim: ' . $e->getMessage()], 500);
         }
-        
-        $message = "Berhasil mengirim {$successCount} slip gaji";
-        if (!empty($failedList)) {
-            $message .= ", gagal: " . implode(', ', $failedList);
-        }
-        
-        return response()->json([
-            'success' => true,
-            'message' => $message
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengirim notifikasi massal: ' . $e->getMessage()
-        ], 500);
     }
-}
-
-    // ============================================================
-    // SHOW, SLIP, APPROVE, PAID
-    // ============================================================
 
     public function show($id)
     {
-        $period = PayrollPeriod::with(['details', 'details.user'])->findOrFail($id);
+        $period = PayrollPeriod::with(['details.user.karyawan.divisi'])->findOrFail($id);
         
         $totalGaji = $period->details->sum('gaji_pokok');
         $totalTunjangan = $period->details->sum('tunjangan_tetap') + $period->details->sum('tunjangan_kinerja');
@@ -500,9 +536,6 @@ class PayrollController extends Controller
         return view('finance.payroll.slip', compact('period', 'detail'));
     }
 
-    /**
-     * Kirim slip gaji ke email karyawan (via email)
-     */
     public function sendSlipToEmail($periodId, $detailId)
     {
         try {
@@ -510,38 +543,29 @@ class PayrollController extends Controller
             $detail = PayrollDetail::with('user')->findOrFail($detailId);
             
             if (!$detail->user || !$detail->user->email) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Email karyawan tidak ditemukan'
-                ], 400);
+                return response()->json(['success' => false, 'message' => 'Email karyawan tidak ditemukan'], 400);
             }
             
-            // Generate PDF
             $pdf = Pdf::loadView('finance.payroll.slip_pdf', compact('period', 'detail'));
+            $pdf->setOptions([
+                'defaultFont' => 'sans-serif',
+                'isRemoteEnabled' => true,
+            ]);
             $pdfContent = $pdf->output();
             
-            // Kirim email
             Mail::to($detail->user->email)->send(new SlipGajiMail($detail, $period, $pdfContent));
             
-            return response()->json([
-                'success' => true,
-                'message' => "Slip gaji berhasil dikirim ke {$detail->user->email}"
-            ]);
+            return response()->json(['success' => true, 'message' => "Slip gaji berhasil dikirim ke {$detail->user->email}"]);
             
         } catch (\Exception $e) {
             Log::error('Gagal kirim slip gaji: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengirim slip gaji: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim slip gaji: ' . $e->getMessage()], 500);
         }
     }
 
     public function approve($id)
     {
         $period = PayrollPeriod::findOrFail($id);
-        
         if ($period->status != 'processed') {
             return redirect()->back()->with('error', 'Periode belum diproses');
         }
@@ -565,10 +589,7 @@ class PayrollController extends Controller
     public function markAsPaid($id, Request $request)
     {
         $period = PayrollPeriod::findOrFail($id);
-        
-        $request->validate([
-            'tanggal_pembayaran' => 'required|date',
-        ]);
+        $request->validate(['tanggal_pembayaran' => 'required|date']);
         
         $period->update([
             'status' => 'paid',
@@ -588,21 +609,13 @@ class PayrollController extends Controller
 
     public function export($id)
     {
-        $period = PayrollPeriod::with(['details', 'details.user'])->findOrFail($id);
-        
-        // Implementasi export jika diperlukan
         return redirect()->back()->with('info', 'Fitur export sedang dalam pengembangan');
     }
-
-    // ============================================================
-    // SETTINGS
-    // ============================================================
 
     public function settings()
     {
         $allowances = PayrollAllowance::all();
         $kpaRules = KpaTunjanganRule::all();
-        
         return view('finance.payroll.settings', compact('allowances', 'kpaRules'));
     }
 

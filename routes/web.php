@@ -50,15 +50,13 @@ use App\Http\Controllers\DivisiController;
 use App\Http\Controllers\TimController;
 use App\Http\Controllers\GajiTemplateController;
 use App\Models\GajiTemplate;
-use App\Http\Controllers\LemburController;
+use App\Http\Controllers\ManagerDivisi\TopLowGradeController;
+// use App\Http\Controllers\LemburController;
+use App\Http\Controllers\Finance\OvertimeSettingController;
+use App\Http\Controllers\Karyawan\LemburController as KaryawanLemburController;
+use App\Http\Controllers\ManagerDivisi\LemburController as ManagerLemburController;
+use App\Http\Controllers\Finance\LemburFinanceController;
 
-
-
-/*
-|--------------------------------------------------------------------------
-| Helper Functions
-|--------------------------------------------------------------------------
-*/
 
 if (!function_exists('redirectToRolePage')) {
     function redirectToRolePage($user)
@@ -237,35 +235,77 @@ Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(functio
     Route::post('/gaji/apply-template', [GajiHrController::class, 'applyTemplate'])->name('gaji.apply-template');
     Route::post('/gaji/kirim-ke-finance', [GajiHrController::class, 'kirimKeFinance'])->name('gaji.kirim-ke-finance');
 });
-// ========== ROUTE LEMBUR ==========
 
-// Untuk Karyawan
+// ============================================
+// ROUTE KARYAWAN - Lembur Mandiri
+// ============================================
 Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        Route::get('/', [LemburController::class, 'index'])->name('index');
-        Route::get('/create', [LemburController::class, 'create'])->name('create');
-        Route::post('/', [LemburController::class, 'store'])->name('store');
+        // Menggunakan KaryawanLemburController hasil dari alias di atas
+        Route::get('/', [KaryawanLemburController::class, 'index'])->name('index');
+        Route::get('/create', [KaryawanLemburController::class, 'create'])->name('create');
+        Route::post('/', [KaryawanLemburController::class, 'store'])->name('store');
+        Route::post('/terima-perintah/{id}', [KaryawanLemburController::class, 'terimaPerintah'])->name('terima_perintah');
     });
-});
+}); 
 
-// Untuk HR 
-Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(function () {
+// ============================================
+// ROUTE MANAGER DIVISI - Approve & Perintah Lembur
+// ============================================
+
+Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        Route::get('/', [LemburController::class, 'hrIndex'])->name('index');
-        Route::post('/{id}/approve', [LemburController::class, 'approve'])->name('approve');
-        Route::post('/{id}/reject', [LemburController::class, 'reject'])->name('reject');
+        // Menggunakan KaryawanLemburController hasil dari alias di atas
+        Route::get('/', [KaryawanLemburController::class, 'index'])->name('index');
+        Route::get('/create', [KaryawanLemburController::class, 'create'])->name('create');
+        Route::post('/', [KaryawanLemburController::class, 'store'])->name('store');
+        Route::post('/terima-perintah/{id}', [KaryawanLemburController::class, 'terimaPerintah'])->name('terima_perintah');
     });
 });
 
-// Untuk Finance
+
+
+// ============================================
+// ROUTE MANAGER DIVISI - Approve & Perintah Lembur
+// ============================================
+Route::middleware(['auth', 'role:manager_divisi'])->prefix('manager-divisi')->name('manager_divisi.')->group(function () {
+    
+    // LEMBUR (Approve & Perintah)
+    Route::prefix('lembur')->name('lembur.')->group(function () {
+        // Menggunakan ManagerLemburController hasil dari alias di atas
+        // Route Utama & Kalkulasi
+        Route::get('/', [ManagerLemburController::class, 'index'])->name('index');
+        Route::post('/order', [ManagerLemburController::class, 'order'])->name('order');
+        Route::post('/calculate', [ManagerLemburController::class, 'calculate'])->name('calculate');
+        
+        // Route Manajemen Data (Edit & Simpan Perubahan Perintah)
+        Route::post('/{id}/update', [ManagerLemburController::class, 'update'])->name('update'); 
+
+        // Route Aksi Persetujuan/Pembatalan
+        Route::post('/{id}/approve', [ManagerLemburController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [ManagerLemburController::class, 'reject'])->name('reject');
+        Route::post('/{id}/cancel', [ManagerLemburController::class, 'cancel'])->name('cancel');
+        
+        // Route Detail (Diletakkan paling bawah agar parameter {id} tidak menangkap teks 'order' / 'calculate')
+        Route::get('/{id}', [ManagerLemburController::class, 'show'])->name('show');
+    });
+});
+
+// ============================================
+// ROUTE FINANCE - Rekap & Pembayaran Lembur
+// ============================================
 Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        Route::get('/', [LemburController::class, 'financeIndex'])->name('index');
-        Route::post('/mark-paid', [LemburController::class, 'markAsPaid'])->name('mark-paid');
-        // Di dalam group finance payroll
-// Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
-// Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
+        // Menggunakan FinanceLemburController hasil dari alias di atas
+        Route::get('/', [FinanceLemburController::class, 'financeIndex'])->name('index');
+        Route::post('/mark-paid', [FinanceLemburController::class, 'markAsPaid'])->name('mark-paid');
     });
+    
+    // ROUTE FINANCE - Setting Upah Lembur
+    Route::get('/overtime-settings', [OvertimeSettingController::class, 'index'])->name('overtime-settings.index');
+    Route::put('/overtime-settings/default', [OvertimeSettingController::class, 'updateDefault'])->name('overtime-settings.update-default');
+    Route::put('/overtime-settings/division/{divisionId}', [OvertimeSettingController::class, 'updateDivision'])->name('overtime-settings.update-division');
+    Route::delete('/overtime-settings/division/{divisionId}', [OvertimeSettingController::class, 'resetDivision'])->name('overtime-settings.reset-division');
 });
 
 // Di dalam route api group
@@ -406,33 +446,56 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     });
 });
 
-// ========== FINANCE - PENGGAJIAN ==========
+// ============================================
+// ROUTE FINANCE
+// ============================================
 Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')->group(function () {
     
+    // ============================================
+    // PAYROLL (Penggajian)
+    // ============================================
     Route::prefix('payroll')->name('payroll.')->group(function () {
         
+        // 1. ROUTE STATIS
         Route::get('/', [PayrollController::class, 'index'])->name('index');
         Route::get('/create', [PayrollController::class, 'create'])->name('create');
         Route::post('/', [PayrollController::class, 'store'])->name('store');
-        Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
-        Route::get('/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('slip');
-        Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungSemuaPotongan'])->name('hitung-potongan');
         
-        // Ambil data dari HR
+        // 2. ROUTE DATA DARI HR
         Route::get('/dari-hr', [PayrollController::class, 'daftarDariHR'])->name('dari-hr');
         Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
         
-        // Approve & Payment
+        // 3. ROUTE SETTING OVERTIME
+        Route::prefix('overtime-settings')->name('overtime-settings.')->group(function () {
+            Route::get('/', [OvertimeSettingController::class, 'index'])->name('index');
+            Route::put('/default', [OvertimeSettingController::class, 'updateDefault'])->name('update-default');
+            Route::put('/division/{divisionId}', [OvertimeSettingController::class, 'updateDivision'])->name('update-division');
+            Route::delete('/division/{divisionId}', [OvertimeSettingController::class, 'resetDivision'])->name('reset-division');
+        });
+        
+        // 4. ROUTE WILDCARD
+        Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
+        Route::get('/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('slip');
+        Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');
         Route::post('/{id}/approve', [PayrollController::class, 'approve'])->name('approve');
         Route::post('/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('paid');
-        
-        // ========== ROUTE KIRIM SLIP GAJI (DI DALAM GROUP PAYROLL) ==========
         Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
         Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
-        // ===================================================================
+        Route::post('/{periodId}/send-email/{detailId}', [PayrollController::class, 'sendSlipToEmail'])->name('send-email');
+        Route::get('/{id}/export', [PayrollController::class, 'export'])->name('export');
+        Route::get('/settings', [PayrollController::class, 'settings'])->name('settings');
+        Route::post('/settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
     });
+    
+    // ============================================
+    // LEMBUR (Monitoring Lembur untuk Finance)
+    // ============================================
+    Route::prefix('lembur')->name('lembur.')->group(function () {
+        Route::get('/', [LemburFinanceController::class, 'index'])->name('index');
+        Route::post('/mark-paid', [LemburFinanceController::class, 'markAsPaid'])->name('mark-paid');
+    });
+    
 });
-
 // Routes for getting lists (no auth required for these specific endpoints)
 Route::get('/roles/list', [RoleController::class, 'list'])->name('roles.list');
 Route::get('/divisis/list', [DivisiController::class, 'list'])->name('divisis.list');
@@ -500,7 +563,7 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
 
 // Route untuk Manager Divisi - Top Low Grade
 Route::middleware(['auth', 'role:manager_divisi'])->prefix('manager-divisi')->group(function () {
-    Route::get('/top-low-grade', [App\Http\Controllers\ManagerDivisiController::class, 'dashboard'])->name('manager_divisi.top_low_grade');
+    Route::get('/top-low-grade', [TopLowGradeController::class, 'index'])->name('manager_divisi.top_low_grade');
 });
 
 Route::prefix('manager/divisi')->name('manager.divisi.')->group(function () {
@@ -1407,7 +1470,7 @@ Route::middleware(['auth', 'role:finance'])
             Route::get('/', [PayrollController::class, 'index'])->name('index');
             Route::get('/create', [PayrollController::class, 'create'])->name('create');
             Route::post('/', [PayrollController::class, 'store'])->name('store');
-            Route::get('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
+            Route::post('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
             Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
             Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
             Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');

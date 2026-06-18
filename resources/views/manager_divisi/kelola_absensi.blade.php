@@ -230,8 +230,10 @@
             height: 1.25rem !important;
         }
 
+        /* UNIFORM SIDEBAR NAV ITEM - SEMUA SAMA */
         .sidebar-nav-item {
             padding: 0.625rem 1rem !important;
+            margin: 0 !important;
         }
 
         .sidebar-header {
@@ -282,14 +284,14 @@
     </button>
 
     <!-- Overlay untuk Mobile -->
-    <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+    <div x-show="sidebarOpen" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="sidebarOpen = false"
         class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"></div>
 
     <!-- Container utama aplikasi -->
     <div class="app-container flex">
-        <!-- Sidebar dari template -->
+        <!-- Sidebar - LENGKAP DENGAN SEMUA MENU DAN URL YANG BENAR -->
         <aside id="sidebar"
             class="sidebar-fixed bg-white flex flex-col sidebar-transition transform translate-x-full md:translate-x-0 right-0 md:left-0 md:right-auto shadow-lg"
             :class="sidebarOpen ? 'translate-x-0' : ''">
@@ -300,47 +302,56 @@
                     class="h-12 w-auto object-contain">
             </div>
 
-            <!-- MENU -->
-            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <!-- MENU LENGKAP - SEMUA SAMA RAPI -->
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
 
                 <!-- BERANDA -->
                 <a href="/manager-divisi/home"
-                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    :class="window.location.pathname === '/manager-divisi/home' ? 'active' : ''">
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                     <span class="material-symbols-outlined sidebar-icon">home</span>
                     <span class="sidebar-text">Beranda</span>
                 </a>
 
                 <!-- DATA PROJECT -->
                 <a href="/manager-divisi/data_project"
-                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    :class="window.location.pathname === '/manager-divisi/data_project' ? 'active' : ''">
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                     <span class="material-symbols-outlined sidebar-icon">assignment</span>
                     <span class="sidebar-text">Data Project</span>
                 </a>
 
                 <!-- KELOLA TUGAS -->
                 <a href="/manager-divisi/pengelola_tugas"
-                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    :class="window.location.pathname === '/manager-divisi/pengelola_tugas' ? 'active' : ''">
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                     <span class="material-symbols-outlined sidebar-icon">assignment</span>
                     <span class="sidebar-text">Kelola Tugas</span>
                 </a>
 
                 <!-- DATA KARYAWAN -->
                 <a href="/manager-divisi/daftar_karyawan"
-                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    :class="window.location.pathname === '/manager-divisi/daftar_karyawan' ? 'active' : ''">
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                     <span class="material-symbols-outlined sidebar-icon">groups</span>
                     <span class="sidebar-text">Data Karyawan</span>
                 </a>
 
                 <!-- LAPORAN ABSENSI -->
                 <a href="/manager-divisi/kelola_absensi"
-                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    :class="window.location.pathname === '/manager-divisi/kelola_absensi' ? 'active' : ''">
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                     <span class="material-symbols-outlined sidebar-icon">fact_check</span>
                     <span class="sidebar-text">Laporan Absensi</span>
+                </a>
+
+                <!-- TOP & LOW GRADE - URL SESUAI ROUTE -->
+                <a href="{{ route('manager_divisi.top_low_grade') }}"
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined sidebar-icon">leaderboard</span>
+                    <span class="sidebar-text">Top & Low Grade</span>
+                </a>
+
+                <!-- APPROVE LEMBUR - URL SESUAI ROUTE -->
+                <a href="{{ route('manager_divisi.lembur.index') }}"
+                    class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined sidebar-icon">schedule</span>
+                    <span class="sidebar-text">Approve Lembur</span>
                 </a>
 
             </nav>
@@ -368,7 +379,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Laporan Absensi</h1>
-                    <p class="text-sm text-gray-500 mt-1">Laporan kehadiran karyawan Divisi <span class="font-semibold text-gray-700">{{ $selectedDivision }}</span> (View Only)</p>
+                    <p class="text-sm text-gray-500 mt-1">Laporan kehadiran karyawan Divisi <span class="font-semibold text-gray-700">{{ $selectedDivision ?? 'Divisi Anda' }}</span> (View Only)</p>
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
                     <span class="material-icons-outlined text-base text-blue-500">calendar_today</span>
@@ -719,26 +730,19 @@
 
         // === 2. STATE MANAGEMENT ===
         let state = {
-            activeTab: 'absensi', // 'absensi' or 'ketidakhadiran'
+            activeTab: 'absensi',
             currentPage: 1,
             itemsPerPage: 5,
             search: '',
-            filterStatus: 'all', // 'all', 'Hadir', 'Terlambat', 'Sakit', etc.
+            filterStatus: 'all',
             filterDate: ''
         };
 
         // === 3. INITIALIZATION ===
         document.addEventListener('DOMContentLoaded', () => {
-            // Set current date in header
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('id-ID', options);
 
-            // Initial Render: skip client-side table rendering to preserve server-side HTML
-            // updateStats();
-            // renderAbsensiTable();
-            // renderKetidakhadiranTable();
-            
-            // Event Listeners
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 state.search = e.target.value.toLowerCase();
                 state.currentPage = 1;
@@ -751,30 +755,24 @@
                 refreshCurrentView();
             });
 
-            // Toggle Filter Dropdown
             document.getElementById('filterBtn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('filterDropdown').classList.toggle('show');
             });
 
-            // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.relative')) {
                     document.getElementById('filterDropdown').classList.remove('show');
                 }
             });
 
-            // Verification Form Submit
             document.getElementById('verifyForm').addEventListener('submit', handleVerificationSubmit);
         });
 
-        // === 4. CORE FUNCTIONS ===
-
         function switchTab(tabName) {
             state.activeTab = tabName;
-            state.currentPage = 1; // Reset page on switch
+            state.currentPage = 1;
             
-            // UI Toggle
             const btnAbsensi = document.getElementById('tabAbsensi');
             const btnKetid = document.getElementById('tabKetidakhadiran');
             const panelAbsensi = document.getElementById('panelAbsensi');
@@ -797,11 +795,8 @@
 
         function toggleFilter(status) {
             state.filterStatus = status;
-            // Update Radio UI
             const radios = document.querySelectorAll('input[name="filter"]');
-            radios.forEach(r => {
-                if(r.value === status) r.checked = true;
-            });
+            radios.forEach(r => { if(r.value === status) r.checked = true; });
             state.currentPage = 1;
             refreshCurrentView();
             document.getElementById('filterDropdown').classList.remove('show');
@@ -817,8 +812,6 @@
             return user ? user.name : 'Unknown';
         }
 
-        // === 5. RENDER LOGIC: DATA ABSENSI ===
-
         function renderAbsensiTable() {
             const tbody = document.getElementById('absensiTableBody');
             const mobileCards = document.getElementById('absensiMobileCards');
@@ -828,7 +821,6 @@
             mobileCards.innerHTML = '';
             pagination.innerHTML = '';
 
-            // Filter Logic
             let filtered = dataAbsensi.filter(item => {
                 const name = (item.name || getUserName(item.userId)).toLowerCase();
                 const matchesSearch = name.includes(state.search);
@@ -837,10 +829,8 @@
                 return matchesSearch && matchesDate && matchesStatus;
             });
 
-            // Update Count
             document.getElementById('totalCountAbsensi').textContent = filtered.length;
 
-            // Pagination Logic
             const totalPages = Math.ceil(filtered.length / state.itemsPerPage) || 1;
             if (state.currentPage > totalPages) state.currentPage = totalPages;
             
@@ -848,60 +838,38 @@
             const end = start + state.itemsPerPage;
             const pageData = filtered.slice(start, end);
 
-            // Generate Desktop Rows
             pageData.forEach((item, index) => {
                 const globalIndex = start + index + 1;
-                const statusClass = item.status === 'Tepat Waktu'
-                    ? 'bg-hadir'
-                    : (item.status === 'Terlambat' ? 'bg-terlambat' : 'bg-pending');
+                const statusClass = item.status === 'Tepat Waktu' ? 'bg-hadir' : (item.status === 'Terlambat' ? 'bg-terlambat' : 'bg-pending');
                 const name = item.name || getUserName(item.userId);
                 const lateLabel = formatLateDuration(item.lateMinutes);
-                const statusLabel = item.status === 'Terlambat' && item.lateMinutes > 0
-                    ? `${item.status} (${lateLabel})`
-                    : item.status;
+                const statusLabel = item.status === 'Terlambat' && item.lateMinutes > 0 ? `${item.status} (${lateLabel})` : item.status;
                 
-                const row = `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                const row = `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td class="text-center text-gray-400">${globalIndex}</td>
-                        <td class="font-medium text-gray-800">${name}</td>
+                        <td class="font-medium text-gray-800">${escapeHtml(name)}</td>
                         <td>${formatDateIndo(item.date)}</td>
                         <td><span class="text-gray-700 font-medium">${displayRaw(item.checkIn)}</span></td>
                         <td><span class="${item.checkOut === '-' ? 'text-gray-400 italic' : 'text-gray-700 font-medium'}">${displayRaw(item.checkOut)}</span></td>
                         <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                    </tr>
-                `;
+                    </tr>`;
                 tbody.insertAdjacentHTML('beforeend', row);
 
-                // Generate Mobile Card
-                const card = `
-                    <div class="mobile-card border-l-4 ${item.status === 'Hadir' ? 'border-l-green-500' : 'border-l-yellow-500'}">
+                const card = `<div class="mobile-card border-l-4 ${item.status === 'Hadir' ? 'border-l-green-500' : 'border-l-yellow-500'}">
                         <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-bold text-gray-800">${name}</h4>
-                                <p class="text-xs text-gray-500">${formatDateIndo(item.date)}</p>
-                            </div>
+                            <div><h4 class="font-bold text-gray-800">${escapeHtml(name)}</h4><p class="text-xs text-gray-500">${formatDateIndo(item.date)}</p></div>
                             <span class="status-badge ${statusClass} text-xs">${statusLabel}</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3 text-sm mb-3">
-                            <div class="bg-gray-50 p-2 rounded">
-                                <p class="text-xs text-gray-400">Masuk</p>
-                                <p class="font-semibold text-gray-700">${displayRaw(item.checkIn)}</p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded">
-                                <p class="text-xs text-gray-400">Pulang</p>
-                                <p class="font-semibold text-gray-700">${displayRaw(item.checkOut)}</p>
-                            </div>
+                            <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-400">Masuk</p><p class="font-semibold text-gray-700">${displayRaw(item.checkIn)}</p></div>
+                            <div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-400">Pulang</p><p class="font-semibold text-gray-700">${displayRaw(item.checkOut)}</p></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 mobileCards.insertAdjacentHTML('beforeend', card);
             });
 
-            // Render Pagination
             renderPaginationControls(pagination, totalPages, 'absensi');
         }
-
-        // === 6. RENDER LOGIC: KETIDAKHADIRAN (Approvals) ===
 
         function renderKetidakhadiranTable() {
             const tbody = document.getElementById('ketidakhadiranTableBody');
@@ -912,19 +880,12 @@
             mobileCards.innerHTML = '';
             pagination.innerHTML = '';
 
-            // Filter Logic
             let filtered = dataKetidakhadiran.filter(item => {
                 const name = (item.name || getUserName(item.userId)).toLowerCase();
                 const matchesSearch = name.includes(state.search);
                 const matchesDate = state.filterDate ? item.dateStart === state.filterDate : true;
-                
                 let matchesStatus = true;
-                if (state.filterStatus !== 'all') {
-                    // Filter by Type (Sakit, Cuti, etc) OR Status (Pending, Approved, Rejected)
-                    // For this demo, we assume Filter Dropdown selects the TYPE of leave
-                    matchesStatus = item.type === state.filterStatus;
-                }
-
+                if (state.filterStatus !== 'all') matchesStatus = item.type === state.filterStatus;
                 return matchesSearch && matchesDate && matchesStatus;
             });
 
@@ -940,109 +901,64 @@
             pageData.forEach((item, index) => {
                 const globalIndex = start + index + 1;
                 const name = item.name || getUserName(item.userId);
-                
-                // Styling based on approval status
-                let statusBadge = '';
-                let actionButton = '';
+                let statusBadge = '', actionButton = '';
                 
                 if (item.status === 'pending') {
                     statusBadge = '<span class="status-badge bg-pending">Menunggu</span>';
-                    actionButton = `<button onclick="openVerifyModal(${item.id})" class="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold hover:bg-blue-100 transition-colors">
-                                        <span class="material-icons-outlined text-sm">check_circle</span> Verifikasi
-                                    </button>`;
+                    actionButton = `<button onclick="openVerifyModal(${item.id})" class="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold hover:bg-blue-100 transition-colors"><span class="material-icons-outlined text-sm">check_circle</span> Verifikasi</button>`;
                 } else if (item.status === 'approved') {
                     statusBadge = '<span class="status-badge bg-approved">Disetujui</span>';
-                    actionButton = `<span class="text-gray-400 text-xs italic">Selesai</span>`;
+                    actionButton = '<span class="text-gray-400 text-xs italic">Selesai</span>';
                 } else if (item.status === 'rejected') {
                     statusBadge = '<span class="status-badge bg-rejected">Ditolak</span>';
                     actionButton = `<button onclick="openVerifyModal(${item.id})" class="text-blue-500 hover:text-blue-700 text-xs font-medium">Review</button>`;
                 }
 
-                // Color type for left border badge
-                const typeColorMap = {
-                    'Sakit': 'border-orange-400',
-                    'Izin': 'border-blue-400',
-                    'Cuti': 'border-red-400',
-                };
+                const typeColorMap = { 'Sakit': 'border-orange-400', 'Izin': 'border-blue-400', 'Cuti': 'border-red-400' };
                 const typeClass = typeColorMap[item.type] || 'border-gray-400';
-
-                // Desktop Row
                 const cleanedReason = cleanReasonText(item.reason);
 
-                const row = `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                const row = `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td class="text-center text-gray-400">${globalIndex}</td>
-                        <td class="font-medium text-gray-800">${name}</td>
+                        <td class="font-medium text-gray-800">${escapeHtml(name)}</td>
                         <td><span class="font-semibold text-gray-700">${item.type}</span></td>
                         <td>${formatDateRange(item.dateStart, item.dateEnd)}</td>
-                        <td class="max-w-xs truncate text-gray-500" title="${cleanedReason}">${cleanedReason}</td>
+                        <td class="max-w-xs truncate text-gray-500" title="${escapeHtml(cleanedReason)}">${escapeHtml(cleanedReason)}</td>
                         <td>${statusBadge}</td>
                         <td class="text-center">${actionButton}</td>
-                    </tr>
-                `;
+                    </tr>`;
                 tbody.insertAdjacentHTML('beforeend', row);
 
-                // Mobile Card
-                const card = `
-                    <div class="mobile-card border-l-4 ${typeClass}">
+                const card = `<div class="mobile-card border-l-4 ${typeClass}">
                         <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 class="font-bold text-gray-800">${name}</h4>
-                                <p class="text-xs text-gray-500 font-medium">${item.type}</p>
-                            </div>
+                            <div><h4 class="font-bold text-gray-800">${escapeHtml(name)}</h4><p class="text-xs text-gray-500 font-medium">${item.type}</p></div>
                             ${statusBadge}
                         </div>
-                        <div class="text-sm mb-3">
-                            <p class="text-gray-400 text-xs mb-1">Tanggal</p>
-                            <p class="font-medium text-gray-700">${formatDateRange(item.dateStart, item.dateEnd)}</p>
-                        </div>
-                        <div class="text-sm mb-4">
-                            <p class="text-gray-400 text-xs mb-1">Keterangan</p>
-                            <p class="text-gray-600">${cleanedReason}</p>
-                            ${item.status === 'rejected' ? `<p class="text-red-500 text-xs mt-1 italic">Alasan Ditolak: ${item.rejectionNote || '-'}</p>` : ''}
-                        </div>
-                        <div class="flex justify-end pt-2 border-t border-gray-100">
-                            ${actionButton}
-                        </div>
-                    </div>
-                `;
+                        <div class="text-sm mb-3"><p class="text-gray-400 text-xs mb-1">Tanggal</p><p class="font-medium text-gray-700">${formatDateRange(item.dateStart, item.dateEnd)}</p></div>
+                        <div class="text-sm mb-4"><p class="text-gray-400 text-xs mb-1">Keterangan</p><p class="text-gray-600">${escapeHtml(cleanedReason)}</p>${item.status === 'rejected' ? `<p class="text-red-500 text-xs mt-1 italic">Alasan Ditolak: ${escapeHtml(item.rejectionNote || '-')}</p>` : ''}</div>
+                        <div class="flex justify-end pt-2 border-t border-gray-100">${actionButton}</div>
+                    </div>`;
                 mobileCards.insertAdjacentHTML('beforeend', card);
             });
 
             renderPaginationControls(pagination, totalPages, 'ketidakhadiran');
         }
 
-        // === 7. PAGINATION HELPER ===
-
         function renderPaginationControls(container, totalPages, context) {
             if (totalPages <= 1) return;
-
             const prevBtn = `<button class="nav-btn" onclick="changePage(-1, '${context}')" ${state.currentPage === 1 ? 'disabled' : ''}><span class="material-icons-outlined text-sm">chevron_left</span></button>`;
             const nextBtn = `<button class="nav-btn" onclick="changePage(1, '${context}')" ${state.currentPage === totalPages ? 'disabled' : ''}><span class="material-icons-outlined text-sm">chevron_right</span></button>`;
-
             let pagesHtml = '';
             for (let i = 1; i <= totalPages; i++) {
-                const activeClass = i === state.currentPage ? 'active' : '';
-                pagesHtml += `<button class="page-btn ${activeClass}" onclick="goToPage(${i}, '${context}')">${i}</button>`;
+                pagesHtml += `<button class="page-btn ${i === state.currentPage ? 'active' : ''}" onclick="goToPage(${i}, '${context}')">${i}</button>`;
             }
-
             container.innerHTML = prevBtn + pagesHtml + nextBtn;
         }
 
-        function changePage(delta, context) {
-            state.currentPage += delta;
-            refreshCurrentView();
-        }
-
-        function goToPage(page, context) {
-            state.currentPage = page;
-            refreshCurrentView();
-        }
-
-        // === 8. STATS UPDATE HELPER ===
+        function changePage(delta, context) { state.currentPage += delta; refreshCurrentView(); }
+        function goToPage(page, context) { state.currentPage = page; refreshCurrentView(); }
 
         function updateStats() {
-            // Calculate stats dynamically from data
             const stats = {
                 hadir: dataAbsensi.filter(i => i.status === 'Hadir').length,
                 terlambat: dataAbsensi.filter(i => i.status === 'Terlambat').length,
@@ -1050,7 +966,6 @@
                 cuti: dataKetidakhadiran.filter(i => i.type === 'Cuti').length,
                 sakit: dataKetidakhadiran.filter(i => i.type === 'Sakit').length,
             };
-
             const statsData = [
                 { label: 'Total Hadir', val: stats.hadir, color: 'bg-green-100 text-green-600', icon: 'check_circle' },
                 { label: 'Terlambat', val: stats.terlambat, color: 'bg-yellow-100 text-yellow-600', icon: 'schedule' },
@@ -1058,58 +973,28 @@
                 { label: 'Cuti', val: stats.cuti, color: 'bg-red-100 text-red-600', icon: 'flight_takeoff' },
                 { label: 'Sakit', val: stats.sakit, color: 'bg-orange-100 text-orange-600', icon: 'healing' },
             ];
-
-            const container = document.getElementById('statsContainer');
-            container.innerHTML = statsData.map(s => `
-                <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">${s.label}</p>
-                            <p class="text-2xl font-bold text-gray-800 mt-1">${s.val}</p>
-                        </div>
-                        <div class="icon-container ${s.color} bg-opacity-20">
-                            <span class="material-icons-outlined text-xl">${s.icon}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+            document.getElementById('statsContainer').innerHTML = statsData.map(s => `<div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-xs font-medium text-gray-500 uppercase tracking-wider">${s.label}</p><p class="text-2xl font-bold text-gray-800 mt-1">${s.val}</p></div><div class="icon-container ${s.color} bg-opacity-20"><span class="material-icons-outlined text-xl">${s.icon}</span></div></div></div>`).join('');
         }
-
-        // === 9. MODAL & ACTIONS ===
 
         function openVerifyModal(id) {
             const item = dataKetidakhadiran.find(i => i.id === id);
             if (!item) return;
-
             document.getElementById('verifyId').value = id;
             document.getElementById('verifyEmployeeName').textContent = item.name || getUserName(item.userId);
             document.getElementById('verifyLeaveType').textContent = item.type;
             document.getElementById('verifyDateRange').textContent = formatDateRange(item.dateStart, item.dateEnd);
-
-            // Reset Form State
-            const radios = document.getElementsByName('decision');
-            radios[0].checked = true; // Default Approved
+            document.querySelectorAll('input[name="decision"]')[0].checked = true;
             toggleRejectionReason(false);
             document.getElementById('rejectionReason').value = '';
-
-            const modal = document.getElementById('verifyModal');
-            modal.classList.add('show');
+            document.getElementById('verifyModal').classList.add('show');
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('show');
-        }
-
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
         function toggleRejectionReason(show) {
             const container = document.getElementById('rejectionReasonContainer');
             const textarea = document.getElementById('rejectionReason');
-            if (show) {
-                container.classList.remove('hidden');
-                textarea.setAttribute('required', 'true');
-            } else {
-                container.classList.add('hidden');
-                textarea.removeAttribute('required');
-            }
+            if (show) { container.classList.remove('hidden'); textarea.setAttribute('required', 'true'); }
+            else { container.classList.add('hidden'); textarea.removeAttribute('required'); }
         }
 
         function handleVerificationSubmit(e) {
@@ -1117,178 +1002,68 @@
             const id = parseInt(document.getElementById('verifyId').value);
             const decision = document.querySelector('input[name="decision"]:checked').value;
             const reason = document.getElementById('rejectionReason').value;
-
-            // Update Data
             const index = dataKetidakhadiran.findIndex(i => i.id === id);
             if (index !== -1) {
                 dataKetidakhadiran[index].status = decision;
                 dataKetidakhadiran[index].rejectionNote = decision === 'rejected' ? reason : null;
-                
-                // Show Notification
-                const msg = decision === 'approved' ? 'Pengajuan berhasil disetujui' : 'Pengajuan ditolak';
-                const type = decision === 'approved' ? 'success' : 'error';
-                showNotification(msg, type);
-
+                showNotification(decision === 'approved' ? 'Pengajuan berhasil disetujui' : 'Pengajuan ditolak', decision === 'approved' ? 'success' : 'error');
                 closeModal('verifyModal');
                 renderKetidakhadiranTable();
-                updateStats(); // Update numbers at top
+                updateStats();
             }
         }
 
-        function deleteAbsensi(id) {
-            showNotification('Fitur hapus data tidak tersedia. Manager Divisi hanya dapat melihat laporan absensi.', 'warning');
-        }
-
-        // === 10. UTILITIES ===
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
         function formatDateIndo(dateString) {
             if (!dateString) return '-';
             const raw = String(dateString).trim();
             if (!raw) return '-';
-
-            const options = { day: 'numeric', month: 'short', year: 'numeric' };
-
-            // Prevent timezone shift for DB date-only values (YYYY-MM-DD)
             const dateOnly = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-            if (dateOnly) {
-                const year = Number(dateOnly[1]);
-                const month = Number(dateOnly[2]) - 1;
-                const day = Number(dateOnly[3]);
-                return new Date(year, month, day).toLocaleDateString('id-ID', options);
-            }
-
-            // Handle common SQL datetime by extracting the date part first
+            if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             const sqlDate = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s+/);
-            if (sqlDate) {
-                const year = Number(sqlDate[1]);
-                const month = Number(sqlDate[2]) - 1;
-                const day = Number(sqlDate[3]);
-                return new Date(year, month, day).toLocaleDateString('id-ID', options);
-            }
-
+            if (sqlDate) return new Date(Number(sqlDate[1]), Number(sqlDate[2]) - 1, Number(sqlDate[3])).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             const parsed = new Date(raw);
             if (isNaN(parsed.getTime())) return raw;
-            return parsed.toLocaleDateString('id-ID', options);
+            return parsed.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         }
 
         function formatDateRange(startDate, endDate) {
             if (!startDate) return '-';
-            const start = formatDateIndo(startDate);
-            const end = formatDateIndo(endDate || startDate);
-            return `${start} - ${end}`;
-        }
-
-        function formatTime(value) {
-            if (value === null || value === undefined) return '-';
-            const s = String(value).trim();
-            if (s === '' || s === '-' || s.toLowerCase() === 'null') return '-';
-
-            // Treat all-zero placeholders as empty (e.g. '0000', '000000', '00:00')
-            if (/^0{4}$/.test(s) || /^0{6}$/.test(s) || s === '00:00' || s === '00:00:00') return '-';
-
-            // Common formats:
-            // HH:MM or HH:MM:SS => capture HH:MM
-            const colonMatch = s.match(/^(\d{2}:\d{2})(:\d{2})?$/);
-            if (colonMatch) return colonMatch[1];
-
-            // 4-digit HHMM => convert to HH:MM (e.g., 0800 -> 08:00, 0000 -> 00:00)
-            const fourDigit = s.match(/^\d{4}$/);
-            if (fourDigit) return s.slice(0,2) + ':' + s.slice(2,4);
-
-            // 6-digit HHMMSS => take first four digits
-            const sixDigit = s.match(/^\d{6}$/);
-            if (sixDigit) return s.slice(0,2) + ':' + s.slice(2,4);
-
-            // ISO or datetime with time part: try to extract time with regex
-            const datetimeMatch = s.match(/(\d{2}:\d{2})(:\d{2})?/);
-            if (datetimeMatch) return datetimeMatch[1];
-
-            // Fallback: attempt Date parsing
-            const d = new Date(s);
-            if (!isNaN(d.getTime())) {
-                const hh = String(d.getHours()).padStart(2, '0');
-                const mm = String(d.getMinutes()).padStart(2, '0');
-                return `${hh}:${mm}`;
-            }
-
-            // As last resort, return first 5 chars (may normalize something like "0000" -> "0000" so ensure format)
-            const fallback = s.slice(0,5);
-            if (/^\d{4}$/.test(s)) return s.slice(0,2) + ':' + s.slice(2,4);
-            return fallback || '-';
+            return `${formatDateIndo(startDate)} - ${formatDateIndo(endDate || startDate)}`;
         }
 
         function displayRaw(value) {
-            if (value === null || value === undefined) return '-';
+            if (!value || value === '-') return '-';
             const s = String(value).trim();
-            if (s === '' || s === '-') return '-';
-
-            // Prefer extracting HH:MM if any time portion exists in the string
             const timeMatch = s.match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
-            if (timeMatch) {
-                const hh = String(timeMatch[1]).padStart(2, '0');
-                const mm = timeMatch[2];
-                return `${hh}:${mm}`;
-            }
-
-            // Handle compact HHMM or HHMMSS anywhere in the string (e.g., '0800' or '080000')
-            const compactMatch = s.match(/(\d{2})(\d{2})(\d{2})?/);
-            if (compactMatch && s.length <= 6) {
-                return compactMatch[1] + ':' + compactMatch[2];
-            }
-
-            // No time found — return the raw DB value (date or other) so it's preserved
+            if (timeMatch) return `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}`;
+            const compactMatch = s.match(/(\d{2})(\d{2})(?:\d{2})?/);
+            if (compactMatch && s.length <= 6) return `${compactMatch[1]}:${compactMatch[2]}`;
             return s;
         }
 
         function formatLateDuration(totalMinutes) {
             const minutes = Number(totalMinutes || 0);
             if (!minutes || minutes <= 0) return '0 menit';
-
             const hours = Math.floor(minutes / 60);
             const remain = minutes % 60;
             const parts = [];
-
             if (hours > 0) parts.push(`${hours} jam`);
             if (remain > 0 || parts.length === 0) parts.push(`${remain} menit`);
-
             return parts.join(' ');
         }
 
-
         function showNotification(message, type = 'success') {
             const container = document.getElementById('notificationContainer');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500',
-                info: 'bg-blue-500'
-            };
-            const icons = {
-                success: 'check_circle',
-                error: 'error',
-                warning: 'warning',
-                info: 'info'
-            };
-
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
+            const icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
             const notification = document.createElement('div');
             notification.className = `${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
-            notification.innerHTML = `
-                <span class="material-icons-outlined text-xl">${icons[type]}</span>
-                <span class="font-medium text-sm">${message}</span>
-            `;
-
+            notification.innerHTML = `<span class="material-icons-outlined text-xl">${icons[type]}</span><span class="font-medium text-sm">${message}</span>`;
             container.appendChild(notification);
-
-            // Animate in
-            requestAnimationFrame(() => {
-                notification.classList.remove('translate-x-full', 'opacity-0');
-            });
-
-            // Remove after 3s
-            setTimeout(() => {
-                notification.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            requestAnimationFrame(() => notification.classList.remove('translate-x-full', 'opacity-0'));
+            setTimeout(() => { notification.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => notification.remove(), 300); }, 3000);
         }
     </script>
     

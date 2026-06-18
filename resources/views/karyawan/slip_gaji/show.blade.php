@@ -36,7 +36,7 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <h2 class="text-2xl font-bold">SLIP GAJI</h2>
-                            <p class="text-indigo-200 mt-1">Periode: {{ $slip->payrollPeriod->nama_periode ?? '-' }}</p>
+                            <p class="text-indigo-200 mt-1">Periode: {{ $period->nama_periode ?? '-' }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-sm text-indigo-200">Tanggal Cetak</p>
