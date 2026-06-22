@@ -1072,8 +1072,9 @@
                                                     <td style="min-width: 100px; text-align: center;">
                                                         <div class="flex justify-center gap-2">
                                                             <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
-                                                                data-id="{{ $item->user_id }}"
+                                                                data-id="{{ $item->id }}"
                                                                 data-user_id="{{ $item->user_id }}"
+
                                                                 data-nama="{{ $item->nama }}"
                                                                 data-email="{{ $item->email }}"
                                                                 data-role="{{ $item->role }}"
