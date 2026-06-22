@@ -834,7 +834,10 @@ private function syncTunjanganKaryawan($karyawanId, Request $request, $deleteOld
             ->whereNotIn('status', ['selesai', 'dibatalkan'])
             ->count();
 
-        return view('karyawan.home', [
+            // NOTE: KPA tables may be split into new structure tables.
+            // Avoid hard-failing when legacy table `kpa` is referenced elsewhere.
+            return view('karyawan.home', [
+
             'attendance_status' => $attendanceStatus,
             'ketidakhadiran_count' => $ketidakhadiranCount,
             'total_hadir' => $totalHadir,
