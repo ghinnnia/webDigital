@@ -270,5 +270,7 @@ class GajiHrController extends Controller
             ],
             'is_default' => true
         ]);
+
+        
     }
 }

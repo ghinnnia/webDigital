@@ -1308,10 +1308,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
-                            <input type="number" name="gaji" id="formGaji"
+                            <input type="text" name="gaji" id="formGaji"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan gaji (angka tanpa titik/koma)">
-                            <p class="text-xs text-gray-500 mt-1">Isi dengan angka, contoh: 5000000</p>
+                                placeholder="Rp 0,00">
+                            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
@@ -2318,6 +2318,33 @@
             loadDivisis('formDivisi');
             setupAllowanceCheckboxListeners();
         });
+
+       const inputGaji = document.getElementById('formGaji');
+
+    // KETIKA DIKETIK: Hanya muncul ribuan (Rp 5.000.000) agar mengetik terasa normal
+    inputGaji.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value === "") { e.target.value = ""; return; }
+        
+        let formattedValue = new Intl.NumberFormat('id-ID').format(value);
+        e.target.value = 'Rp ' + formattedValue;
+    });
+
+    // KETIKA SELESAI MENGETIK (Pindah Kolom): Otomatis tambahkan desimal (,00)
+    inputGaji.addEventListener('blur', function (e) {
+        let value = e.target.value;
+        if (value && !value.includes(',00')) {
+            e.target.value = value + ',00';
+        }
+    });
+
+    // KETIKA DIKLIK KEMBALI UNTUK EDIT: Hapus desimal sementara agar mudah diedit lagi
+    inputGaji.addEventListener('focus', function (e) {
+        let value = e.target.value;
+        if (value.endsWith(',00')) {
+            e.target.value = value.slice(0, -3);
+        }
+    });
     </script>
 </body>
 </html>

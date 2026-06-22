@@ -795,16 +795,16 @@ Route::middleware('auth')->group(function () {
         // HR Specific APIs
         Route::prefix('hr')->middleware(['role:hr'])->name('hr.')->group(function () {
             Route::get('/karyawan/count', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr'];
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
             $count = \App\Models\User::whereIn('role', $roles)->count();
             return response()->json(['count' => $count]);
             })->name('karyawan.count');
 
             Route::get('/karyawan/active', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr'];
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
             $count = \App\Models\User::whereIn('role', $roles)->count(); 
             return response()->json(['count' => $count]);
-            
+
             })->name('karyawan.active');
             Route::get('/meeting-notes-dates', [CatatanRapatController::class, 'getMeetingDatesApi'])->name('meeting.notes.dates');
             Route::get('/meeting-notes', [CatatanRapatController::class, 'getMeetingNotesApi'])->name('meeting.notes.get');
