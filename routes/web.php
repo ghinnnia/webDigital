@@ -56,6 +56,8 @@ use App\Http\Controllers\Finance\OvertimeSettingController;
 use App\Http\Controllers\Karyawan\LemburController as KaryawanLemburController;
 use App\Http\Controllers\ManagerDivisi\LemburController as ManagerLemburController;
 use App\Http\Controllers\Finance\LemburFinanceController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
+
 
 
 if (!function_exists('redirectToRolePage')) {
@@ -417,12 +419,48 @@ Route::post('/notifications/read-all', function() {
     return response()->json(['success' => true]);
 })->name('api.notifications.read-all');
 
+
+// notifikasi di karyawan
+
+
+// ROUTE KARYAWAN TUGAS
+Route::prefix('karyawan')->middleware(['auth'])->group(function () {
+    Route::get('/tugas', [TaskController::class, 'karyawanTasks'])->name('karyawan.tugas.index');
+    Route::get('/tugas/{id}', [TaskController::class, 'karyawanShow'])->name('karyawan.tugas.show');
+    Route::post('/tugas/{id}/upload', [TaskController::class, 'uploadTaskFile'])->name('karyawan.tugas.upload');
+    Route::post('/tugas/{id}/terima', [TaskController::class, 'terimaTugas'])->name('karyawan.tugas.terima');
+});
+
+// ROUTE NOTIFICATIONS
+Route::prefix('notifications')->middleware(['auth'])->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
+// API ROUTES
+Route::prefix('api')->middleware(['auth'])->group(function () {
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::get('/notifications/count', function () {
+        return response()->json([
+            'count' => \App\Models\Notification::where('user_id', auth()->id())->count()
+        ]);
+    });
+});
+
 // Route untuk karyawan - slip gaji
 Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
     Route::prefix('slip-gaji')->name('slip-gaji.')->group(function () {
         Route::get('/', [App\Http\Controllers\Karyawan\SlipGajiController::class, 'index'])->name('index');
         Route::get('/{id}', [App\Http\Controllers\Karyawan\SlipGajiController::class, 'show'])->name('show');
     });
+});
+Route::prefix('notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 // ========== PENGUMUMAN (Admin & HR - Satu Route) ==========
@@ -542,7 +580,7 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
     
     // Halaman Data Karyawan
     Route::get('/data_karyawan', [GeneralManagerController::class, 'data_karyawan'])->name('data_karyawan');
-    
+    Route::get('/general_manajer/data_karyawan', [GeneralManagerController::class, 'data_karyawan'])->name('general.data_karyawan');
     // Halaman Layanan
     Route::get('/layanan', [GeneralManagerController::class, 'layanan'])->name('layanan');
     
@@ -553,12 +591,48 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
     // Halaman Tim & Divisi
     Route::get('/tim_divisi', [GeneralManagerController::class, 'tim_divisi'])->name('tim_divisi');
     
-    // 🔥 HALAMAN TOP & LOW GRADE
+    // Halaman Top & Low Grade
     Route::get('/top-low-grade', [GeneralManagerController::class, 'index'])->name('top_low_grade');
     
     // API Endpoints
     Route::get('/api/manager-ranking', [GeneralManagerController::class, 'managerRanking'])->name('api.manager-ranking');
     Route::get('/api/divisi-ranking', [GeneralManagerController::class, 'divisiRanking'])->name('api.divisi-ranking');
+});
+
+// Manager Divisi - Task Management
+Route::prefix('manager-divisi')->middleware(['auth', 'role:manager_divisi'])->group(function () {
+    // View
+    Route::get('/kelola-tugas', [ManagerDivisiTaskController::class, 'index'])->name('manager.tasks.index');
+    Route::get('/tugas-dari-karyawan', [ManagerDivisiTaskController::class, 'tugasDariKaryawan'])->name('manager.tasks.karyawan');
+    
+    // API Tasks
+    Route::get('/api/tasks-api', [ManagerDivisiTaskController::class, 'getTasksApi'])->name('manager.tasks.api');
+    Route::get('/api/tasks/statistics', [ManagerDivisiTaskController::class, 'getStatistics'])->name('manager.tasks.statistics');
+    Route::get('/api/tasks/{id}', [ManagerDivisiTaskController::class, 'getTaskDetail'])->name('manager.tasks.detail');
+    Route::get('/api/tasks/files/{id}', [ManagerDivisiTaskController::class, 'getTaskFiles'])->name('manager.tasks.files');
+    Route::get('/api/all-tasks', [ManagerDivisiTaskController::class, 'getAllTasksApi'])->name('manager.tasks.all');
+    
+    // Create Task
+    Route::post('/tasks/createTask', [ManagerDivisiTaskController::class, 'createTask'])->name('manager.tasks.create');
+    Route::post('/tasks/{id}/upload', [ManagerDivisiTaskController::class, 'uploadAttachment'])->name('manager.tasks.upload');
+    
+    // Update Task
+    Route::put('/tasks/{id}', [ManagerDivisiTaskController::class, 'update'])->name('manager.tasks.update');
+    Route::post('/tasks/{id}', [ManagerDivisiTaskController::class, 'update'])->name('manager.tasks.update.post');
+    
+    // Delete Task
+    Route::delete('/tasks/{id}', [ManagerDivisiTaskController::class, 'destroy'])->name('manager.tasks.delete');
+    
+    // Task from Karyawan
+    Route::get('/api/tugas-karyawan', [ManagerDivisiTaskController::class, 'getTasksFromKaryawan'])->name('manager.tasks.karyawan.api');
+    Route::get('/api/tugas-karyawan/statistics', [ManagerDivisiTaskController::class, 'getTasksFromKaryawanStatistics'])->name('manager.tasks.karyawan.statistics');
+    Route::get('/api/tugas-karyawan/{id}', [ManagerDivisiTaskController::class, 'getTaskFromKaryawanDetail'])->name('manager.tasks.karyawan.detail');
+    Route::post('/api/tugas-karyawan/{id}/approve', [ManagerDivisiTaskController::class, 'approveTaskFromKaryawan'])->name('manager.tasks.karyawan.approve');
+    
+    // Dropdowns
+    Route::get('/api/projects-dropdown', [ManagerDivisiTaskController::class, 'getProjectsDropdown'])->name('manager.tasks.projects.dropdown');
+    Route::get('/api/karyawan-dropdown', [ManagerDivisiTaskController::class, 'getKaryawanDropdown'])->name('manager.tasks.karyawan.dropdown');
+    Route::get('/api/karyawan-in-divisi', [ManagerDivisiTaskController::class, 'getKaryawanInDivisi'])->name('manager.tasks.karyawan.divisi');
 });
 
 // Route untuk Manager Divisi - Top Low Grade
@@ -1125,6 +1199,12 @@ Route::middleware(['auth', 'role:admin,hr'])
         Route::get('/pengumuman', function () {
             return redirect()->route('pengumuman.index');
         });
+        // Data Project - Route notifikasi
+Route::get('/project/notifications', [DataProjectController::class, 'notifications'])->name('project.notifications');
+Route::put('/project/notifications/{id}/read', [DataProjectController::class, 'markAsRead'])->name('project.notifications.read');
+Route::put('/project/notifications/mark-all-read', [DataProjectController::class, 'markAllAsRead'])->name('project.notifications.mark-all');
+Route::get('/project/invoice/{id}/details', [DataProjectController::class, 'getInvoiceDetails']);
+Route::post('/project/sync-from-invoice/{id}', [DataProjectController::class, 'syncFromInvoice'])->name('admin.project.sync');
     });
 
 /*
@@ -1138,7 +1218,7 @@ Route::middleware(['auth', 'role:karyawan'])
     ->group(function () {
         // Dashboard
         Route::get('/home', [KaryawanController::class, 'home'])->name('home');
-
+        
         // Profile
         Route::get('/profile', [KaryawanProfileController::class, 'index'])->name('profile');
         Route::post('/profile/update', [KaryawanProfileController::class, 'update'])->name('profile.update');
@@ -1216,7 +1296,11 @@ Route::middleware(['auth', 'role:karyawan'])
         Route::get('/pengajuan_cuti', function () {
             return redirect()->route('karyawan.cuti.index');
         });
-    });
+         // Route untuk pengumuman karyawan biasa (BARU DITAMBAHKAN)
+    Route::get('/api/announcements/employee', [App\Http\Controllers\PengumumanController::class, 'getAnnouncementsForEmployee']);
+    Route::get('/api/announcement-dates/employee', [App\Http\Controllers\PengumumanController::class, 'getAnnouncementDatesForEmployee']);
+});
+    
 
 /*
 |--------------------------------------------------------------------------

@@ -35,8 +35,7 @@
 <main class="flex-1 p-4 lg:p-8 md:ml-64">
     <div class="max-w-7xl mx-auto">
         
-        <!-- ========== HEADER ========== -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
                     <i class="fa-solid fa-file-invoice-dollar text-indigo-600 text-2xl"></i>
@@ -44,25 +43,25 @@
                 </h1>
                 <p class="text-sm text-slate-500 mt-1">Kelola periode penggajian dan monitoring status pembayaran</p>
             </div>
-            <!-- Tombol Lihat Data HR -->
-<a href="{{ route('finance.payroll.dari-hr') }}" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition shadow-sm">
-    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Lihat Data HR
-</a>
-           <!-- Tombol Ambil Data HR -->
-<form action="{{ route('finance.payroll.ambil-dari-hr') }}" method="POST" class="inline">
-    @csrf
-    <button type="submit" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition shadow-sm">
-        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Ambil Data HR
-    </button>
-</form>
-                <!-- Tombol Buat Periode Baru -->
-                <a href="{{ route('finance.payroll.create') }}" class="btn btn-primary flex items-center gap-2 shadow-sm">
+            
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <a href="{{ route('finance.payroll.dari-hr') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm border border-slate-200 h-10">
+                    <i class="fa-solid fa-eye mr-2"></i> Lihat Data HR
+                </a>
+
+                <form action="{{ route('finance.payroll.ambil-dari-hr') }}" method="POST" class="inline m-0 p-0">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm h-10">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Ambil Data HR
+                    </button>
+                </form>
+
+                <a href="{{ route('finance.payroll.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm h-10 gap-2">
                     <i class="fa-solid fa-plus"></i> Buat Periode Baru
                 </a>
             </div>
         </div>
 
-        <!-- ========== ALERT ========== -->
         @if(session('success'))
             <div class="mb-4 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded-r-lg flex items-center gap-2">
                 <i class="fa-solid fa-circle-check text-emerald-500"></i>
@@ -76,7 +75,6 @@
             </div>
         @endif
 
-        <!-- ========== STATISTIK CARDS ========== -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card-hover bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
                 <div class="flex justify-between items-start">
@@ -124,7 +122,6 @@
             </div>
         </div>
 
-        <!-- ========== TABEL PERIODE ========== -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                 <h2 class="font-semibold text-slate-800">Daftar Periode Penggajian</h2>
@@ -196,7 +193,6 @@
             </div>
         </div>
 
-        <!-- ========== LEGENDA ========== -->
         <div class="mt-6 flex flex-wrap gap-4 items-center justify-center py-3 border-t border-slate-200 text-xs">
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Diproses (dari HR)</span>
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Disetujui (terverifikasi)</span>

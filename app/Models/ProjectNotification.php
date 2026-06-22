@@ -2,37 +2,53 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectNotification extends Model
 {
+    use HasFactory;
+
     protected $table = 'project_notifications';
-    protected $fillable = ['project_id', 'type', 'message', 'trigger_date', 'is_read'];
+    
+    protected $fillable = [
+        'project_id', 
+        'type', 
+        'message', 
+        'trigger_date', 
+        'is_read'
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+        'trigger_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
-    public function getNotifications()
-{
-    $notifications = ProjectNotification::with('project')
-        ->orderBy('created_at', 'desc')
-        ->take(50)
-        ->get();
-    return response()->json(['success' => true, 'data' => $notifications]);
-}
 
-public function markNotificationAsRead($id)
-{
-    $notif = ProjectNotification::findOrFail($id);
-    $notif->is_read = true;
-    $notif->save();
-    return response()->json(['success' => true]);
-}
+    /**
+     * Boot method untuk set default values
+     */
+    protected static function boot()
+    {
+        parent::boot();
 
-public function markAllNotificationsAsRead()
-{
-    ProjectNotification::where('is_read', false)->update(['is_read' => true]);
-    return response()->json(['success' => true]);
-}
+        static::creating(function ($notification) {
+            // Set trigger_date ke now() jika tidak diisi
+            if (!$notification->trigger_date) {
+                $notification->trigger_date = now();
+            }
+            
+            // Set is_read ke false jika tidak diisi
+            if ($notification->is_read === null) {
+                $notification->is_read = false;
+            }
+        });
+    }
+    
 }

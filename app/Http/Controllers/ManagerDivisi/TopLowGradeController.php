@@ -50,10 +50,8 @@ class TopLowGradeController extends Controller
         $divisi = Divisi::find($divisiId);
         
         if ($divisi) {
-            // Sesuaikan dengan kolom yang ada di tabel divisi
             $namaDivisi = $divisi->divisi ?? $divisi->nama_divisi ?? $divisi->name ?? 'Divisi ' . $divisiId;
         } else {
-            // Jika tabel divisi tidak ditemukan, coba dari kolom divisi di user
             $namaDivisi = $manager->divisi ?? 'Divisi ' . $divisiId;
         }
         
@@ -63,13 +61,9 @@ class TopLowGradeController extends Controller
         $bulan = $request->input('bulan', now()->month);
         $tahun = $request->input('tahun', now()->year);
         
-        // TARGET TUGAS per bulan (5 tugas selesai = skor 100%)
-        $targetTasks = 5;
-        
         // =============================================
-        // AMBIL SEMUA KARYAWAN DI DIVISI YANG SAMA DENGAN MANAGER
+        // AMBIL SEMUA KARYAWAN DI DIVISI YANG SAMA
         // =============================================
-        // HANYAMenampilkan karyawan yang divisi_id nya sama dengan manager
         $employees = User::where('divisi_id', $divisiId)
             ->where(function($q) {
                 $q->where('role', 'karyawan')
@@ -78,12 +72,11 @@ class TopLowGradeController extends Controller
                   ->orWhere('status_karyawan', 'tetap')
                   ->orWhere('status_karyawan', 'kontrak');
             })
-            // JANGAN tampilkan manager itu sendiri di daftar karyawan
             ->where('id', '!=', $manager->id)
+            // Memuat relasi tugas yang difilter berdasarkan bulan & tahun (menggunakan created_at atau keaslian tanggal tugas)
             ->with(['tasks' => function($query) use ($bulan, $tahun) {
-                $query->where('status', 'selesai')
-                      ->whereMonth('completed_at', $bulan)
-                      ->whereYear('completed_at', $tahun);
+                $query->whereMonth('created_at', $bulan)
+                      ->whereYear('created_at', $tahun);
             }])
             ->get();
         
@@ -91,26 +84,33 @@ class TopLowGradeController extends Controller
         // PROSES DATA KARYAWAN
         // =============================================
         $dataKaryawan = [];
-        $totalTugasSemua = 0;
+        $totalTugasSelesaiSemua = 0;
         $totalNilaiSemua = 0;
         $gradeCount = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0];
         
         foreach ($employees as $employee) {
-            // Hitung jumlah tugas selesai dari relasi tasks
-            $completedTasks = $employee->tasks->count();
-            $totalTugasSemua += $completedTasks;
+            // Ambil semua tugas karyawan di bulan & tahun ini
+            $allTasks = $employee->tasks;
             
-            // HITUNG SKOR: (tugas_selesai / target) * 100%
-            if ($targetTasks > 0) {
-                $rawScore = ($completedTasks / $targetTasks) * 100;
+            // Hitung total semua tugas (target dinamis)
+            $totalTasksCount = $allTasks->count();
+            
+            // Hitung jumlah tugas yang berstatus 'selesai'
+            $completedTasks = $allTasks->where('status', 'selesai')->count();
+            $totalTugasSelesaiSemua += $completedTasks;
+            
+            // RUMUS BARU: (tugas_selesai / total_tugas) * 100%
+            if ($totalTasksCount > 0) {
+                $rawScore = ($completedTasks / $totalTasksCount) * 100;
                 $score = min(100, round($rawScore, 1));
             } else {
-                $score = 0;
+                // Jika belum diberikan tugas sama sekali bulan ini, beri nilai default 0 atau disesuaikan kebijakan
+                $score = 0; 
             }
             
             $totalNilaiSemua += $score;
             
-            // Tentukan GRADE berdasarkan SKOR
+            // Tentukan GRADE berdasarkan SKOR BARU
             if ($score >= 90) {
                 $grade = 'A';
                 $gradeCount['A']++;
@@ -125,7 +125,6 @@ class TopLowGradeController extends Controller
                 $gradeCount['D']++;
             }
             
-            // Ambil role/jabatan
             $role = $employee->role ?? 'Karyawan';
             $jabatan = $employee->jabatan ?? $employee->position ?? $employee->status_karyawan ?? 'Staff';
             
@@ -134,7 +133,7 @@ class TopLowGradeController extends Controller
                 'name' => $employee->name,
                 'role' => $role,
                 'jabatan' => $jabatan,
-                'total_tugas' => $completedTasks,
+                'total_tugas' => $completedTasks, // Yang dikirim ke view tetap jumlah tugas selesai
                 'nilai' => $score,
                 'grade' => $grade,
             ];
@@ -143,30 +142,22 @@ class TopLowGradeController extends Controller
         // =============================================
         // URUTKAN DAN AMBIL TOP 5 & LOW 5
         // =============================================
-        
-        // Urutkan berdasarkan NILAI (TERTINGGI ke TERENDAH)
         usort($dataKaryawan, function($a, $b) {
             return $b['nilai'] <=> $a['nilai'];
         });
         
-        // Ambil TOP 5 (nilai tertinggi) - karyawan terbaik
         $topKaryawan = array_slice($dataKaryawan, 0, 5);
         
-        // Ambil LOW 5 (nilai terendah) - karyawan yang perlu dievaluasi
-        // Filter dulu yang nilainya di bawah 75 (Grade C/D)
         $lowData = array_filter($dataKaryawan, function($k) {
             return $k['nilai'] < 75;
         });
         
-        // Urutkan dari terendah ke tertinggi
         usort($lowData, function($a, $b) {
             return $a['nilai'] <=> $b['nilai'];
         });
         
-        // Ambil 5 terendah
         $lowKaryawan = array_slice($lowData, 0, 5);
         
-        // Jika lowKaryawan kurang dari 5, ambil dari nilai terendah keseluruhan
         if (count($lowKaryawan) < 5 && count($dataKaryawan) > 0) {
             $allLow = array_slice($dataKaryawan, -5);
             usort($allLow, function($a, $b) {
@@ -185,12 +176,9 @@ class TopLowGradeController extends Controller
             'grade_c_count' => $gradeCount['C'],
             'grade_d_count' => $gradeCount['D'],
             'rata_rata_nilai' => $employees->count() > 0 ? round($totalNilaiSemua / $employees->count(), 1) : 0,
-            'total_tugas' => $totalTugasSemua,
+            'total_tugas' => $totalTugasSelesaiSemua,
         ];
         
-        // =============================================
-        // RETURN VIEW
-        // =============================================
         return view('manager_divisi.top_low_grade', compact(
             'topKaryawan', 
             'lowKaryawan', 
@@ -202,37 +190,44 @@ class TopLowGradeController extends Controller
     }
     
     /**
-     * Detail karyawan (opsional)
+     * Detail karyawan (Ikut diperbaiki agar sinkron)
      */
     public function show($id)
     {
         $manager = Auth::user();
         
-        $employee = User::with(['tasks' => function($query) {
-            $query->orderBy('created_at', 'desc');
-        }])->findOrFail($id);
+        $employee = User::findOrFail($id);
         
-        // Pastikan karyawan satu divisi dengan manager
         if ($employee->divisi_id !== $manager->divisi_id) {
             abort(403, 'Anda tidak memiliki akses ke data karyawan ini');
         }
         
         $bulan = request()->input('bulan', now()->month);
         $tahun = request()->input('tahun', now()->year);
-        $targetTasks = 5;
         
-        $completedTasks = $employee->tasks()
-            ->where('status', 'selesai')
-            ->whereMonth('completed_at', $bulan)
-            ->whereYear('completed_at', $tahun)
-            ->count();
+        // Ambil semua tugas di bulan & tahun ini
+        $allTasks = $employee->tasks()
+            ->whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->get();
+            
+        $totalTasksCount = $allTasks->count();
+        $completedTasks = $allTasks->where('status', 'selesai')->count();
         
-        $score = min(100, round(($completedTasks / $targetTasks) * 100, 1));
+        // Hitung skor dinamis
+        if ($totalTasksCount > 0) {
+            $score = min(100, round(($completedTasks / $totalTasksCount) * 100, 1));
+        } else {
+            $score = 0;
+        }
         
         if ($score >= 90) $grade = 'A';
         elseif ($score >= 75) $grade = 'B';
         elseif ($score >= 60) $grade = 'C';
         else $grade = 'D';
+        
+        // Agar view detail tidak error, kita samakan variabel targetTasks diisi total tugas bulan ini
+        $targetTasks = $totalTasksCount;
         
         return view('manager_divisi.karyawan_detail', compact(
             'employee', 'score', 'grade', 'completedTasks', 'targetTasks', 'bulan', 'tahun'

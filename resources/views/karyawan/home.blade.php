@@ -421,39 +421,11 @@
                     </button>
                 </div>
                 <div id="announcements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @forelse($announcements as $announcement)
-                        <div class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl list-indicator indicator-yellow hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-                            <div class="flex justify-between items-start mb-3">
-                                <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">{{ $announcement->judul ?? 'Tanpa Judul' }}</h4>
-                                <span class="text-xs font-medium bg-white dark:bg-gray-700 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
-                                    {{ is_object($announcement) && $announcement->created_at ? $announcement->created_at->format('d M Y') : (is_array($announcement) && isset($announcement['created_at']) ? date('d M Y', strtotime($announcement['created_at'])) : '-') }}
-                                </span>
-                            </div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                                {{ is_object($announcement) ? ($announcement->ringkasan ?? $announcement->isi_pesan ?? 'Tidak ada pesan') : (isset($announcement['isi_pesan']) ? $announcement['isi_pesan'] : (isset($announcement['ringkasan']) ? $announcement['ringkasan'] : 'Tidak ada pesan')) }}
-                            </p>
-                            <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-3 mt-auto">
-                                <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                    <span class="material-symbols-outlined text-sm">person</span>
-                                    {{ is_object($announcement) ? ($announcement->creator ?? 'System') : (isset($announcement['creator']) ? $announcement['creator'] : 'System') }}
-                                </div>
-                                @php
-                                    $lampiranUrl = is_object($announcement) ? ($announcement->lampiran_url ?? null) : (isset($announcement['lampiran_url']) ? $announcement['lampiran_url'] : null);
-                                @endphp
-                                @if($lampiranUrl)
-                                    <a href="{{ $lampiranUrl }}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-sm">attach_file</span>
-                                        Lampiran
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @empty
-                        <div class="col-span-full h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-                            <span class="material-symbols-outlined text-5xl mb-2 opacity-50">campaign</span>
-                            <p class="text-sm">Tidak ada pengumuman</p>
-                        </div>
-                    @endforelse
+                    <!-- Akan diisi oleh JavaScript -->
+                    <div class="col-span-full h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                        <span class="material-symbols-outlined text-5xl mb-2 opacity-50">campaign</span>
+                        <p class="text-sm">Memuat pengumuman...</p>
+                    </div>
                 </div>
             </section>
 
@@ -536,7 +508,7 @@
                                 <th class="py-2 pr-3">Deskripsi</th>
                                 <th class="py-2 pr-3">Periode</th>
                                 <th class="py-2 pr-3">Status</th>
-                            </table>
+                            </tr>
                         </thead>
                         <tbody id="projectDetailBody"></tbody>
                     </table>
@@ -576,6 +548,40 @@
             const today = new Date();
             const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             selectDate(todayStr);
+            
+            // Load announcements dari API
+            loadAnnouncements();
+            loadAnnouncementDates();
+            
+            // Refresh announcements
+            document.getElementById('refresh-announcements')?.addEventListener('click', function() {
+                const currentDate = window.selectedDate || null;
+                loadAnnouncements(currentDate);
+                
+                // Animasi refresh
+                const icon = this.querySelector('.material-symbols-outlined');
+                icon.style.transform = 'rotate(360deg)';
+                icon.style.transition = 'transform 0.6s ease';
+                setTimeout(() => {
+                    icon.style.transform = 'rotate(0deg)';
+                }, 600);
+            });
+            
+            // Refresh notes
+            document.getElementById('refresh-notes')?.addEventListener('click', function() {
+                const currentDate = window.selectedDate || null;
+                if (currentDate) {
+                    loadMeetingNotes(currentDate);
+                }
+                
+                // Animasi refresh
+                const icon = this.querySelector('.material-symbols-outlined');
+                icon.style.transform = 'rotate(360deg)';
+                icon.style.transition = 'transform 0.6s ease';
+                setTimeout(() => {
+                    icon.style.transform = 'rotate(0deg)';
+                }, 600);
+            });
         });
 
         // Helper function to animate numbers
@@ -662,7 +668,7 @@
         let currentDate = new Date();
         let selectedDate = null;
         let highlightedDates = @json($highlighted_dates ?? []);
-        let announcementDates = @json($announcement_dates ?? []);
+        let announcementDates = [];
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -705,7 +711,6 @@
                 const hasMeeting = highlightedDates.includes(dateStr);
                 const hasAnnouncement = announcementDates.includes(dateStr);
 
-                // Tambahkan indikator jika ada meeting/pengumuman
                 if (hasMeeting) {
                     const indicator = document.createElement('div');
                     indicator.className = 'absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm';
@@ -718,7 +723,6 @@
                     dayElement.appendChild(indicator);
                 }
 
-                // Semua tanggal bisa diklik
                 dayElement.addEventListener('click', function () {
                     selectDate(dateStr);
                 });
@@ -753,163 +757,166 @@
                 return '';
             }
         }
-// Load meeting notes (langsung dari data Blade, tanpa API)
-function loadMeetingNotes(date) {
-    const container = document.getElementById('meeting-notes-container');
-    if (!container) return;
-    
-    // Data catatan meeting dari Blade
-    let meetingNotes = @json($meetingNotes ?? []);
-    
-    // Filter berdasarkan tanggal
-    if (date && meetingNotes && meetingNotes.length > 0) {
-        meetingNotes = meetingNotes.filter(note => {
-            let tanggalNote = note.tanggal || note.created_at;
-            if (tanggalNote) {
-                const dateOnly = normalizeDate(tanggalNote);
-                return dateOnly === date;
-            }
-            return false;
-        });
-    }
-    
-    if (!meetingNotes || meetingNotes.length === 0) {
-        container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-            <span class="material-symbols-outlined text-5xl mb-2 opacity-50">event_note</span>
-            <p class="text-sm">Tidak ada catatan meeting pada tanggal ini</p>
-        </div>`;
-        return;
-    }
-    
-    container.innerHTML = meetingNotes.map(note => `
-        <div class="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl list-indicator indicator-purple">
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">${escapeHtml(note.topik || 'Tanpa Topik')}</h4>
-            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                <div><span class="font-medium">Hasil Diskusi:</span><p class="mt-1">${escapeHtml(note.hasil_diskusi || '-')}</p></div>
-                <div><span class="font-medium">Keputusan:</span><p class="mt-1">${escapeHtml(note.keputusan || '-')}</p></div>
-            </div>
-            <div class="mt-2 text-xs text-gray-400">
-                📅 ${formatTanggal(note.tanggal || note.created_at)}
-            </div>
-        </div>
-    `).join('');
-}
 
-// Load announcements (langsung dari data Blade, tanpa API)
-function loadAnnouncements(selectedDate = null) {
-    const container = document.getElementById('announcements-container');
-    if (!container) return;
-    
-    // Data pengumuman dari Blade
-    let announcements = @json($announcements ?? []);
-    
-    // Filter berdasarkan tanggal jika ada
-    if (selectedDate && announcements && announcements.length > 0) {
-        announcements = announcements.filter(a => {
-            let tanggal = a.tanggal || a.created_at || a.tanggal_indo;
-            if (tanggal) {
-                const dateOnly = normalizeDate(tanggal);
-                return dateOnly === selectedDate;
+        // Load meeting notes (langsung dari data Blade, tanpa API)
+        function loadMeetingNotes(date) {
+            const container = document.getElementById('meeting-notes-container');
+            if (!container) return;
+            
+            // Data catatan meeting dari Blade
+            let meetingNotes = @json($meetingNotes ?? []);
+            
+            // Filter berdasarkan tanggal
+            if (date && meetingNotes && meetingNotes.length > 0) {
+                meetingNotes = meetingNotes.filter(note => {
+                    let tanggalNote = note.tanggal || note.created_at;
+                    if (tanggalNote) {
+                        const dateOnly = normalizeDate(tanggalNote);
+                        return dateOnly === date;
+                    }
+                    return false;
+                });
             }
-            return false;
-        });
-    }
-    
-    if (!announcements || announcements.length === 0) {
-        const msg = selectedDate ? 'Tidak ada pengumuman pada tanggal ini' : 'Tidak ada pengumuman';
-        container.innerHTML = `<div class="col-span-full h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-            <span class="material-symbols-outlined text-5xl mb-2 opacity-50">campaign</span>
-            <p class="text-sm">${msg}</p>
-        </div>`;
-        return;
-    }
-    
-    container.innerHTML = announcements.map(announcement => `
-        <div class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl list-indicator indicator-yellow hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-            <div class="flex justify-between items-start mb-3">
-                <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">${escapeHtml(announcement.judul || 'Tanpa Judul')}</h4>
-                <span class="text-xs font-medium bg-white dark:bg-gray-700 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
-                    ${formatTanggal(announcement.tanggal_indo || announcement.tanggal || announcement.created_at)}
-                </span>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                ${escapeHtml(announcement.ringkasan || announcement.isi_pesan || 'Tidak ada pesan')}
-            </p>
-            <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-3 mt-auto">
-                <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    <span class="material-symbols-outlined text-sm">person</span>
-                    ${escapeHtml(announcement.creator || announcement.creator_name || 'System')}
+            
+            if (!meetingNotes || meetingNotes.length === 0) {
+                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <span class="material-symbols-outlined text-5xl mb-2 opacity-50">event_note</span>
+                    <p class="text-sm">Tidak ada catatan meeting pada tanggal ini</p>
+                </div>`;
+                return;
+            }
+            
+            container.innerHTML = meetingNotes.map(note => `
+                <div class="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl list-indicator indicator-purple">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2">${escapeHtml(note.topik || 'Tanpa Topik')}</h4>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <div><span class="font-medium">Hasil Diskusi:</span><p class="mt-1">${escapeHtml(note.hasil_diskusi || '-')}</p></div>
+                        <div><span class="font-medium">Keputusan:</span><p class="mt-1">${escapeHtml(note.keputusan || '-')}</p></div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400">
+                        📅 ${formatTanggal(note.tanggal || note.created_at)}
+                    </div>
                 </div>
-                ${announcement.lampiran_url ? `<a href="${escapeHtml(announcement.lampiran_url)}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">attach_file</span>
-                    Lampiran
-                </a>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-// Helper functions
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function formatTanggal(tanggal) {
-    if (!tanggal) return '-';
-    try {
-        const date = new Date(tanggal);
-        if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            `).join('');
         }
-    } catch(e) {}
-    return tanggal;
-}
 
-function normalizeDate(value) {
-    if (!value) return '';
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
-        return value.slice(0, 10);
-    }
-    try {
-        return new Date(value).toISOString().split('T')[0];
-    } catch (e) {
-        return '';
-    }
-}
-
-// Helper function untuk escape HTML
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// Helper function format tanggal
-function formatTanggal(tanggal) {
-    if (!tanggal) return '-';
-    try {
-        const date = new Date(tanggal);
-        if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        // --- LOAD ANNOUNCEMENTS DARI API ---
+        async function loadAnnouncements(selectedDate = null) {
+            const container = document.getElementById('announcements-container');
+            if (!container) return;
+            
+            try {
+                let url = '/karyawan/api/announcements/employee';
+                if (selectedDate) {
+                    url += `?date=${selectedDate}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': window.csrfToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    const msg = selectedDate ? 'Tidak ada pengumuman pada tanggal ini' : 'Tidak ada pengumuman';
+                    container.innerHTML = `<div class="col-span-full h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                        <span class="material-symbols-outlined text-5xl mb-2 opacity-50">campaign</span>
+                        <p class="text-sm">${msg}</p>
+                    </div>`;
+                    return;
+                }
+                
+                container.innerHTML = result.data.map(announcement => `
+                    <div class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl list-indicator indicator-yellow hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">${escapeHtml(announcement.judul || 'Tanpa Judul')}</h4>
+                            <span class="text-xs font-medium bg-white dark:bg-gray-700 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+                                ${announcement.tanggal_indo || formatTanggal(announcement.created_at)}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                            ${escapeHtml(announcement.ringkasan || announcement.isi_pesan || 'Tidak ada pesan')}
+                        </p>
+                        <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-3 mt-auto">
+                            <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                <span class="material-symbols-outlined text-sm">person</span>
+                                ${escapeHtml(announcement.creator || announcement.creator_name || 'System')}
+                            </div>
+                            ${announcement.lampiran_url ? `<a href="${escapeHtml(announcement.lampiran_url)}" target="_blank" class="text-xs font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">attach_file</span>
+                                Lampiran
+                            </a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+                container.innerHTML = `<div class="col-span-full h-32 flex flex-col items-center justify-center text-red-400 dark:text-red-500">
+                    <span class="material-symbols-outlined text-5xl mb-2 opacity-50">error</span>
+                    <p class="text-sm">Gagal memuat pengumuman</p>
+                </div>`;
+            }
         }
-    } catch(e) {}
-    return tanggal;
-}
+
+        // --- LOAD ANNOUNCEMENT DATES UNTUK KALENDER ---
+        async function loadAnnouncementDates() {
+            try {
+                const response = await fetch('/karyawan/api/announcement-dates/employee', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': window.csrfToken
+                    }
+                });
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    announcementDates = data;
+                    renderCalendar();
+                }
+            } catch (error) {
+                console.error('Error loading announcement dates:', error);
+            }
+        }
+
+        // Helper functions
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function formatTanggal(tanggal) {
+            if (!tanggal) return '-';
+            try {
+                const date = new Date(tanggal);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+            } catch(e) {}
+            return tanggal;
+        }
+
         function formatProjectDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr);
             return d.toLocaleDateString('id-ID');
         }
+
+        // Project Detail Modal
+        const projectOpenBtn = document.getElementById('openProjectDetail');
+        const projectModal = document.getElementById('projectDetailModal');
+        const projectCloseBtn = document.getElementById('closeProjectDetail');
+        const projectLoadingEl = document.getElementById('projectDetailLoading');
+        const projectBodyEl = document.getElementById('projectDetailBody');
+        const projectEmptyEl = document.getElementById('projectDetailEmpty');
 
         function renderProjectRows(items) {
             if (!projectBodyEl) return;
@@ -920,10 +927,10 @@ function formatTanggal(tanggal) {
                 const startDate = item.tanggal_mulai_pengerjaan || item.tanggal_mulai_kerjasama || null;
                 const endDate = item.tanggal_selesai_pengerjaan || item.tanggal_selesai_kerjasama || null;
                 tr.innerHTML = `
-                    <td class="py-2 pr-3 font-medium text-gray-900 dark:text-white">${item.nama}</td>
-                    <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">${item.deskripsi || '-'}</td>
+                    <td class="py-2 pr-3 font-medium text-gray-900 dark:text-white">${escapeHtml(item.nama)}</td>
+                    <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">${escapeHtml(item.deskripsi || '-')}</td>
                     <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">${formatProjectDate(startDate)} - ${formatProjectDate(endDate)}</td>
-                    <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">${item.status_pengerjaan || '-'}</td>
+                    <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">${escapeHtml(item.status_pengerjaan || '-')}</td>
                 `;
                 projectBodyEl.appendChild(tr);
             });
@@ -972,6 +979,17 @@ function formatTanggal(tanggal) {
                 }
             });
         }
+
+        // Calendar navigation
+        document.getElementById('prev-month')?.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month')?.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
     </script>
 </body>
 </html>

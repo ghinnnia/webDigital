@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Layanan;
 use App\Models\Divisi;
 use App\Models\TugasKaryawanToManager;
+use App\Models\Notification; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -17,81 +18,83 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon; // Tambahkan Carbon untuk memproses tanggal dengan aman
 
 class TaskController extends Controller
 {
     /**
      * Display list of tasks for admin (dashboard)
      */
-/**
- * API untuk Manager Divisi mendapatkan daftar tugas
- */
-public function apiGetManagerTasks()
-{
-    try {
-        $user = Auth::user();
-        $userDivisiId = $user->divisi_id;
-        
-        Log::info('Manager Divisi API Get Tasks', [
-            'user_id' => $user->id,
-            'divisi_id' => $userDivisiId
-        ]);
-        
-        $tasks = Task::with(['assignee', 'creator', 'project', 'targetDivisi'])
-            ->where(function($query) use ($user, $userDivisiId) {
-                $query->where('target_divisi_id', $userDivisiId)
-                      ->orWhere('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhere('assigned_by_manager', $user->id);
-            })
-            ->orderBy('deadline', 'asc')
-            ->get();
-        
-        // Transform data untuk frontend
-        $transformedTasks = $tasks->map(function($task) {
-            // TENTUKAN TYPE BERDASARKAN SUBMISSION FILE
-            // Jika sudah ada file upload, ini adalah "tugas dari karyawan"
-            $type = $task->submission_file ? 'task_from_karyawan' : 'regular';
+
+    /**
+     * API untuk Manager Divisi mendapatkan daftar tugas
+     */
+    public function apiGetManagerTasks()
+    {
+        try {
+            $user = Auth::user();
+            $userDivisiId = $user->divisi_id;
             
-            return [
-                'id' => $task->id,
-                'judul' => $task->judul,
-                'nama_tugas' => $task->nama_tugas,
-                'deskripsi' => $task->deskripsi,
-                'deadline' => $task->deadline,
-                'status' => $task->status,
-                'priority' => $task->priority,
-                'project_id' => $task->project_id,
-                'project_name' => $task->project ? $task->project->nama : null,
-                'assigned_to' => $task->assigned_to,
-                'assignee_name' => $task->assignee ? $task->assignee->name : null,
-                'created_by' => $task->created_by,
-                'creator_name' => $task->creator ? $task->creator->name : null,
-                'submission_file' => $task->submission_file,
-                'submission_url' => $task->submission_file ? Storage::url($task->submission_file) : null,
-                'submission_notes' => $task->submission_notes,
-                'submitted_at' => $task->submitted_at,
-                'catatan' => $task->catatan,
-                'is_overdue' => $task->deadline && now()->gt($task->deadline) && !in_array($task->status, ['selesai', 'dibatalkan']),
-                'type' => $type,  // ← INI YANG DITAMBAHKAN
-                'created_by_name' => $task->creator ? $task->creator->name : null,  // ← TAMBAHKAN JUGA INI
-            ];
-        });
-        
-        return response()->json([
-            'success' => true,
-            'data' => $transformedTasks,
-            'total' => $transformedTasks->count()
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('Error in apiGetManagerTasks: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal memuat data tugas: ' . $e->getMessage()
-        ], 500);
+            Log::info('Manager Divisi API Get Tasks', [
+                'user_id' => $user->id,
+                'divisi_id' => $userDivisiId
+            ]);
+            
+            $tasks = Task::with(['assignee', 'creator', 'project', 'targetDivisi'])
+                ->where(function($query) use ($user, $userDivisiId) {
+                    $query->where('target_divisi_id', $userDivisiId)
+                          ->orWhere('created_by', $user->id)
+                          ->orWhere('assigned_to', $user->id)
+                          ->orWhere('assigned_by_manager', $user->id);
+                })
+                ->orderBy('deadline', 'asc')
+                ->get();
+            
+            // Transform data untuk frontend
+            $transformedTasks = $tasks->map(function($task) {
+                // TENTUKAN TYPE BERDASARKAN SUBMISSION FILE
+                // Jika sudah ada file upload, ini adalah "tugas dari karyawan"
+                $type = $task->submission_file ? 'task_from_karyawan' : 'regular';
+                
+                return [
+                    'id' => $task->id,
+                    'judul' => $task->judul,
+                    'nama_tugas' => $task->nama_tugas,
+                    'deskripsi' => $task->deskripsi,
+                    'deadline' => $task->deadline,
+                    'status' => $task->status,
+                    'priority' => $task->priority,
+                    'project_id' => $task->project_id,
+                    'project_name' => $task->project ? $task->project->nama : null,
+                    'assigned_to' => $task->assigned_to,
+                    'assignee_name' => $task->assignee ? $task->assignee->name : null,
+                    'created_by' => $task->created_by,
+                    'creator_name' => $task->creator ? $task->creator->name : null,
+                    'submission_file' => $task->submission_file,
+                    'submission_url' => $task->submission_file ? Storage::url($task->submission_file) : null,
+                    'submission_notes' => $task->submission_notes,
+                    'submitted_at' => $task->submitted_at,
+                    'catatan' => $task->catatan,
+                    'is_overdue' => $task->deadline && now()->gt($task->deadline) && !in_array($task->status, ['selesai', 'dibatalkan']),
+                    'type' => $type,
+                    'created_by_name' => $task->creator ? $task->creator->name : null,
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $transformedTasks,
+                'total' => $transformedTasks->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in apiGetManagerTasks: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data tugas: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     public function index()
     {
@@ -112,44 +115,44 @@ public function apiGetManagerTasks()
     }
 
     /**
- * Karyawan menerima tugas (ubah status dari pending menjadi proses)
- */
-public function terimaTugas($id)
-{
-    try {
-        $userId = Auth::id();
-        
-        // Cari tugas milik karyawan ini
-        $task = Task::where('id', $id)
-            ->where(function($q) use ($userId) {
-                $q->where('assigned_to', $userId)
-                  ->orWhereRaw("JSON_CONTAINS(assigned_to_ids, JSON_ARRAY(?))", [$userId]);
-            })
-            ->first();
-        
-        if (!$task) {
+     * Karyawan menerima tugas (ubah status dari pending menjadi proses)
+     */
+    public function terimaTugas($id)
+    {
+        try {
+            $userId = Auth::id();
+            
+            // Cari tugas milik karyawan ini
+            $task = Task::where('id', $id)
+                ->where(function($q) use ($userId) {
+                    $q->where('assigned_to', $userId)
+                      ->orWhereRaw("JSON_CONTAINS(assigned_to_ids, JSON_ARRAY(?))", [$userId]);
+                })
+                ->first();
+            
+            if (!$task) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tidak ditemukan'
+                ], 404);
+            }
+            
+            // Update status menjadi 'proses'
+            $task->status = 'proses';
+            $task->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Tugas berhasil diterima'
+            ]);
+            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tugas tidak ditemukan'
-            ], 404);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-        
-        // Update status menjadi 'proses'
-        $task->status = 'proses';
-        $task->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Tugas berhasil diterima'
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-        ], 500);
     }
-}
     
     /**
      * Display tasks for manager divisi
@@ -279,147 +282,170 @@ public function terimaTugas($id)
     /**
      * UPLOAD TUGAS OLEH KARYAWAN - TANPA VALIDASI MANAGER
      */
-  public function uploadTaskFile(Request $request, $id)
-{
-    try {
-        $user = Auth::user();
-        
-        if ($user->role !== 'karyawan') {
-            return redirect()->back()->with('error', 'Hanya karyawan yang dapat mengupload tugas');
-        }
-
-        $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif,zip,rar|max:10240',
-            'notes' => 'nullable|string|max:1000'
-        ]);
-
-        $task = Task::find($id);
-        if (!$task) {
-            return redirect()->back()->with('error', 'Tugas tidak ditemukan');
-        }
-
-        // Cek apakah tugas milik karyawan ini
-        $isAssignedToUser = ((int) $task->assigned_to === (int) $user->id);
-        if (!$isAssignedToUser) {
-            $assignedIds = $task->assigned_to_ids;
-            if (is_string($assignedIds)) {
-                $decoded = json_decode($assignedIds, true);
-                $assignedIds = is_array($decoded) ? $decoded : [];
+    public function uploadTaskFile(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            
+            if ($user->role !== 'karyawan') {
+                return redirect()->back()->with('error', 'Hanya karyawan yang dapat mengupload tugas');
             }
-            if (is_array($assignedIds)) {
-                $isAssignedToUser = in_array((int) $user->id, array_map('intval', $assignedIds), true);
+
+            $request->validate([
+                'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif,zip,rar|max:10240',
+                'notes' => 'nullable|string|max:1000'
+            ]);
+
+            $task = Task::find($id);
+            if (!$task) {
+                return redirect()->back()->with('error', 'Tugas tidak ditemukan');
             }
+
+            // Cek apakah tugas milik karyawan ini
+            $isAssignedToUser = ((int) $task->assigned_to === (int) $user->id);
+            if (!$isAssignedToUser) {
+                $assignedIds = $task->assigned_to_ids;
+                if (is_string($assignedIds)) {
+                    $decoded = json_decode($assignedIds, true);
+                    $assignedIds = is_array($decoded) ? $decoded : [];
+                }
+                if (is_array($assignedIds)) {
+                    $isAssignedToUser = in_array((int) $user->id, array_map('intval', $assignedIds), true);
+                }
+            }
+
+            if (!$isAssignedToUser) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengupload tugas ini');
+            }
+
+            // Cek status tugas
+            if (in_array($task->status, ['selesai', 'dibatalkan'])) {
+                return redirect()->back()->with('error', 'Tugas sudah selesai atau dibatalkan');
+            }
+
+            // Handle file upload
+            $file = $request->file('file');
+            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $filePath = $file->storeAs('tugas_karyawan', $fileName, 'public');
+
+            // Simpan submission
+            $oldSubmission = $task->submission_file;
+            $task->submission_file = $filePath;
+            $task->submission_notes = $request->input('notes');
+            $task->submitted_at = now();
+            
+            // 🔥 PERUBAHAN: Jangan langsung selesai, tapi "menunggu review"
+            $task->status = 'menunggu';
+            
+            $task->save();
+
+            // Hapus file submission lama jika berbeda
+            if ($oldSubmission && $oldSubmission !== $filePath && Storage::disk('public')->exists($oldSubmission)) {
+                Storage::disk('public')->delete($oldSubmission);
+            }
+
+            // 🔥 TAMBAHAN: NOTIFIKASI TUGAS DIKIRIM KE MANAGER/HR
+            $this->sendTaskSubmittedNotification($task, $user);
+
+            return redirect()->route('karyawan.tugas.index')
+                ->with('success', 'Tugas berhasil diupload! Menunggu review dari Manager/HR.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
         }
-
-        if (!$isAssignedToUser) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengupload tugas ini');
-        }
-
-        // Cek status tugas
-        if (in_array($task->status, ['selesai', 'dibatalkan'])) {
-            return redirect()->back()->with('error', 'Tugas sudah selesai atau dibatalkan');
-        }
-
-        // Handle file upload
-        $file = $request->file('file');
-        $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-        $filePath = $file->storeAs('tugas_karyawan', $fileName, 'public');
-
-        // Simpan submission
-        $oldSubmission = $task->submission_file;
-        $task->submission_file = $filePath;
-        $task->submission_notes = $request->input('notes');
-        $task->submitted_at = now();
-        
-        // 🔥 PERUBAHAN: Jangan langsung selesai, tapi "menunggu review"
-        $task->status = 'menunggu';  // ← GANTI DARI 'selesai' JADI 'menunggu'
-        
-        $task->save();
-
-        // Hapus file submission lama jika berbeda
-        if ($oldSubmission && $oldSubmission !== $filePath && Storage::disk('public')->exists($oldSubmission)) {
-            Storage::disk('public')->delete($oldSubmission);
-        }
-
-        return redirect()->route('karyawan.tugas.index')
-            ->with('success', 'Tugas berhasil diupload! Menunggu review dari Manager/HR.');
-
-    } catch (\Exception $e) {
-        return redirect()->back()
-            ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
     }
-}
     
     /**
      * Store a new task (ADMIN)
      */
-    public function store(Request $request)
-    {
-        try {
-            Log::info('=== STORE TASK REQUEST ===', $request->all());
-            
-            $validator = Validator::make($request->all(), [
-                'judul' => 'nullable|string|max:255',
-                'nama_tugas' => 'required|string|max:255',
-                'deskripsi' => 'required|string',
-                'deadline' => 'required|date',
-                'status' => 'required|in:pending,proses,selesai,dibatalkan',
-                'target_type' => 'required|in:karyawan,divisi,manager',
-                'assigned_to' => 'nullable|exists:users,id',
-                'target_manager_id' => 'nullable|exists:users,id',
-                'catatan' => 'nullable|string',
-                'project_id' => 'nullable|exists:project,id',
-                'target_divisi_id' => 'nullable|integer|exists:divisi,id',
-            ]);
-            
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            }
-            
-            $validated = $validator->validated();
-            $validated['created_by'] = Auth::id();
-            $validated['status'] = $validated['status'] ?? 'pending';
-            $validated['judul'] = $validated['judul'] ?? $validated['nama_tugas'];
-            
-            // Logic divisi
-            if ($validated['target_type'] === 'divisi' && !empty($validated['target_divisi_id'])) {
-                $manager = User::where('role', 'manager_divisi')
-                              ->where('divisi_id', $validated['target_divisi_id'])
-                              ->first();
-                
-                if ($manager) {
-                    $validated['target_manager_id'] = $manager->id;
-                    $validated['assigned_to'] = $manager->id;
-                }
-            }
-            
-            unset($validated['kategori']);
-            
-            Log::info('Creating task with data:', $validated);
-            
-            $task = Task::create($validated);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Tugas berhasil dibuat',
-                'task' => $task->load(['project', 'assignee', 'creator', 'targetDivisi'])
-            ]);
-            
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-            
-        } catch (\Exception $e) {
-            Log::error('Error in store: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat tugas: ' . $e->getMessage()
-            ], 500);
+   public function store(Request $request)
+{
+    try {
+        Log::info('=== STORE TASK REQUEST ===', $request->all());
+        
+        $validator = Validator::make($request->all(), [
+            'judul' => 'nullable|string|max:255',
+            'nama_tugas' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'deadline' => 'required|date',
+            'status' => 'required|in:pending,proses,selesai,dibatalkan',
+            'target_type' => 'required|in:karyawan,divisi,manager',
+            'assigned_to' => 'nullable|exists:users,id',
+            'target_manager_id' => 'nullable|exists:users,id',
+            'catatan' => 'nullable|string',
+            'project_id' => 'nullable|exists:project,id',
+            'target_divisi_id' => 'nullable|integer|exists:divisi,id',
+        ]);
+        
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
         }
+        
+        $validated = $validator->validated();
+        $validated['created_by'] = Auth::id();
+        $validated['status'] = $validated['status'] ?? 'pending';
+        $validated['judul'] = $validated['judul'] ?? $validated['nama_tugas'];
+        
+        // Logic divisi
+        if ($validated['target_type'] === 'divisi' && !empty($validated['target_divisi_id'])) {
+            $manager = User::where('role', 'manager_divisi')
+                          ->where('divisi_id', $validated['target_divisi_id'])
+                          ->first();
+            
+            if ($manager) {
+                $validated['target_manager_id'] = $manager->id;
+                $validated['assigned_to'] = $manager->id;
+            }
+        }
+        
+        unset($validated['kategori']);
+        
+        Log::info('Creating task with data:', $validated);
+        
+        $task = Task::create($validated);
+        
+        // 🔥 PERBAIKAN: TAMBAHKAN LOG UNTUK DEBUG
+        Log::info('Task created, checking notification conditions', [
+            'task_id' => $task->id,
+            'assigned_to' => $task->assigned_to,
+            'has_assigned_to' => !empty($task->assigned_to)
+        ]);
+        
+        // 🔥 TAMBAHAN: NOTIFIKASI TUGAS BARU UNTUK KARYAWAN
+        if ($task->assigned_to) {
+            Log::info('Calling sendNewTaskNotification for task ID: ' . $task->id);
+            $this->sendNewTaskNotification($task);
+        } else {
+            Log::warning('Task created without assigned_to, no notification sent', [
+                'task_id' => $task->id
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tugas berhasil dibuat',
+            'task' => $task->load(['project', 'assignee', 'creator', 'targetDivisi'])
+        ]);
+        
+    } catch (ValidationException $e) {
+        Log::error('Validation error in store: ' . json_encode($e->errors()));
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Exception $e) {
+        Log::error('Error in store: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal membuat tugas: ' . $e->getMessage()
+        ], 500);
     }
+}
     
     /**
      * Update task
@@ -485,99 +511,106 @@ public function terimaTugas($id)
     }
     
     /**
- * Approve atau revisi tugas dari karyawan (untuk Manager/HR)
- */
-public function approveOrRevisiTugasKaryawan(Request $request, $id)
-{
-    try {
-        $task = Task::findOrFail($id);
-        $action = $request->input('action');
-        $notes = $request->input('notes');
-        
-        if ($action === 'approved') {
-            // APPROVE TUGAS
-            $task->status = 'selesai';
-            $task->completed_at = now();
-            $message = 'Tugas berhasil disetujui';
+     * Approve atau revisi tugas dari karyawan (untuk Manager/HR)
+     */
+    public function approveOrRevisiTugasKaryawan(Request $request, $id)
+    {
+        try {
+            $task = Task::findOrFail($id);
+            $action = $request->input('action');
+            $notes = $request->input('notes');
+            $currentUser = Auth::user();
             
-            // Tambahkan catatan approve ke catatan_update
-            $approveNote = "[APPROVED] " . now()->format('d/m/Y H:i') . " - Tugas disetujui oleh " . Auth::user()->name . "\n";
-            $task->catatan_update = ($task->catatan_update ?? '') . $approveNote;
-            
-        } elseif ($action === 'returned') {
-            // REVISI TUGAS - INI YANG PENTING UNTUK PENILAIAN KESESUAIAN
-            
-            if (!$notes || trim($notes) === '') {
+            if ($action === 'approved') {
+                // APPROVE TUGAS
+                $task->status = 'selesai';
+                $task->completed_at = now();
+                $message = 'Tugas berhasil disetujui';
+                
+                // Tambahkan catatan approve ke catatan_update
+                $approveNote = "[APPROVED] " . now()->format('d/m/Y H:i') . " - Tugas disetujui oleh " . $currentUser->name . "\n";
+                $task->catatan_update = ($task->catatan_update ?? '') . $approveNote;
+                
+                // 🔥 TAMBAHAN: NOTIFIKASI TUGAS DISETUJUI
+                $this->sendTaskApprovedNotification($task);
+                
+            } elseif ($action === 'returned') {
+                // REVISI TUGAS
+                
+                if (!$notes || trim($notes) === '') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Keterangan revisi wajib diisi'
+                    ], 422);
+                }
+                
+                // Hitung jumlah revisi sebelumnya
+                $jumlahRevisiSebelum = $this->countRevisi($task->catatan_update);
+                $revisiKe = $jumlahRevisiSebelum + 1;
+                
+                // Format revisi sesuai dengan yang dibaca sistem penilaian
+                // PENTING: Gunakan format "REVISI:" agar terbaca oleh sistem KPA
+                $revisiText = sprintf(
+                    "REVISI %d: %s - %s\n",
+                    $revisiKe,
+                    now()->format('d/m/Y H:i'),
+                    $notes
+                );
+                
+                // Simpan ke catatan_update
+                $task->catatan_update = ($task->catatan_update ?? '') . $revisiText;
+                
+                // Ubah status menjadi 'proses' agar karyawan bisa perbaiki
+                $task->status = 'proses';
+                
+                // Reset submission file agar karyawan upload ulang
+                $oldFile = $task->submission_file;
+                $task->submission_file = null;
+                $task->submission_notes = null;
+                $task->submitted_at = null;
+                
+                // Hapus file lama jika ada
+                if ($oldFile && Storage::disk('public')->exists($oldFile)) {
+                    Storage::disk('public')->delete($oldFile);
+                }
+                
+                $message = 'Revisi berhasil dikirim ke karyawan';
+                
+                // 🔥 TAMBAHAN: NOTIFIKASI TUGAS PERLU REVISI
+                $this->sendTaskRevisionNotification($task, $notes);
+                
+            } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Keterangan revisi wajib diisi'
-                ], 422);
+                    'message' => 'Aksi tidak valid'
+                ], 400);
             }
             
-            // Hitung jumlah revisi sebelumnya
-            $jumlahRevisiSebelum = $this->countRevisi($task->catatan_update);
-            $revisiKe = $jumlahRevisiSebelum + 1;
+            $task->save();
             
-            // Format revisi sesuai dengan yang dibaca sistem penilaian
-            // PENTING: Gunakan format "REVISI:" agar terbaca oleh sistem KPA
-            $revisiText = sprintf(
-                "REVISI %d: %s - %s\n",
-                $revisiKe,
-                now()->format('d/m/Y H:i'),
-                $notes
-            );
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $task
+            ]);
             
-            // Simpan ke catatan_update
-            $task->catatan_update = ($task->catatan_update ?? '') . $revisiText;
-            
-            // Ubah status menjadi 'proses' atau 'pending' agar karyawan bisa perbaiki
-            $task->status = 'proses';
-            
-            // Reset submission file agar karyawan upload ulang
-            $oldFile = $task->submission_file;
-            $task->submission_file = null;
-            $task->submission_notes = null;
-            $task->submitted_at = null;
-            
-            // Hapus file lama jika ada
-            if ($oldFile && Storage::disk('public')->exists($oldFile)) {
-                Storage::disk('public')->delete($oldFile);
-            }
-            
-            $message = 'Revisi berhasil dikirim ke karyawan';
-            
-        } else {
+        } catch (\Exception $e) {
+            Log::error('Error in approveOrRevisiTugasKaryawan: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Aksi tidak valid'
-            ], 400);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-        
-        $task->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'task' => $task
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('Error in approveOrRevisiTugasKaryawan: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-        ], 500);
     }
-}
 
-/**
- * Hitung jumlah revisi dari catatan_update
- */
-private function countRevisi($catatan)
-{
-    if (empty($catatan)) return 0;
-    return preg_match_all('/REVISI \d+:/', $catatan, $matches);
-}
+    /**
+     * Hitung jumlah revisi dari catatan_update
+     */
+    private function countRevisi($catatan)
+    {
+        if (empty($catatan)) return 0;
+        return preg_match_all('/REVISI \d+:/', $catatan, $matches);
+    }
 
     /**
      * Store task khusus untuk manager divisi
@@ -636,6 +669,11 @@ private function countRevisi($catatan)
             
             $task = Task::create($taskData);
             
+            // 🔥 TAMBAHAN: NOTIFIKASI TUGAS BARU UNTUK KARYAWAN
+            if ($task->assigned_to) {
+                $this->sendNewTaskNotification($task);
+            }
+            
             DB::commit();
             
             return response()->json([
@@ -661,4 +699,258 @@ private function countRevisi($catatan)
             ], 500);
         }
     }
+
+    // ================================================
+    // 🔥 FUNGSI-FUNGSI NOTIFIKASI (TAMBAHAN BARU)
+    // ================================================
+
+/**
+ * Send notification for new task to karyawan
+ * 🔥 UBAH DARI private MENJADI public
+ */
+public function sendNewTaskNotification($task)
+{
+    try {
+        Log::info('=== START sendNewTaskNotification ===', [
+            'task_id' => $task->id,
+            'assigned_to' => $task->assigned_to
+        ]);
+        
+        // Cek apakah assigned_to ada
+        if (empty($task->assigned_to)) {
+            Log::warning('sendNewTaskNotification: assigned_to is empty', [
+                'task_id' => $task->id
+            ]);
+            return;
+        }
+        
+        $assignedUser = User::find($task->assigned_to);
+        if (!$assignedUser) {
+            Log::warning('sendNewTaskNotification: assigned user not found', [
+                'task_id' => $task->id,
+                'assigned_to' => $task->assigned_to
+            ]);
+            return;
+        }
+        
+        $creator = User::find($task->created_by);
+        $creatorName = $creator ? $creator->name : 'Admin';
+        $creatorRole = $creator ? ($creator->role == 'hr' ? 'HRD' : ($creator->role == 'manager_divisi' ? 'Manager' : 'Admin')) : 'Admin';
+        
+        // Pengaman Format Tanggal
+        $deadlineText = 'Tidak ada deadline';
+        if ($task->deadline) {
+            try {
+                $deadlineText = $task->deadline instanceof Carbon 
+                    ? $task->deadline->format('d M Y H:i') 
+                    : Carbon::parse($task->deadline)->format('d M Y H:i');
+            } catch (\Exception $e) {
+                $deadlineText = $task->deadline;
+            }
+        }
+
+        // 🔥 GUNAKAN URL LANGSUNG
+        $linkUrl = '/karyawan/tugas/' . $task->id;
+        
+        Log::info('Creating new task notification', [
+            'task_id' => $task->id,
+            'user_id' => $task->assigned_to,
+            'title' => '📋 Tugas Baru: ' . ($task->judul ?? $task->nama_tugas),
+            'link' => $linkUrl
+        ]);
+        
+        $notificationData = [
+            'user_id' => $task->assigned_to,
+            'title' => '📋 Tugas Baru: ' . ($task->judul ?? $task->nama_tugas),
+            'message' => "Anda mendapatkan tugas baru dari {$creatorName} ({$creatorRole}): " . ($task->judul ?? $task->nama_tugas) . ". Deadline: {$deadlineText}",
+            'type' => 'new_task',
+            'task_id' => $task->id,
+            'is_read' => false,
+            'link' => $linkUrl,
+        ];
+        
+        Log::info('Notification data prepared:', $notificationData);
+        
+        $notification = Notification::create($notificationData);
+        
+        Log::info('✅ New task notification sent successfully', [
+            'task_id' => $task->id,
+            'user_id' => $task->assigned_to,
+            'notification_id' => $notification->id
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('❌ Error sending new task notification: ' . $e->getMessage(), [
+            'task_id' => $task->id ?? null,
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+}
+   /**
+ * Send notification for task submission to manager/HR
+ */
+private function sendTaskSubmittedNotification($task, $user)
+{
+    try {
+        // Cari creator tugas (HR atau Manager)
+        $creator = User::find($task->created_by);
+        if (!$creator) {
+            // Jika tidak ada creator, cari assigned_by_manager
+            $creator = User::find($task->assigned_by_manager);
+        }
+        
+        if (!$creator) return;
+        
+        // 🔥 PERBAIKAN: GUNAKAN URL LANGSUNG
+        $linkUrl = '/';
+        if ($creator->role == 'hr') {
+            $linkUrl = '/hr/tasks/' . $task->id;
+        } else {
+            $linkUrl = '/manager/tasks/' . $task->id;
+        }
+        
+        Notification::create([
+            'user_id' => $creator->id,
+            'title' => '📤 Tugas Dikumpulkan: ' . ($task->judul ?? $task->nama_tugas),
+            'message' => "Karyawan {$user->name} telah mengumpulkan tugas \"" . ($task->judul ?? $task->nama_tugas) . "\". Silakan review.",
+            'type' => 'task_submitted',
+            'task_id' => $task->id,
+            'is_read' => false,
+            'link' => $linkUrl,
+        ]);
+        
+        Log::info('Task submitted notification sent', [
+            'task_id' => $task->id,
+            'user_id' => $creator->id
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error sending task submitted notification: ' . $e->getMessage());
+    }
+}
+
+    /**
+ * Send notification for task revision to karyawan
+ */
+private function sendTaskRevisionNotification($task, $notes)
+{
+    try {
+        if (!$task->assigned_to) return;
+        
+        $creator = User::find($task->created_by);
+        $creatorName = $creator ? $creator->name : 'Manager';
+        
+        // 🔥 PERBAIKAN: GUNAKAN URL LANGSUNG
+        $linkUrl = '/karyawan/tugas/' . $task->id;
+        
+        Notification::create([
+            'user_id' => $task->assigned_to,
+            'title' => '📝 Tugas Perlu Revisi: ' . ($task->judul ?? $task->nama_tugas),
+            'message' => "Tugas \"" . ($task->judul ?? $task->nama_tugas) . "\" perlu direvisi. Catatan: {$notes}",
+            'type' => 'task_revision',
+            'task_id' => $task->id,
+            'is_read' => false,
+            'link' => $linkUrl,
+        ]);
+        
+        Log::info('Task revision notification sent', [
+            'task_id' => $task->id,
+            'user_id' => $task->assigned_to
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error sending task revision notification: ' . $e->getMessage());
+    }
+}
+
+    /**
+ * Send notification for task approval to karyawan
+ */
+private function sendTaskApprovedNotification($task)
+{
+    try {
+        if (!$task->assigned_to) return;
+        
+        $creator = User::find($task->created_by);
+        $creatorName = $creator ? $creator->name : 'Manager';
+        
+        // 🔥 PERBAIKAN: GUNAKAN URL LANGSUNG
+        $linkUrl = '/karyawan/tugas/' . $task->id;
+        
+        Notification::create([
+            'user_id' => $task->assigned_to,
+            'title' => '✅ Tugas Disetujui: ' . ($task->judul ?? $task->nama_tugas),
+            'message' => "Tugas \"" . ($task->judul ?? $task->nama_tugas) . "\" telah disetujui oleh {$creatorName}. Selamat!",
+            'type' => 'task_approved',
+            'task_id' => $task->id,
+            'is_read' => false,
+            'link' => $linkUrl,
+        ]);
+        
+        Log::info('Task approved notification sent', [
+            'task_id' => $task->id,
+            'user_id' => $task->assigned_to
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error sending task approved notification: ' . $e->getMessage());
+    }
+}
+
+    /**
+     * Send deadline reminder notification (dipanggil dari cron/job)
+     */
+    public function sendDeadlineReminders()
+    {
+        try {
+            $tasks = Task::where('status', '!=', 'selesai')
+                ->where('status', '!=', 'dibatalkan')
+                ->whereNotNull('deadline')
+                ->where('deadline', '>=', now())
+                ->where('deadline', '<=', now()->addDays(2))
+                ->get();
+            
+            foreach ($tasks as $task) {
+                if (!$task->assigned_to) continue;
+                
+                $daysLeft = now()->diffInDays($task->deadline, false);
+                $daysLeft = ceil($daysLeft);
+                
+                $message = "Tugas \"" . ($task->judul ?? $task->nama_tugas) . "\" deadline dalam ";
+                if ($daysLeft == 0) {
+                    $message .= "HARI INI! Segera selesaikan!";
+                } elseif ($daysLeft == 1) {
+                    $message .= "BESOK! Segera selesaikan!";
+                } else {
+                    $message .= "{$daysLeft} hari lagi. Jangan lupa untuk menyelesaikannya!";
+                }
+                
+                // Cek apakah sudah ada notifikasi reminder untuk tugas ini dalam 24 jam terakhir
+                $existing = Notification::where('user_id', $task->assigned_to)
+                    ->where('task_id', $task->id)
+                    ->where('type', 'deadline_reminder')
+                    ->where('created_at', '>=', now()->subHours(24))
+                    ->first();
+                
+                if (!$existing) {
+                    Notification::create([
+                        'user_id' => $task->assigned_to,
+                        'title' => '⏰ Pengingat Deadline',
+                        'message' => $message,
+                        'type' => 'deadline_reminder',
+                        'task_id' => $task->id,
+                        'is_read' => false,
+                        'link' => route('karyawan.tugas.show', $task->id),
+                    ]);
+                }
+            }
+            
+            Log::info('Deadline reminders sent', ['count' => $tasks->count()]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error sending deadline reminders: ' . $e->getMessage());
+        }
+    }
+
+    
 }

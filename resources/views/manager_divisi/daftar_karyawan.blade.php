@@ -206,26 +206,21 @@
 </head>
 
 <body>
-    <!-- Mobile Menu Button -->
     <button id="mobileMenuBtn" class="mobile-menu-btn">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
     </button>
 
-    <!-- Overlay untuk mobile -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <div class="app-container">
-        <!-- Sidebar -->
         <aside id="sidebar" class="sidebar-desktop">
             @include('manager_divisi.templet.sider')
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="p-4 sm:p-6 lg:p-8">
-                <!-- Header -->
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">Data Karyawan</h2>
@@ -245,7 +240,6 @@
                     </div>
                 </div>
 
-                <!-- Alert Success -->
                 @if (session('success'))
                     <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4">
                         <div class="flex items-center">
@@ -255,7 +249,6 @@
                     </div>
                 @endif
 
-                <!-- Search Section -->
                 <div class="mb-6">
                     <form method="GET" action="{{ route('manager_divisi.daftar_karyawan') }}" class="w-full md:w-1/2 lg:w-1/3">
                         <div class="relative">
@@ -269,7 +262,6 @@
                     </form>
                 </div>
 
-                <!-- Info Divisi -->
                 @if(isset($namaDivisiManager) && $namaDivisiManager && count($karyawan) > 0)
                     <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <div class="flex items-center gap-2">
@@ -281,7 +273,6 @@
                     </div>
                 @endif
 
-                <!-- Tabel Desktop -->
                 @if(count($karyawan) > 0)
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-200 bg-gray-50">
@@ -291,7 +282,6 @@
                             </h3>
                         </div>
                         
-                        <!-- Desktop Table (hidden on mobile) -->
                         <div class="hidden md:block">
                             <div class="table-wrapper">
                                 <table class="data-table">
@@ -323,7 +313,7 @@
                                                     </span>
                                                 </td>
                                                 <td>{{ $k->email }}</td>
-                                                <td>{{ $k->divisi ?? '-' }}</td>
+                                                <td>{{ $k->divisi->nama ?? $k->divisi ?? $namaDivisiManager ?? '-' }}</td>
                                                 <td>{{ Str::limit($k->alamat, 30) ?? '-' }}</td>
                                                 <td>{{ $k->kontak ?? '-' }}</td>
                                                 <td>
@@ -359,7 +349,6 @@
                             </div>
                         </div>
 
-                        <!-- Mobile Cards (visible only on mobile) -->
                         <div class="block md:hidden p-4 space-y-3">
                             @foreach ($karyawan as $index => $k)
                                 <div class="employee-card">
@@ -390,7 +379,7 @@
                                             <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
                                                 <div>
                                                     <p class="text-xs text-gray-400">Divisi</p>
-                                                    <p class="text-sm text-gray-700">{{ $k->divisi ?? '-' }}</p>
+                                                    <p class="text-sm text-gray-700">{{ $k->divisi->nama ?? $k->divisi ?? $namaDivisiManager ?? '-' }}</p>
                                                 </div>
                                                 <div>
                                                     <p class="text-xs text-gray-400">Status Kerja</p>
@@ -424,7 +413,6 @@
                         </div>
                     </div>
                 @else
-                    <!-- Empty State -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                         <div class="flex flex-col items-center">
                             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -449,7 +437,6 @@
                 @endif
             </div>
 
-            <!-- Footer -->
             <footer class="text-center p-4 bg-white border-t border-gray-200 text-gray-500 text-sm">
                 Copyright ©2025 by digicity.id
             </footer>

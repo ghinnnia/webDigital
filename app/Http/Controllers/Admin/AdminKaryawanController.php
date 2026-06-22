@@ -441,12 +441,36 @@ class AdminKaryawanController extends Controller
         }
     }
     
-    /**
+       /**
      * Get karyawan data for general manager view
      */
     public function karyawanGeneral(Request $request)
     {
-        $karyawan = Karyawan::with(['user', 'divisiRelation', 'tim'])->paginate(10);
+        $query = Karyawan::with(['user', 'divisiRelation', 'tim']);
+
+        // Logika Search (mendukung parameter 'search' atau 'keyword')
+        if ($request->filled('search') || $request->filled('keyword')) {
+            $keyword = $request->input('search') ?? $request->input('keyword');
+            
+            $query->where(function($q) use ($keyword) {
+                $q->where('nama', 'like', "%$keyword%")
+                  ->orWhere('email', 'like', "%$keyword%")
+                  ->orWhere('role', 'like', "%$keyword%")
+                  ->orWhereHas('user', function($qu) use ($keyword) {
+                      $qu->where('email', 'like', "%$keyword%")
+                        ->orWhere('role', 'like', "%$keyword%");
+                  });
+            });
+        }
+
+        // Logika Filter Divisi (mendukung parameter 'divisi' atau 'divisi_id')
+        if ($request->filled('divisi') || $request->filled('divisi_id')) {
+            $divisiId = $request->input('divisi') ?? $request->input('divisi_id');
+            $query->where('divisi_id', $divisiId);
+        }
+
+        $karyawan = $query->paginate(10);
+        
         return view('general_manajer.data_karyawan', compact('karyawan'));
     }
     
@@ -459,7 +483,7 @@ class AdminKaryawanController extends Controller
         return view('finance.daftar_karyawan', compact('karyawans'));
     }
     
-    /**
+       /**
      * Get daftar karyawan view for manager divisi
      */
     public function daftarKaryawanView(Request $request)
@@ -470,15 +494,28 @@ class AdminKaryawanController extends Controller
         $divisi = Divisi::find($divisiId);
         $namaDivisiManager = $divisi ? $divisi->divisi : null;
         
-        $query = Karyawan::with(['user', 'tim'])
+        $query = Karyawan::with(['user', 'divisi', 'tim'])
             ->where('divisi_id', $divisiId);
             
-        if ($request->has('search')) {
+        // Gunakan $request->filled() agar pencarian kosong tidak merusak query
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
+                // 1. Cari berdasarkan data langsung di tabel karyawan
                 $q->where('nama', 'like', "%$search%")
                   ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('role', 'like', "%$search%");
+                  ->orWhere('role', 'like', "%$search%")
+                  
+                  // 2. Tambahan: Cari berdasarkan nama divisi di tabel divisi
+                  ->orWhereHas('divisi', function($qd) use ($search) {
+                      $qd->where('divisi', 'like', "%$search%");
+                  })
+                  
+                  // 3. Tambahan: Cari berdasarkan email dan role di tabel users (jika di tabel karyawan kosong)
+                  ->orWhereHas('user', function($qu) use ($search) {
+                      $qu->where('email', 'like', "%$search%")
+                        ->orWhere('role', 'like', "%$search%");
+                  });
             });
         }
         
@@ -486,7 +523,6 @@ class AdminKaryawanController extends Controller
         
         return view('manager_divisi.daftar_karyawan', compact('karyawan', 'namaDivisiManager'));
     }
-
     /**
      * Get karyawan by divisi for manager
      */

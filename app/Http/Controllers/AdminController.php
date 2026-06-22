@@ -16,12 +16,14 @@ use App\Models\Task;
 
 class AdminController extends Controller
 {
-public function beranda()
+    public function beranda()
     {
         try {
-            // Data statistik
-            $jumlahKaryawan = Karyawan::count();
-            $jumlahPerusahaan = Perusahaan::count(); // Tambahkan ini
+            // 🔥 PERBAIKAN: Mengambil jumlah karyawan dari tabel users dengan role 'karyawan'
+            $jumlahKaryawan = User::where('role', 'karyawan')->count();
+            
+            // Data statistik lainnya
+            $jumlahPerusahaan = Perusahaan::count();
             $jumlahLayanan = Layanan::count();
             $jumlahProject = Project::count();
             
@@ -52,7 +54,7 @@ public function beranda()
             
             return view('admin.home', compact(
                 'jumlahKaryawan',
-                'jumlahPerusahaan', // Tambahkan ini
+                'jumlahPerusahaan',
                 'jumlahLayanan',
                 'jumlahProject',
                 'catatanRapat',

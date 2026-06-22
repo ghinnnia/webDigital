@@ -50,6 +50,14 @@ class Karyawan extends Model
         return $this->belongsTo(Divisi::class, 'divisi_id');
     }
 
+    /**
+     * Tambahan: Alias agar error divisiRelation teratasi
+     */
+    public function divisiRelation()
+    {
+        return $this->divisi();
+    }
+
     public function tim()
     {
         return $this->belongsTo(Tim::class, 'tim_id');

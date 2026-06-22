@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\Karyawan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\NotificationController; // Tambahkan ini agar bisa memanggil notifikasi
 
 class HRTaskController extends Controller
 {
@@ -65,6 +66,9 @@ class HRTaskController extends Controller
             'target_divisi_id' => $divisiId,
             'status' => 'pending'
         ]);
+
+        // 🔥 TAMBAHAN: Pemicu Notifikasi Tugas Baru dari HR
+        NotificationController::createNewTaskNotification($task->id, $task->assigned_to);
 
         return redirect()->route('hr.tasks.index')
             ->with('success', 'Tugas berhasil dibuat!');

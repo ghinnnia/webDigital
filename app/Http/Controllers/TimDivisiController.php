@@ -25,7 +25,7 @@ class TimDivisiController extends Controller
         $totalAnggota = Tim::sum('jumlah_anggota');
         
         // Ambil data dengan pagination
-        $tims = Tim::orderBy('created_at', 'desc')->paginate(10);
+        $tims = Tim::with('divisi')->orderBy('created_at', 'desc')->paginate(10);
         $divisis = Divisi::orderBy('created_at', 'desc')->paginate(10);
         
         return view('general_manajer.tim_dan_divisi', compact(
@@ -42,29 +42,25 @@ class TimDivisiController extends Controller
             \Log::info('Store Tim Request:', $request->all());
             
             $validated = $request->validate([
-                'tim' => 'required|string|max:255',
+                'tim' => 'required|string|max:255|unique:tim,tim',
                 'divisi' => 'required|string|max:255',
                 'jumlah_anggota' => 'nullable|integer|min:0'
             ]);
 
             // Cek apakah divisi ada
-            $divisiExists = Divisi::where('divisi', $validated['divisi'])->exists();
+            $divisi = Divisi::where('divisi', $validated['divisi'])->first();
 
-            if (!$divisiExists) {
+            if (!$divisi) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Divisi tidak ditemukan. Silakan pilih divisi yang tersedia.'
                 ], 422);
             }
-
-            // Dapatkan divisi_id
-            $divisi = Divisi::where('divisi', $validated['divisi'])->first();
             
-            // Buat tim
+            // Buat tim langsung menggunakan string nama divisi (tanpa kolom divisi_id yang tidak ada di database)
             $tim = Tim::create([
                 'tim' => $validated['tim'],
                 'divisi' => $validated['divisi'],
-                'divisi_id' => $divisi->id,
                 'jumlah_anggota' => $validated['jumlah_anggota'] ?? 0,
             ]);
 
@@ -97,8 +93,10 @@ class TimDivisiController extends Controller
     public function updateTim(Request $request, $id)
     {
         try {
+            \Log::info('Update Tim Request:', $request->all());
+            
             $validated = $request->validate([
-                'tim' => 'required|string|max:255',
+                'tim' => 'required|string|max:255|unique:tim,tim,' . $id,
                 'divisi' => 'required|string|max:255',
                 'jumlah_anggota' => 'nullable|integer|min:0'
             ]);
@@ -114,13 +112,16 @@ class TimDivisiController extends Controller
                 ], 422);
             }
             
+            // Update data tim tanpa mengisi kolom divisi_id (karena tidak ada di DB)
             $tim->tim = $validated['tim'];
             $tim->divisi = $validated['divisi'];
-            $tim->divisi_id = $newDivisi->id;
             if (isset($validated['jumlah_anggota'])) {
                 $tim->jumlah_anggota = $validated['jumlah_anggota'];
             }
             $tim->save();
+            
+            // Update jumlah tim di divisi
+            $newDivisi->updateJumlahTim();
             
             return response()->json([
                 'success' => true,
@@ -128,7 +129,14 @@ class TimDivisiController extends Controller
                 'data' => $tim
             ]);
             
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('Update tim error:', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -143,7 +151,19 @@ class TimDivisiController extends Controller
     {
         try {
             $tim = Tim::findOrFail($id);
+            
+            // Simpan nama divisi untuk update jumlah
+            $divisiName = $tim->divisi;
+            
             $tim->delete();
+            
+            // Update jumlah tim di divisi berdasarkan nama divisi
+            if ($divisiName) {
+                $divisi = Divisi::where('divisi', $divisiName)->first();
+                if ($divisi) {
+                    $divisi->updateJumlahTim();
+                }
+            }
             
             return response()->json([
                 'success' => true,
@@ -200,7 +220,7 @@ class TimDivisiController extends Controller
             
             $divisi->update(['divisi' => $validated['divisi']]);
             
-            // Update nama divisi di semua tim yang terkait
+            // Update nama divisi di semua tim yang terkait berdasarkan nama divisi lama (bukan divisi_id)
             if ($oldNamaDivisi != $validated['divisi']) {
                 Tim::where('divisi', $oldNamaDivisi)->update(['divisi' => $validated['divisi']]);
             }

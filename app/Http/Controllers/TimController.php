@@ -17,17 +17,17 @@ class TimController extends Controller
     public function getByDivisi($divisiId)
     {
         try {
-            // Try to get from tims table
-            $tims = Tim::where('divisi_id', $divisiId)
-                ->orderBy('tim', 'asc')
-                ->get(['id', 'tim', 'divisi_id']);
-            
-            if ($tims->isNotEmpty()) {
-                return response()->json($tims);
+            $divisi = Divisi::find($divisiId);
+            if (!$divisi) {
+                return response()->json([]);
             }
+
+            // Mencari relasi menggunakan nama divisi (string) bukan divisi_id
+            $tims = Tim::where('divisi', $divisi->divisi)
+                ->orderBy('tim', 'asc')
+                ->get(['id', 'tim', 'divisi']);
             
-            // If no tims found, return empty array
-            return response()->json([]);
+            return response()->json($tims);
             
         } catch (\Exception $e) {
             return response()->json([]);
@@ -39,10 +39,13 @@ class TimController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Tim::with('divisi');
+        $query = Tim::query();
         
         if ($request->has('divisi_id')) {
-            $query->where('divisi_id', $request->divisi_id);
+            $divisi = Divisi::find($request->divisi_id);
+            if ($divisi) {
+                $query->where('divisi', $divisi->divisi);
+            }
         }
         
         $tims = $query->orderBy('tim')->get();
@@ -57,12 +60,14 @@ class TimController extends Controller
     {
         $request->validate([
             'tim' => 'required|string|max:255',
-            'divisi_id' => 'required|exists:divisis,id'
+            'divisi_id' => 'required|exists:divisi,id' // Nama tabel adalah 'divisi' (bukan divisis)
         ]);
+
+        $divisi = Divisi::findOrFail($request->divisi_id);
 
         // Check if tim already exists in the same divisi
         $existing = Tim::where('tim', $request->tim)
-            ->where('divisi_id', $request->divisi_id)
+            ->where('divisi', $divisi->divisi)
             ->first();
             
         if ($existing) {
@@ -74,7 +79,7 @@ class TimController extends Controller
 
         $tim = Tim::create([
             'tim' => $request->tim,
-            'divisi_id' => $request->divisi_id,
+            'divisi' => $divisi->divisi,
             'deskripsi' => $request->deskripsi
         ]);
 
@@ -94,12 +99,14 @@ class TimController extends Controller
         
         $request->validate([
             'tim' => 'required|string|max:255',
-            'divisi_id' => 'required|exists:divisis,id'
+            'divisi_id' => 'required|exists:divisi,id' // Nama tabel adalah 'divisi'
         ]);
+
+        $divisi = Divisi::findOrFail($request->divisi_id);
 
         // Check if tim already exists in the same divisi (excluding current)
         $existing = Tim::where('tim', $request->tim)
-            ->where('divisi_id', $request->divisi_id)
+            ->where('divisi', $divisi->divisi)
             ->where('id', '!=', $id)
             ->first();
             
@@ -112,7 +119,7 @@ class TimController extends Controller
 
         $tim->update([
             'tim' => $request->tim,
-            'divisi_id' => $request->divisi_id,
+            'divisi' => $divisi->divisi,
             'deskripsi' => $request->deskripsi
         ]);
 
