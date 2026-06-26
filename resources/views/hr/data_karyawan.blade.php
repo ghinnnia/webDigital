@@ -919,7 +919,6 @@
                                             <th style="min-width: 200px;">Nama</th>
                                             <th style="min-width: 200px;">Email</th>
                                             <th style="min-width: 150px;">Role</th>
-                                            <th style="min-width: 150px;">Divisi</th>
                                             <th style="min-width: 150px;">Tim</th>
                                             <th style="min-width: 250px;">Alamat</th>
                                             <th style="min-width: 150px;">Kontak</th>
@@ -972,7 +971,7 @@
                                                     </td>
                                                     <td style="min-width: 200px;">
                                                         <div class="text-sm">{{ $item->email }}</div>
-                                                        <div class="text-xs text-gray-500">Role: {{ $item->role }}</div>
+                                                        <div class="text-xs text-gray-400 mt-1">{{ $task->assignedKaryawan->divisi ?? 'No Division' }}</div>
                                                     </td>
                                                     <td style="min-width: 150px;">
                                                         <span class="status-badge 
@@ -983,8 +982,42 @@
                                                             {{ $item->role }}
                                                         </span>
                                                     </td>
-                                                    <td style="min-width: 150px;">{{ $item->divisi ?? '-' }}</td>
-                                                    <td style="min-width: 150px;">{{ $item->tim ? $item->tim->tim : '-' }}</td>
+                                                    <td style="min-width: 150px;">
+                                                        @if(isset($divisiMap[$item->divisi_id]))
+                                                            @php
+                                                                $divisiName = strtolower(trim($divisiMap[$item->divisi_id]));
+                                                                $divisiClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                                if ($divisiName === 'hr' || $divisiName === 'human resources') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                                elseif ($divisiName === 'finance') $divisiClass = 'bg-green-50 text-green-700 border border-green-200';
+                                                                elseif ($divisiName === 'marketing') $divisiClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                                                                elseif ($divisiName === 'it' || $divisiName === 'programmer' || $divisiName === 'pengembangan') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                            @endphp
+
+                                                            <span class="status-badge {{ $divisiClass }}">
+                                                                {{ $divisiMap[$item->divisi_id] }}
+                                                            </span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                    <td style="min-width: 150px;">
+                                                        @php
+                                                            $timBadgeClass = 'bg-gray-100 text-gray-800';
+                                                            $timName = $item->tim ? strtolower(trim($item->tim->tim)) : '';
+                                                            if ($timName === 'hr' || $timName === 'human resources') $timBadgeClass = 'bg-blue-100 text-blue-800';
+                                                            elseif ($timName === 'finance') $timBadgeClass = 'bg-green-100 text-green-800';
+                                                            elseif ($timName === 'marketing') $timBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                            elseif ($timName === 'it' || $timName === 'programming' || $timName === 'pengembangan') $timBadgeClass = 'bg-indigo-100 text-indigo-800';
+                                                        @endphp
+
+                                                        @if($item->tim)
+                                                            <span class="status-badge {{ $timBadgeClass }}">
+                                                                {{ $item->tim->tim }}
+                                                            </span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
                                                     <td style="min-width: 250px;">{{ $item->alamat }}</td>
                                                     <td style="min-width: 150px;">{{ $item->kontak }}</td>
                                                     <td style="min-width: 150px;">
@@ -1167,11 +1200,52 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div class="grid grid-cols-2 gap-2 text-sm">
                                             <div><p class="text-text-muted-light">No</p><p class="font-medium">{{ $no++ }}</p></div>
                                             <div><p class="text-text-muted-light">Role</p><p><span class="status-badge">{{ $item->role }}</span></p></div>
                                             <div><p class="text-text-muted-light">Status Kerja</p><p>{{ ucfirst($item->status_kerja) }}</p></div>
-                                            <div><p class="text-text-muted-light">Divisi</p><p class="font-medium">{{ $item->divisi ?? '-' }}</p></div>
+                                            <div>
+                                                <p class="text-text-muted-light">Divisi</p>
+                                                <p class="font-medium">
+                                                    @if(isset($divisiMap[$item->divisi_id]))
+                                                        @php
+                                                            $divisiName = strtolower(trim($divisiMap[$item->divisi_id]));
+                                                            $divisiClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                            if ($divisiName === 'hr' || $divisiName === 'human resources') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                            elseif ($divisiName === 'finance') $divisiClass = 'bg-green-50 text-green-700 border border-green-200';
+                                                            elseif ($divisiName === 'marketing') $divisiClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                                                            elseif ($divisiName === 'it' || $divisiName === 'programmer' || $divisiName === 'pengembangan') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                        @endphp
+
+                                                        <span class="status-badge {{ $divisiClass }}">
+                                                            {{ $divisiMap[$item->divisi_id] }}
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p class="text-text-muted-light">Tim</p>
+                                                <p class="font-medium">
+                                                    @if($item->tim)
+                                                        @php
+                                                            $timNameMobile = strtolower(trim($item->tim->tim));
+                                                            $timBadgeClassMobile = 'bg-gray-100 text-gray-800';
+                                                            if ($timNameMobile === 'hr' || $timNameMobile === 'human resources') $timBadgeClassMobile = 'bg-blue-100 text-blue-800';
+                                                            elseif ($timNameMobile === 'finance') $timBadgeClassMobile = 'bg-green-100 text-green-800';
+                                                            elseif ($timNameMobile === 'marketing') $timBadgeClassMobile = 'bg-yellow-100 text-yellow-800';
+                                                            elseif ($timNameMobile === 'it' || $timNameMobile === 'programming' || $timNameMobile === 'pengembangan') $timBadgeClassMobile = 'bg-indigo-100 text-indigo-800';
+                                                        @endphp
+
+                                                        <span class="status-badge {{ $timBadgeClassMobile }}">
+                                                            {{ $item->tim->tim }}
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </p>
+                                            </div>
                                             <div><p class="text-text-muted-light">Alamat</p><p class="font-medium truncate">{{ $item->alamat }}</p></div>
                                             <div><p class="text-text-muted-light">Gaji</p><p class="font-medium text-green-600">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p></div>
                                             <div><p class="text-text-muted-light">Tunjangan Tetap</p>
@@ -2037,7 +2111,7 @@
                 
                 // Load tunjangan karyawan saat edit
                 if (data.id) {
-                    fetch(`/api/karyawan/${data.id}/tunjangan`)
+fetch(`/admin/karyawan/${data.id}/tunjangan`)
                         .then(res => res.json())
                         .then(result => {
                             if (result.success) {

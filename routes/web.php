@@ -428,6 +428,10 @@ Route::middleware(['auth'])->prefix('admin/karyawan')->group(function () {
     Route::put('/update/{id}', [AdminKaryawanController::class, 'update'])->name('admin.karyawan.update');
     Route::delete('/delete/{id}', [AdminKaryawanController::class, 'destroy'])->name('admin.karyawan.delete');
     Route::get('/get/{id}', [AdminKaryawanController::class, 'getKaryawan'])->name('admin.karyawan.get');
+
+    // 🔧 Tambahan: endpoint untuk ambil tunjangan per karyawan (agar checklist tidak hilang saat edit)
+    Route::get('/{id}/tunjangan', [AdminKaryawanController::class, 'getTunjanganKaryawanApi'])
+        ->name('admin.karyawan.tunjangan.get');
 });
 
 // Routes for divisi management (if needed)

@@ -24,6 +24,45 @@ class AdminKaryawanController extends Controller
     }
 
     /**
+     * API: Ambil tunjangan per karyawan (format sesuai frontend hr/data_karyawan.blade.php)
+     * Response:
+     * {
+     *   success: true,
+     *   data: { tetap: [{id:...}], tidak_tetap:[{id:...}] }
+     * }
+     */
+    public function getTunjanganKaryawanApi($id)
+    {
+        try {
+            $karyawan = Karyawan::with('user')->findOrFail($id);
+
+            $all = $karyawan->tunjanganDefault()->get();
+
+            $tetap = $all->where('tipe', 'bulanan')->values()->map(function ($t) {
+                return ['id' => $t->id];
+            })->all();
+
+            $tidakTetap = $all->whereIn('tipe', ['bonus', 'insentif'])->values()->map(function ($t) {
+                return ['id' => $t->id];
+            })->all();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tetap' => $tetap,
+                    'tidak_tetap' => $tidakTetap,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('getTunjanganKaryawanApi error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil tunjangan karyawan'
+            ], 500);
+        }
+    }
+
+    /**
      * Get gaji terbaru karyawan dari data HR
      */
     public function getGajiTerbaru($userId)
