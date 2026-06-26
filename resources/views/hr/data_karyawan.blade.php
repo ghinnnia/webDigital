@@ -971,7 +971,7 @@
                                                     </td>
                                                     <td style="min-width: 200px;">
                                                         <div class="text-sm">{{ $item->email }}</div>
-                                                        <div class="text-xs text-gray-400 mt-1">{{ $task->assignedKaryawan->divisi ?? 'No Division' }}</div>
+                                                        <div class="text-xs text-gray-400 mt-1">{{ $item->divisi ?? 'No Division' }}</div>
                                                     </td>
                                                     <td style="min-width: 150px;">
                                                         <span class="status-badge 

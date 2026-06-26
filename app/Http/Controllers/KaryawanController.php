@@ -63,6 +63,7 @@ public function indexPegawai(Request $request)
         
         // Format data untuk view (tanpa eager loading yang bermasalah)
         $karyawan = $karyawanCollection->map(function ($userItem) {
+            // dd($userItem->toArray()); // Debugging: Periksa struktur data userItem
             // Ambil data karyawan beserta tim (tim_id ada di karyawan, bukan users)
             $karyawanData = Karyawan::with('tim')->where('user_id', $userItem->id)->first();
             
@@ -84,6 +85,8 @@ public function indexPegawai(Request $request)
             
             // Tim diambil dari tabel karyawan (bukan users, karena tim_id ada di karyawan)
             $timObject = $karyawanData ? $karyawanData->tim : null;
+
+            // dd($userItem); // Debugging: Periksa struktur data divisi)
 
             return (object) [
                 'id' => $karyawanData ? $karyawanData->id : null, // karyawan.id untuk delete/edit
