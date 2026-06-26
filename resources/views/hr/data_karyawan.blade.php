@@ -836,6 +836,14 @@
             background-color: #fef3c7;
             color: #92400e;
         }
+
+                /* Perbaiki jarak antar field di modal */
+        #karyawanModal .grid > div {
+            margin-bottom: 0.25rem;
+        }
+        #karyawanModal label {
+            font-weight: 500;
+        }
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -1028,7 +1036,7 @@
                                                     <td style="min-width: 180px;">
                                                         @php
                                                             $kontrakText = '-';
-                                                            if (($item->status_karyawan ?? null) === 'kontrak' && (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai))) {
+                                                            if (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai)) {
                                                                 $mulai = $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-';
                                                                 $selesai = $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-';
                                                                 $kontrakText = "$mulai - $selesai";
@@ -1191,6 +1199,8 @@
                                                     data-status_kerja="{{ $item->status_kerja }}"
                                                     data-status_karyawan="{{ $item->status_karyawan }}"
                                                     data-gaji="{{ $item->gaji }}"
+                                                    data-kontrak_mulai="{{ $item->kontrak_mulai ?? '' }}"
+                                                    data-kontrak_selesai="{{ $item->kontrak_selesai ?? '' }}"
                                                     data-foto="{{ $item->foto ?? '' }}">
                                                     <span class="material-icons-outlined">edit</span>
                                                 </button>
@@ -1273,6 +1283,20 @@
                                         </div>
                                         @if($item->gaji)
                                             <div class="mt-3 pt-3 border-t border-gray-100">
+                                                <div>
+                                            <p class="text-text-muted-light">Kontrak</p>
+                                            <p class="font-medium text-sm">
+                                                @php
+                                                    $kontrakTextMobile = '-';
+                                                    if (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai)) {
+                                                        $mulai = $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-';
+                                                        $selesai = $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-';
+                                                        $kontrakTextMobile = "$mulai - $selesai";
+                                                    }
+                                                @endphp
+                                                {{ $kontrakTextMobile }}
+                                            </p>
+                                        </div>
                                                 <p class="text-text-muted-light">Gaji</p>
                                                 <p class="font-medium">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p>
                                             </div>
@@ -1328,180 +1352,204 @@
                     </button>
                 </div>
                 <form id="karyawanForm" class="space-y-4" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" id="formId" name="id">
-                    <input type="hidden" id="formUserId" name="user_id">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama *</label>
-                            <input type="text" name="name" id="formNama" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" name="email" id="formEmail" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" name="password" id="formPassword"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Kosongkan jika tidak diubah">
-                            <p class="text-xs text-gray-500 mt-1">Minimal 6 karakter (isi hanya jika ingin mengubah)</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                            <select name="role" id="formRole" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Role</option>
-                                <option value="general_manager">General Manager</option>
-                                <option value="manager_divisi">Manager Divisi</option>
-                                <option value="karyawan">Karyawan</option>
-                                <option value="finance">Finance</option>
-                                <option value="hr">HR</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
-                            <select name="divisi_id" id="formDivisi"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Divisi</option>
-                                @if (isset($divisis) && count($divisis) > 0)
-                                    @foreach ($divisis as $divisi)
-                                        <option value="{{ $divisi->id }}">{{ $divisi->divisi }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tim</label>
-                            <select name="tim_id" id="formTim"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Tim (opsional)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
-                            <input type="text" name="gaji" id="formGaji"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Rp 0,00">
-                            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
-                            <input type="text" name="kontak" id="formKontak"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Kerja</label>
-                            <select name="status_kerja" id="formStatusKerja"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="aktif">Aktif</option>
-                                <option value="resign">Resign</option>
-                                <option value="phk">PHK</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Karyawan</label>
-                            <select name="status_karyawan" id="formStatusKaryawan"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="tetap">Tetap</option>
-                                <option value="kontrak">Kontrak</option>
-                                <option value="freelance">Freelance</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-                            <textarea name="alamat" id="formAlamat" rows="2"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
-                        </div>
-                    </div>
+    @csrf
+    <input type="hidden" id="formId" name="id">
+    <input type="hidden" id="formUserId" name="user_id">
 
-                    <!-- Tunjangan Tetap Section -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Tunjangan Tetap (Bulanan)</label>
-                            <button type="button" id="addFixedAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
-                                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
-                            </button>
-                        </div>
-                        <div id="fixedAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            @foreach($tunjanganMaster->where('tipe', 'bulanan') as $tunjangan)
-                            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="fixed" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1">
-                                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
-                                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" class="fixed-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
-                                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="bulanan" data-nominal="{{ $tunjangan->nominal }}">
-                                            <span class="material-icons-outlined text-sm">edit</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @if($tunjanganMaster->where('tipe', 'bulanan')->count() == 0)
-                            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
-                        @endif
-                    </div>
+    <!-- ===== BAGIAN 1: DATA DIRI (2 KOLOM) ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama <span class="text-red-500">*</span></label>
+            <input type="text" name="name" id="formNama" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+            <input type="email" name="email" id="formEmail" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" id="formPassword"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                   placeholder="Kosongkan jika tidak diubah">
+            <p class="text-xs text-gray-500 mt-1">Minimal 6 karakter (isi hanya jika ingin mengubah)</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Role <span class="text-red-500">*</span></label>
+            <select name="role" id="formRole" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Pilih Role</option>
+                <option value="general_manager">General Manager</option>
+                <option value="manager_divisi">Manager Divisi</option>
+                <option value="karyawan">Karyawan</option>
+                <option value="finance">Finance</option>
+                <option value="hr">HR</option>
+            </select>
+        </div>
+    </div>
 
-                    <!-- Tunjangan Tidak Tetap Section -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Tunjangan Tidak Tetap (Bonus/Insentif)</label>
-                            <button type="button" id="addVariableAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
-                                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
-                            </button>
-                        </div>
-                        <div id="variableAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            @foreach($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif']) as $tunjangan)
-                            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="variable" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1">
-                                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
-                                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" class="variable-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
-                                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="{{ $tunjangan->tipe }}" data-nominal="{{ $tunjangan->nominal }}">
-                                            <span class="material-icons-outlined text-sm">edit</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @if($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif'])->count() == 0)
-                            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tidak tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
-                        @endif
-                    </div>
+    <!-- ===== BAGIAN 2: DIVISI & TIM (DIBUNGKUS) ===== -->
+    <div id="divisiTimWrapper">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
+                <select name="divisi_id" id="formDivisi"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="">Pilih Divisi</option>
+                    @if (isset($divisis) && count($divisis) > 0)
+                        @foreach ($divisis as $divisi)
+                            <option value="{{ $divisi->id }}">{{ $divisi->divisi }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tim</label>
+                <select name="tim_id" id="formTim"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="">Pilih Tim (opsional)</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Foto -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
-                        <div class="flex items-center space-x-4">
-                            <div id="fotoPreview" class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span class="material-icons-outlined text-gray-500 text-2xl">person</span>
-                            </div>
-                            <div>
-                                <input type="file" name="foto" id="fotoInput" class="hidden" accept="image/*">
-                                <button type="button" id="pilihFotoBtn" class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                                    Pilih Foto
-                                </button>
-                                <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG maks. 2MB</p>
-                            </div>
-                        </div>
-                    </div>
+    <!-- ===== BAGIAN 3: GAJI, KONTAK, STATUS, KONTRAK ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
+            <input type="text" name="gaji" id="formGaji"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                   placeholder="Rp 0,00">
+            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
+            <input type="text" name="kontak" id="formKontak"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status Kerja</label>
+            <select name="status_kerja" id="formStatusKerja"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="aktif">Aktif</option>
+                <option value="resign">Resign</option>
+                <option value="phk">PHK</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status Karyawan</label>
+            <select name="status_karyawan" id="formStatusKaryawan"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="tetap">Tetap</option>
+                <option value="kontrak">Kontrak</option>
+                <option value="freelance">Freelance</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontrak Mulai</label>
+            <input type="date" name="kontrak_mulai" id="formKontrakMulai"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontrak Selesai</label>
+            <input type="date" name="kontrak_selesai" id="formKontrakSelesai"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+    </div>
 
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" id="cancelModalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">Simpan Karyawan</button>
+    <!-- ===== BAGIAN 4: ALAMAT ===== -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+        <textarea name="alamat" id="formAlamat" rows="2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+    </div>
+
+    <!-- ===== BAGIAN 5: TUNJANGAN TETAP ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <div class="flex justify-between items-center mb-3">
+            <label class="block text-sm font-medium text-gray-700">Tunjangan Tetap (Bulanan)</label>
+            <button type="button" id="addFixedAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
+                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
+            </button>
+        </div>
+        <div id="fixedAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            @foreach($tunjanganMaster->where('tipe', 'bulanan') as $tunjangan)
+            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="fixed" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
+                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
                     </div>
-                </form>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="fixed-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
+                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="bulanan" data-nominal="{{ $tunjangan->nominal }}">
+                            <span class="material-icons-outlined text-sm">edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @if($tunjanganMaster->where('tipe', 'bulanan')->count() == 0)
+            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
+        @endif
+    </div>
+
+    <!-- ===== BAGIAN 6: TUNJANGAN TIDAK TETAP ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <div class="flex justify-between items-center mb-3">
+            <label class="block text-sm font-medium text-gray-700">Tunjangan Tidak Tetap (Bonus/Insentif)</label>
+            <button type="button" id="addVariableAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
+                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
+            </button>
+        </div>
+        <div id="variableAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            @foreach($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif']) as $tunjangan)
+            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="variable" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
+                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="variable-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
+                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="{{ $tunjangan->tipe }}" data-nominal="{{ $tunjangan->nominal }}">
+                            <span class="material-icons-outlined text-sm">edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @if($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif'])->count() == 0)
+            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tidak tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
+        @endif
+    </div>
+
+    <!-- ===== BAGIAN 7: FOTO ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+        <div class="flex items-center space-x-4">
+            <div id="fotoPreview" class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
+                <span class="material-icons-outlined text-gray-500 text-2xl">person</span>
+            </div>
+            <div>
+                <input type="file" name="foto" id="fotoInput" class="hidden" accept="image/*">
+                <button type="button" id="pilihFotoBtn" class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                    Pilih Foto
+                </button>
+                <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG maks. 2MB</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BAGIAN 8: TOMBOL AKSI ===== -->
+    <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelModalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">Simpan Karyawan</button>
+    </div>
+</form>
             </div>
         </div>
     </div>
@@ -2084,55 +2132,77 @@
 
         // MODAL KARYAWAN
         function openKaryawanModal(mode = 'create', data = null) {
-            currentModalMode = mode;
-            const modal = document.getElementById('karyawanModal');
-            const form = document.getElementById('karyawanForm');
-            form.reset();
-            document.getElementById('formId').value = '';
-            document.getElementById('formUserId').value = '';
-            document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
-            initAllowanceSelections([], []);
-            
-            if (mode === 'edit' && data) {
-                document.getElementById('modalTitle').textContent = 'Edit Karyawan';
-                document.getElementById('formId').value = data.id;
-                document.getElementById('formUserId').value = data.user_id || '';
-                document.getElementById('formNama').value = data.nama || '';
-                document.getElementById('formEmail').value = data.email || '';
-                document.getElementById('formRole').value = data.role || '';
-                document.getElementById('formDivisi').value = data.divisi_id || '';
-                document.getElementById('formGaji').value = data.gaji || '';
-                document.getElementById('formKontak').value = data.kontak || '';
-                document.getElementById('formAlamat').value = data.alamat || '';
-                document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
-                document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
-                
-                if (data.divisi_id) loadTims('formTim', data.divisi_id, data.tim_id);
-                
-                // Load tunjangan karyawan saat edit
-                if (data.id) {
-fetch(`/admin/karyawan/${data.id}/tunjangan`)
-                        .then(res => res.json())
-                        .then(result => {
-                            if (result.success) {
-                                initAllowanceSelections(
-                                    result.data.tetap.map(t => t.id),
-                                    result.data.tidak_tetap.map(t => t.id)
-                                );
-                            }
-                        })
-                        .catch(err => console.error('Error loading allowances:', err));
-                }
-            } else {
-                document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
-                document.getElementById('formGaji').value = '';
-            }
-            modal.classList.remove('hidden');
+    currentModalMode = mode;
+    const modal = document.getElementById('karyawanModal');
+    const form = document.getElementById('karyawanForm');
+    form.reset();
+    document.getElementById('formId').value = '';
+    document.getElementById('formUserId').value = '';
+    document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
+    initAllowanceSelections([], []);
+
+    // Reset field kontrak (biarkan kosong)
+    document.getElementById('formKontrakMulai').value = '';
+    document.getElementById('formKontrakSelesai').value = '';
+
+    if (mode === 'edit' && data) {
+        document.getElementById('modalTitle').textContent = 'Edit Karyawan';
+        document.getElementById('formId').value = data.id;
+        document.getElementById('formUserId').value = data.user_id || '';
+        document.getElementById('formNama').value = data.nama || '';
+        document.getElementById('formEmail').value = data.email || '';
+        document.getElementById('formRole').value = data.role || '';
+        document.getElementById('formDivisi').value = data.divisi_id || '';
+        document.getElementById('formGaji').value = data.gaji || '';
+        document.getElementById('formKontak').value = data.kontak || '';
+        document.getElementById('formAlamat').value = data.alamat || '';
+        document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
+        document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
+        document.getElementById('formKontrakMulai').value = data.kontrak_mulai || '';
+        document.getElementById('formKontrakSelesai').value = data.kontrak_selesai || '';
+
+        // Sembunyikan divisi/tim jika role = general_manager
+        toggleDivisiTim(data.role);
+
+        if (data.divisi_id) {
+            loadTims('formTim', data.divisi_id, data.tim_id);
         }
+
+        // Load tunjangan karyawan saat edit
+        if (data.id) {
+            fetch(`/admin/karyawan/${data.id}/tunjangan`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        initAllowanceSelections(
+                            result.data.tetap.map(t => t.id),
+                            result.data.tidak_tetap.map(t => t.id)
+                        );
+                    }
+                })
+                .catch(err => console.error('Error loading allowances:', err));
+        }
+    } else {
+        document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
+        document.getElementById('formGaji').value = '';
+        // Saat create, sembunyikan/tampilkan berdasarkan role yang dipilih saat itu
+        const currentRole = document.getElementById('formRole').value;
+        toggleDivisiTim(currentRole);
+    }
+
+    modal.classList.remove('hidden');
+}   
 
         function closeKaryawanModal() {
             document.getElementById('karyawanModal').classList.add('hidden');
         }
+
+        function toggleDivisiTim(role) {
+    const wrapper = document.getElementById('divisiTimWrapper');
+    if (wrapper) {
+        wrapper.style.display = (role === 'general_manager') ? 'none' : 'block';
+    }
+}
 
         // MODAL ALLOWANCE MASTER
         const allowanceModal = document.getElementById('allowanceMasterModal');
@@ -2296,6 +2366,9 @@ fetch(`/admin/karyawan/${data.id}/tunjangan`)
             document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
                 const id = document.getElementById('deleteId').value;
                 if (id) handleDeleteKaryawan(id);
+            });
+            document.getElementById('formRole').addEventListener('change', function() {
+                toggleDivisiTim(this.value);
             });
             
             document.addEventListener('click', function(e) {
