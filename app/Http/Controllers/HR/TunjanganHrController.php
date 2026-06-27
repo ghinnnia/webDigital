@@ -35,7 +35,7 @@ class TunjanganHrController extends Controller
         $karyawan = $queryKaryawan->orderBy('name')->get();
 
         // 🔥 AMBIL MASTER TUNJANGAN (tetap ada untuk tambah jenis)
-        $tunjanganMaster = TunjanganMaster::where('is_active', true)->get();
+        $tunjanganMaster = TunjanganMaster::orderBy('tipe')->orderBy('nama')->get();
 
         // 🔥 AMBIL TUNJANGAN YANG SUDAH DIBERIKAN
         $tunjanganDiberikan = TunjanganKaryawan::where('bulan', $bulan)
@@ -109,7 +109,7 @@ class TunjanganHrController extends Controller
             'nama' => $request->nama,
             'tipe' => $request->tipe,
             'nominal' => $request->nominal,
-            'is_active' => true
+            // is_active tidak ada di tabel tunjangan_master
         ]);
 
         return redirect()->back()->with('success', 'Jenis tunjangan baru berhasil ditambahkan!');

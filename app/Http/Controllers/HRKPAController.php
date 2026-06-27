@@ -28,7 +28,7 @@ class HRKPAController extends Controller
         $divisiId = $request->get('divisi_id');
         $viewType = $request->get('view', 'bulanan');
 
-        $queryKaryawan = User::where('role', 'karyawan');
+        $queryKaryawan = User::where('role', 'karyawan')->with('divisi');
         if ($divisiId && $divisiId != '') {
             $queryKaryawan->where('divisi_id', $divisiId);
         }
@@ -155,7 +155,7 @@ class HRKPAController extends Controller
      */
     private function getKpaData($bulan, $tahun, $divisiId, $viewType = 'bulanan')
     {
-        $queryKaryawan = User::where('role', 'karyawan');
+        $queryKaryawan = User::where('role', 'karyawan')->with('divisi');
         if ($divisiId && $divisiId != '') {
             $queryKaryawan->where('divisi_id', $divisiId);
         }
@@ -214,7 +214,7 @@ class HRKPAController extends Controller
         $tahun = $request->get('tahun', now()->year);
         $divisiId = $request->get('divisi_id');
 
-        $queryKaryawan = User::where('role', 'karyawan');
+        $queryKaryawan = User::where('role', 'karyawan')->with('divisi');
         if ($divisiId && $divisiId != '') {
             $queryKaryawan->where('divisi_id', $divisiId);
         }
@@ -384,7 +384,7 @@ class HRKPAController extends Controller
         $tahun = $request->get('tahun', now()->year);
         $divisiId = $request->get('divisi_id');
 
-        $query = User::where('role', 'karyawan');
+        $query = User::where('role', 'karyawan')->with('divisi');
         if ($divisiId && $divisiId != '') {
             $query->where('divisi_id', $divisiId);
         }

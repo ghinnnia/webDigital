@@ -58,7 +58,7 @@
             color: white;
             width: 250px;
             min-height: 100vh;
-            padding: 1.5rem 1rem;
+            padding: 2rem 1rem;
             position: fixed;
             left: 0;
             top: 0;
@@ -70,7 +70,7 @@
         .sidebar-header {
             display: flex;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -84,7 +84,6 @@
             align-items: center;
             justify-content: center;
             margin-right: 0.75rem;
-            flex-shrink: 0;
         }
 
         .sidebar-logo .material-symbols-rounded {
@@ -95,28 +94,24 @@
         .sidebar-title {
             font-size: 1.25rem;
             font-weight: 700;
-            white-space: nowrap;
         }
 
         .nav-menu {
             list-style: none;
-            padding: 0;
-            margin: 0;
         }
 
         .nav-item {
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.5rem;
         }
 
         .nav-link {
             display: flex;
             align-items: center;
-            padding: 0.6rem 0.9rem;
+            padding: 0.75rem 1rem;
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             border-radius: 0.5rem;
             transition: all 0.2s ease;
-            gap: 0.75rem;
         }
 
         .nav-link:hover,
@@ -126,17 +121,15 @@
         }
 
         .nav-link .material-symbols-rounded {
-            font-size: 20px;
-            flex-shrink: 0;
+            margin-right: 0.75rem;
         }
 
         .nav-text {
             font-weight: 500;
-            font-size: 0.85rem;
         }
 
         .sidebar-footer {
-            margin-top: 1.5rem;
+            margin-top: 2rem;
             padding-top: 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -144,7 +137,6 @@
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
         }
 
         .user-avatar {
@@ -155,28 +147,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .user-avatar .material-symbols-rounded {
-            font-size: 22px;
+            margin-right: 0.75rem;
         }
 
         .user-info {
             flex: 1;
-            min-width: 0;
         }
 
         .user-name {
             font-weight: 600;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.875rem;
         }
 
         .user-role {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.7);
         }
 
@@ -189,22 +173,22 @@
         }
 
         .page-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .page-title {
-            font-size: 1.75rem;
+            font-size: 1.875rem;
             font-weight: 700;
             color: #1e293b;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
         }
 
-        /* Stat Cards */
+        /* --- UPDATED STAT CARDS (Compact, Icon Left) --- */
         .stat-card {
             background-color: white;
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1rem;
+            padding: 1rem; /* Reduced padding */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             height: 100%;
             display: flex;
@@ -218,8 +202,8 @@
         }
 
         .stat-card-icon {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 0.5rem;
             display: flex;
             align-items: center;
@@ -228,7 +212,7 @@
         }
 
         .stat-card-icon .material-symbols-rounded {
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .stat-card-content {
@@ -236,12 +220,12 @@
         }
 
         .stat-card-title {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.25rem;
             line-height: 1.2;
         }
 
@@ -252,17 +236,19 @@
             line-height: 1.2;
         }
 
+        /* --- END UPDATED STAT CARDS --- */
+
         /* Panels & Tabs */
         .panel {
             background-color: white;
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             overflow: hidden;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .panel-header {
-            padding: 1rem 1.5rem;
+            padding: 1.5rem;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
@@ -270,7 +256,7 @@
         }
 
         .panel-title {
-            font-size: 1rem;
+            font-size: 1.125rem;
             font-weight: 600;
             color: #1e293b;
             display: flex;
@@ -302,9 +288,10 @@
         }
 
         .panel-body {
-            padding: 1rem 1.5rem 1.5rem;
+            padding: 1.5rem;
         }
 
+        /* Action Button Style (From Reference) */
         .action-btn {
             width: 32px;
             height: 32px;
@@ -334,11 +321,12 @@
             color: #b91c1c;
         }
 
+        /* User Badge Style (From Reference) */
         .user-badge-sm {
             display: inline-block;
             padding: 2px 8px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 12px;
             margin: 2px;
             background-color: #f3f4f6;
             color: #374151;
@@ -349,7 +337,7 @@
             display: inline-block;
             padding: 2px 8px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 12px;
             margin: 2px;
             background-color: #e5e7eb;
             color: #6b7280;
@@ -358,23 +346,21 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
         }
 
         .data-table th {
             text-align: left;
-            padding: 0.6rem 0.8rem;
+            padding: 0.75rem 1rem;
             font-weight: 600;
             color: #64748b;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 0.875rem;
         }
 
         .data-table td {
-            padding: 0.6rem 0.8rem;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
             vertical-align: middle;
         }
 
@@ -394,7 +380,7 @@
         }
 
         .tab-button {
-            padding: 0.6rem 1.2rem;
+            padding: 0.75rem 1rem;
             font-weight: 500;
             color: #64748b;
             background: none;
@@ -404,7 +390,6 @@
             transition: all 0.2s ease;
             white-space: nowrap;
             flex-shrink: 0;
-            font-size: 0.9rem;
         }
 
         .tab-button:hover {
@@ -416,11 +401,12 @@
             border-bottom-color: #3b82f6;
         }
 
+        /* --- COMPACT CALENDAR STYLES --- */
         .calendar-notes-container {
             display: grid;
             grid-template-columns: 1fr;
             gap: 1rem;
-            max-width: 500px;
+            max-width: 600px;
             margin-left: 0;
             margin-right: auto;
             margin-bottom: 2rem;
@@ -438,7 +424,7 @@
         .calendar-header {
             background: linear-gradient(to right, #3b82f6, #2563eb);
             color: white;
-            padding: 0.4rem 0.75rem;
+            padding: 0.5rem 0.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -471,24 +457,24 @@
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 0.125rem;
-            padding: 0.2rem 0.5rem;
+            padding: 0.25rem 0.5rem;
             background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .calendar-weekday {
             text-align: center;
-            font-size: 0.6rem;
+            font-size: 0.625rem;
             font-weight: 600;
             color: #64748b;
-            padding: 0.15rem 0;
+            padding: 0.25rem 0;
         }
 
         .calendar-days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 0.125rem;
-            padding: 0.2rem 0.5rem;
+            padding: 0.25rem 0.5rem;
         }
 
         .calendar-day {
@@ -501,7 +487,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
         }
 
         .calendar-day:hover {
@@ -578,82 +564,6 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        /* Modal untuk Lihat File */
-        .file-modal-content {
-            max-width: 800px;
-        }
-
-        .file-preview {
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            text-align: center;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            border: 1px dashed #e2e8f0;
-        }
-
-        .file-preview img {
-            max-width: 100%;
-            max-height: 400px;
-            object-fit: contain;
-            border-radius: 0.25rem;
-        }
-
-        .file-preview .file-icon {
-            font-size: 4rem;
-            color: #64748b;
-        }
-
-        .file-preview .file-name {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            color: #1e293b;
-            word-break: break-all;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .file-actions .btn {
-            padding: 0.5rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            font-size: 0.85rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .file-actions .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .file-actions .btn-primary:hover {
-            background: #2563eb;
-        }
-
-        .file-actions .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .file-actions .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
         /* Mobile responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -675,70 +585,45 @@
             }
 
             .page-title {
-                font-size: 1.3rem;
+                font-size: 1.5rem;
             }
 
             .panel-header,
             .panel-body {
-                padding: 0.75rem;
+                padding: 1rem;
             }
 
             .data-table {
-                font-size: 0.75rem;
+                font-size: 0.813rem;
             }
 
             .data-table th,
             .data-table td {
-                padding: 0.4rem 0.5rem;
+                padding: 0.5rem;
             }
 
             .tab-button {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
             }
 
             .calendar-notes-container {
                 max-width: 100%;
             }
-
-            .stat-card {
-                padding: 0.75rem;
-                gap: 0.75rem;
-            }
-
-            .stat-card-value {
-                font-size: 1.2rem;
-            }
-
-            .stat-card-icon {
-                width: 36px;
-                height: 36px;
-            }
-
-            .stat-card-icon .material-symbols-rounded {
-                font-size: 18px;
-            }
         }
 
         @media (max-width: 480px) {
             .main-content {
-                padding: 0.5rem;
+                padding: 0.75rem;
             }
 
             .panel-header,
             .panel-body {
-                padding: 0.5rem;
-            }
-
-            .stat-card-title {
-                font-size: 0.6rem;
-            }
-
-            .stat-card-value {
-                font-size: 1rem;
+                padding: 0.75rem;
             }
         }
 
+        /* Card-based layout for tables on mobile */
         .mobile-table-cards {
             display: none;
         }
@@ -746,8 +631,8 @@
         .mobile-table-card {
             background: white;
             border-radius: 0.5rem;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             border: 1px solid #e2e8f0;
         }
@@ -761,25 +646,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
         }
 
         .mobile-table-card-row {
             display: flex;
-            margin-bottom: 0.3rem;
-            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
         }
 
         .mobile-table-card-label {
             font-weight: 600;
-            width: 35%;
+            width: 40%;
             color: #64748b;
+            font-size: 0.875rem;
             flex-shrink: 0;
         }
 
         .mobile-table-card-value {
-            width: 65%;
+            width: 60%;
             color: #1f2937;
+            font-size: 0.875rem;
             word-wrap: break-word;
         }
 
@@ -793,6 +678,7 @@
             }
         }
 
+        /* Mobile menu toggle */
         .mobile-menu-toggle {
             display: none;
             position: fixed;
@@ -815,37 +701,9 @@
             }
         }
         
+        /* Helper for hiding elements */
         .hidden-row {
             display: none !important;
-        }
-
-        /* Badge untuk lampiran */
-        .badge-attachment {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            background-color: #dbeafe;
-            color: #1d4ed8;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .badge-attachment:hover {
-            background-color: #bfdbfe;
-            transform: scale(1.05);
-        }
-
-        .badge-attachment .material-icons-outlined {
-            font-size: 14px;
-        }
-
-        .no-attachment {
-            color: #9ca3af;
-            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -855,19 +713,21 @@
        
    @include('admin.templet.sider')
 
+        <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Dashboard</h1>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- UPDATED Stats Cards (Compact & Icon Left) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="stat-card">
                     <div class="stat-card-icon bg-blue-100">
                         <span class="material-symbols-rounded text-blue-600">groups</span>
                     </div>
                     <div class="stat-card-content">
                         <h3 class="stat-card-title">Jumlah Karyawan</h3>
-                        <p class="stat-card-value">{{ \App\Models\User::whereNotIn('role', ['admin', 'owner'])->count() }}</p>
+                        <p class="stat-card-value">{{ $jumlahKaryawan }}</p>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -899,17 +759,21 @@
                 </div>
             </div>
 
+            <!-- TABS & PANELS (Positioned at Top) -->
+
+            <!-- Tab Navigation -->
             <div class="tab-nav">
                 <button id="meetingTab" class="tab-button active" onclick="switchTab('meeting')">
-                    <span class="material-symbols-rounded align-middle mr-2" style="font-size:18px;">description</span>
+                    <span class="material-symbols-rounded align-middle mr-2">description</span>
                     Catatan Meeting
                 </button>
                 <button id="announcementTab" class="tab-button" onclick="switchTab('announcement')">
-                    <span class="material-symbols-rounded align-middle mr-2" style="font-size:18px;">campaign</span>
+                    <span class="material-symbols-rounded align-middle mr-2">campaign</span>
                     Pengumuman Terbaru
                 </button>
             </div>
 
+            <!-- Meeting Notes Panel -->
             <div id="meetingPanel" class="panel">
                 <div class="panel-header">
                     <h3 class="panel-title">
@@ -926,6 +790,7 @@
                     </div>
                 </div>
                 <div class="panel-body">
+                    <!-- Desktop Table View -->
                     <div class="data-table-container overflow-x-auto">
                         <table class="data-table">
                             <thead>
@@ -943,6 +808,7 @@
                             <tbody>
                                 @if ($catatanRapat->count() > 0)
                                     @foreach ($catatanRapat as $rapat)
+                                        <!-- Storing Data for JS Modal -->
                                         <tr 
                                             data-id="{{ $rapat->id }}"
                                             data-tanggal="{{ \Carbon\Carbon::parse($rapat->tanggal)->translatedFormat('d F Y') }}"
@@ -959,6 +825,7 @@
                                             <td>{{ Str::limit($rapat->hasil_diskusi, 30) }}</td>
                                             <td>{{ Str::limit($rapat->keputusan, 30) }}</td>
                                             
+                                            <!-- Styled Peserta Column -->
                                             <td>
                                                 @if($rapat->peserta && count($rapat->peserta) > 0)
                                                     @foreach($rapat->peserta->take(2) as $user)
@@ -972,6 +839,7 @@
                                                 @endif
                                             </td>
                                             
+                                            <!-- Styled Penugasan Column -->
                                             <td>
                                                 @if($rapat->penugasan && count($rapat->penugasan) > 0)
                                                     @foreach($rapat->penugasan->take(2) as $user)
@@ -985,6 +853,7 @@
                                                 @endif
                                             </td>
 
+                                            <!-- Action Column -->
                                             <td style="text-align: center;">
                                                 <button onclick="viewCatatanRapat(this)" class="action-btn" title="Lihat Selengkapnya">
                                                     <span class="material-icons-outlined">visibility</span>
@@ -1003,6 +872,7 @@
                         </table>
                     </div>
                     
+                    <!-- Mobile Card View -->
                     <div class="mobile-table-cards">
                         @if ($catatanRapat->count() > 0)
                             @foreach ($catatanRapat as $rapat)
@@ -1077,6 +947,7 @@
                 </div>
             </div>
 
+            <!-- Announcement Panel -->
             <div id="announcementPanel" class="panel hidden">
                 <div class="panel-header">
                     <h3 class="panel-title">
@@ -1093,6 +964,7 @@
                     </div>
                 </div>
                 <div class="panel-body">
+                    <!-- Desktop Table View -->
                     <div class="data-table-container overflow-x-auto">
                         <table class="data-table">
                             <thead>
@@ -1124,15 +996,14 @@
                                                     {{ $item->users->take(2)->pluck('name')->join(', ') }}
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 @if ($item->lampiran)
-                                                    <button onclick="viewFile('{{ asset('storage/' . $item->lampiran) }}', '{{ $item->lampiran }}')" 
-                                                            class="badge-attachment">
-                                                        <span class="material-icons-outlined">attach_file</span>
-                                                        Lihat File
-                                                    </button>
+                                                    <a href="{{ asset('storage/' . $item->lampiran) }}"
+                                                        class="text-blue-600 hover:underline" target="_blank">
+                                                        Lihat
+                                                    </a>
                                                 @else
-                                                    <span class="no-attachment">-</span>
+                                                    -
                                                 @endif
                                             </td>
                                         </tr>
@@ -1148,6 +1019,7 @@
                         </table>
                     </div>
                     
+                    <!-- Mobile Card View -->
                     <div class="mobile-table-cards">
                         @if ($pengumumanTerbaru->count() > 0)
                             @foreach ($pengumumanTerbaru as $item)
@@ -1181,13 +1053,12 @@
                                         <div class="mobile-table-card-label">Lampiran:</div>
                                         <div class="mobile-table-card-value">
                                             @if ($item->lampiran)
-                                                <button onclick="viewFile('{{ asset('storage/' . $item->lampiran) }}', '{{ $item->lampiran }}')" 
-                                                        class="badge-attachment">
-                                                    <span class="material-icons-outlined">attach_file</span>
-                                                    Lihat File
-                                                </button>
+                                                <a href="{{ asset('storage/' . $item->lampiran) }}"
+                                                    class="text-blue-600 hover:underline" target="_blank">
+                                                    Lihat
+                                                </a>
                                             @else
-                                                <span class="no-attachment">-</span>
+                                                -
                                             @endif
                                         </div>
                                     </div>
@@ -1204,6 +1075,7 @@
                 </div>
             </div>
 
+            <!-- COMPACT CALENDAR (Positioned at Bottom, Small Size) -->
             <div class="calendar-notes-container">
                 <div class="calendar-container">
                     <div class="calendar-header">
@@ -1211,7 +1083,8 @@
                             <span class="material-symbols-rounded">chevron_left</span>
                         </button>
                         <h3 id="calendarTitle" class="text-sm font-semibold">
-                            </h3>
+                            <!-- JS Injected -->
+                        </h3>
                         <button class="calendar-nav-button" onclick="nextMonth()">
                             <span class="material-symbols-rounded">chevron_right</span>
                         </button>
@@ -1226,13 +1099,15 @@
                         <div class="calendar-weekday">Sab</div>
                     </div>
                     <div id="calendarDays" class="calendar-days">
-                        </div>
+                        <!-- JS Injected -->
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
+    <!-- View Modal (Similar to Reference Code) -->
     <div id="viewModal" class="modal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
@@ -1243,34 +1118,7 @@
             </div>
             
             <div id="viewContent" class="space-y-4">
-                </div>
-        </div>
-    </div>
-
-    <div id="fileModal" class="modal">
-        <div class="modal-content file-modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">File Lampiran</h3>
-                <button onclick="closeModal('fileModal')" class="text-gray-800 hover:text-gray-500">
-                    <span class="material-icons-outlined">close</span>
-                </button>
-            </div>
-            
-            <div id="fileContent" class="space-y-4">
-                <div id="filePreview" class="file-preview">
-                    <div class="file-icon material-symbols-rounded">insert_drive_file</div>
-                    <p class="file-name" id="fileName">Loading...</p>
-                </div>
-                <div class="file-actions">
-                    <a id="downloadFileBtn" href="#" class="btn btn-primary" download>
-                        <span class="material-icons-outlined">download</span>
-                        Download File
-                    </a>
-                    <button onclick="closeModal('fileModal')" class="btn btn-secondary">
-                        <span class="material-icons-outlined">close</span>
-                        Tutup
-                    </button>
-                </div>
+                <!-- Content will be dynamically inserted here via JS -->
             </div>
         </div>
     </div>
@@ -1363,7 +1211,7 @@
             }
         }
 
-        // --- VIEW MODAL LOGIC ---
+        // --- VIEW MODAL LOGIC (New) ---
         
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -1373,11 +1221,14 @@
             }
         }
 
+        // Open modal when "View" button is clicked
         function viewCatatanRapat(buttonElement) {
+            // Find the parent row or card
             const parentRow = buttonElement.closest('tr') || buttonElement.closest('.mobile-table-card');
             
             if (!parentRow) return;
 
+            // Read data attributes
             const tanggal = parentRow.getAttribute('data-tanggal');
             const topik = parentRow.getAttribute('data-topik');
             const hasil = parentRow.getAttribute('data-hasil');
@@ -1385,11 +1236,14 @@
             const pesertaJson = parentRow.getAttribute('data-peserta');
             const penugasanJson = parentRow.getAttribute('data-penugasan');
 
+            // Parse JSON
             const peserta = JSON.parse(pesertaJson || '[]');
             const penugasan = JSON.parse(penugasanJson || '[]');
 
+            // Populate Modal Content
             const contentDiv = document.getElementById('viewContent');
             
+            // Helper to generate badge HTML
             const generateBadges = (users, colorClass) => {
                 if (!users || users.length === 0) return '<span class="text-gray-400">-</span>';
                 return users.map(user => 
@@ -1430,72 +1284,19 @@
                 </div>
             `;
 
+            // Show Modal
             const modal = document.getElementById('viewModal');
             modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
 
+        // Close modal when clicking outside
         document.getElementById('viewModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal('viewModal');
             }
         });
 
-        // --- VIEW FILE LOGIC ---
-        function viewFile(fileUrl, fileName) {
-            const modal = document.getElementById('fileModal');
-            const filePreview = document.getElementById('filePreview');
-            const fileNameEl = document.getElementById('fileName');
-            const downloadBtn = document.getElementById('downloadFileBtn');
-
-            // Set file name
-            const cleanFileName = fileName.split('/').pop();
-            fileNameEl.textContent = cleanFileName;
-
-            // Set download link
-            downloadBtn.href = fileUrl;
-
-            // Check file type untuk preview
-            const fileExtension = cleanFileName.split('.').pop().toLowerCase();
-            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
-
-            // Reset preview
-            filePreview.innerHTML = '';
-
-            if (imageExtensions.includes(fileExtension)) {
-                // Preview gambar
-                filePreview.innerHTML = `
-                    <img src="${fileUrl}" alt="${cleanFileName}" onerror="this.style.display='none'; showFileIcon()" />
-                    <p class="file-name mt-2">${cleanFileName}</p>
-                `;
-            } else {
-                // Tampilkan icon file
-                filePreview.innerHTML = `
-                    <div class="file-icon material-symbols-rounded" style="font-size:4rem;">insert_drive_file</div>
-                    <p class="file-name mt-2">${cleanFileName}</p>
-                    <p class="text-sm text-gray-500 mt-1">File tidak dapat ditampilkan secara langsung. Silakan download untuk melihat.</p>
-                `;
-            }
-
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function showFileIcon() {
-            const filePreview = document.getElementById('filePreview');
-            filePreview.innerHTML = `
-                <div class="file-icon material-symbols-rounded" style="font-size:4rem;">insert_drive_file</div>
-                <p class="file-name mt-2">${document.getElementById('fileName').textContent}</p>
-                <p class="text-sm text-gray-500 mt-1">Gambar tidak dapat ditampilkan. Silakan download untuk melihat.</p>
-            `;
-        }
-
-        // Close file modal when clicking outside
-        document.getElementById('fileModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal('fileModal');
-            }
-        });
 
         // --- CALENDAR FUNCTIONALITY ---
         const events = @json($events);

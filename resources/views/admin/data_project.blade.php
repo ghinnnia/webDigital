@@ -97,7 +97,6 @@
     });
     
     $totalNotif = count($semuaNotifikasi);
-    $unreadNotif = count(array_filter($semuaNotifikasi, function($n) { return !$n['is_read']; }));
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -567,52 +566,27 @@
             background-color: #f3f4f6;
         }
 
-        /* NOTYF CUSTOM - LEBIH KECIL DAN RAPI */
-        .notyf {
-            max-width: 380px !important;
-        }
-        
-        .notyf__toast {
-            max-width: 380px !important;
-            padding: 8px 12px !important;
-            font-size: 12px !important;
-            border-radius: 6px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
-            min-height: 44px !important;
-        }
-        
-        .notyf__toast .notyf__message {
-            font-size: 12px !important;
-            line-height: 1.3 !important;
-        }
-        
-        .notyf__toast .notyf__icon {
-            font-size: 14px !important;
-            width: 18px !important;
-            height: 18px !important;
-            margin-right: 6px !important;
-        }
-        
-        .notyf__toast--success {
-            background: #10b981 !important;
-        }
-        
-        .notyf__toast--error {
-            background: #ef4444 !important;
-        }
-        
-        .notyf__toast--warning {
-            background: #f59e0b !important;
-        }
-        
-        .notyf__toast--info {
-            background: #3b82f6 !important;
-        }
-        
-        .notyf-announcer {
-            display: none !important;
+        /* Custom Toast Animation */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
+        @keyframes bounce {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-8px); }
+        }
+
+        .toast-notification {
+            animation: slideInRight 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), bounce 0.5s ease 0.3s;
+        }
+        
         .text-expired {
             color: #ef4444 !important;
         }
@@ -623,49 +597,6 @@
         
         .text-kerjasama {
             color: #10b981 !important;
-        }
-        
-        /* Notification Bell Badge */
-        .notif-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ef4444;
-            color: white;
-            font-size: 9px;
-            font-weight: 600;
-            min-width: 16px;
-            height: 16px;
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 3px;
-            border: 2px solid white;
-        }
-        
-        /* NOTIFICATION DROPDOWN - LEBIH RINGKAS */
-        .notif-dropdown {
-            width: 320px;
-            max-height: 380px;
-        }
-        
-        .notif-dropdown .notif-item {
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-        
-        .notif-dropdown .notif-item .notif-icon {
-            font-size: 16px !important;
-        }
-        
-        .notif-dropdown .notif-item .notif-text {
-            font-size: 12px;
-            line-height: 1.3;
-        }
-        
-        .notif-dropdown .notif-item .notif-time {
-            font-size: 10px;
         }
     </style>
 </head>
@@ -686,24 +617,24 @@
                         <!-- NOTIFICATION BELL -->
                         <div class="relative">
                             <button id="notificationBell" class="relative p-2 rounded-full hover:bg-gray-100 transition">
-                                <span class="material-icons-outlined text-gray-600 text-2xl">notifications_none</span>
-                                <span id="notifBadge" class="notif-badge hidden">
-                                    {{ $unreadNotif > 0 ? ($unreadNotif > 99 ? '99+' : $unreadNotif) : 0 }}
+                                <span class="material-icons-outlined text-gray-600">notifications_none</span>
+                                <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 hidden items-center justify-center">
+                                    {{ $totalNotif > 0 ? ($totalNotif > 99 ? '99+' : $totalNotif) : 0 }}
                                 </span>
                             </button>
                             
-                            <div id="notifDropdown" class="notif-dropdown absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50 overflow-hidden">
-                                <div class="p-2 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                    <h3 class="font-semibold text-gray-800 text-xs">Notifikasi</h3>
-                                    <button onclick="markAllNotifAsRead()" class="text-[10px] text-blue-600 hover:text-blue-800">Tandai semua dibaca</button>
+                            <div id="notifDropdown" class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
+                                <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+                                    <h3 class="font-semibold text-gray-800">Notifikasi</h3>
+                                    <button onclick="markAllNotifAsRead()" class="text-xs text-blue-600 hover:text-blue-800">Tandai semua dibaca</button>
                                 </div>
-                                <div id="notifList" class="max-h-72 overflow-y-auto">
+                                <div id="notifList" class="max-h-96 overflow-y-auto">
                                     @if(count($semuaNotifikasi) > 0)
                                         @foreach($semuaNotifikasi as $notif)
-                                        <div class="notif-item border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer {{ !$notif['is_read'] ? 'bg-blue-50' : '' }}" 
+                                        <div class="p-3 border-b border-gray-100 hover:bg-gray-50 transition notification-item {{ !$notif['is_read'] ? 'bg-blue-50' : '' }}" 
                                              onclick="markNotifAsRead({{ $notif['id'] ?? 0 }})">
-                                            <div class="flex gap-2 items-start">
-                                                <span class="notif-icon material-icons-outlined text-sm mt-0.5
+                                            <div class="flex gap-2">
+                                                <span class="material-icons-outlined 
                                                     @if(str_contains($notif['jenis'], 'expired')) text-red-500
                                                     @elseif(str_contains($notif['jenis'], 'pengerjaan')) text-orange-500
                                                     @elseif(str_contains($notif['jenis'], 'kerjasama')) text-green-500
@@ -712,22 +643,22 @@
                                                     @elseif(str_contains($notif['jenis'], 'kerjasama')) handshake
                                                     @else warning @endif
                                                 </span>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="notif-text text-gray-800 leading-relaxed">{{ $notif['pesan'] }}</p>
-                                                    <p class="notif-time text-gray-400 mt-0.5">{{ $notif['tanggal'] }}</p>
+                                                <div class="flex-1">
+                                                    <p class="text-sm text-gray-800">{{ $notif['pesan'] }}</p>
+                                                    <p class="text-xs text-gray-400 mt-1">{{ $notif['tanggal'] }}</p>
                                                     @if(!$notif['is_read'])
-                                                        <span class="text-[9px] text-blue-500 mt-0.5 inline-block font-medium">● Baru</span>
+                                                        <span class="text-xs text-blue-500 mt-1 inline-block">● Baru</span>
                                                     @endif
                                                 </div>
                                             </div>
                                         </div>
                                         @endforeach
                                     @else
-                                        <div class="p-4 text-center text-gray-500 text-xs">Belum ada notifikasi</div>
+                                        <div class="p-4 text-center text-gray-500">Belum ada notifikasi</div>
                                     @endif
                                 </div>
-                                <div class="p-1.5 border-t border-gray-200 text-center bg-gray-50">
-                                    <button onclick="refreshNotifications()" class="text-[10px] text-blue-600 hover:text-blue-800">Refresh</button>
+                                <div class="p-2 border-t border-gray-200 text-center">
+                                    <button onclick="refreshNotifications()" class="text-xs text-blue-600 hover:text-blue-800">Refresh</button>
                                 </div>
                             </div>
                         </div>
@@ -1394,39 +1325,34 @@
         // TOAST NOTIFICATION SYSTEM
         // ============================
         
-        // Inisialisasi Notyf - Bottom Right & Smaller
+        // Inisialisasi Notyf
         const notyf = new Notyf({
-            duration: 4000,
-            position: { x: 'right', y: 'bottom' },
-            ripple: false,
+            duration: 6000,
+            position: { x: 'right', y: 'top' },
+            ripple: true,
             dismissible: true,
             types: [
                 {
                     type: 'warning',
                     background: '#f59e0b',
-                    icon: '<i class="fas fa-exclamation-triangle" style="font-size:12px;"></i>',
-                    duration: 5000
+                    icon: '<i class="fas fa-exclamation-triangle"></i>',
+                    duration: 7000
                 },
                 {
                     type: 'danger',
                     background: '#ef4444',
-                    icon: '<i class="fas fa-circle-exclamation" style="font-size:12px;"></i>',
-                    duration: 5000
+                    icon: '<i class="fas fa-circle-exclamation"></i>',
+                    duration: 7000
                 },
                 {
                     type: 'info',
                     background: '#3b82f6',
-                    icon: '<i class="fas fa-bell" style="font-size:12px;"></i>',
-                    duration: 4000
+                    icon: '<i class="fas fa-bell"></i>'
                 }
             ]
         });
 
-        // Flag untuk mencegah notifikasi muncul berulang
-        var initialNotificationsShown = false;
-        var notificationShown = false;
-
-        // Fungsi untuk memainkan suara notifikasi (opsional)
+        // Fungsi untuk memainkan suara notifikasi
         function playNotificationSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1437,15 +1363,15 @@
                 gainNode.connect(audioContext.destination);
                 
                 oscillator.frequency.value = 880;
-                gainNode.gain.value = 0.1;
+                gainNode.gain.value = 0.3;
                 
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
-                oscillator.stop(audioContext.currentTime + 0.2);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
                 
                 audioContext.resume();
             } catch(e) {
-                // Silent fail
+                console.log('Audio tidak didukung');
             }
         }
 
@@ -1484,7 +1410,7 @@
             const notif = notifQueue.shift();
             showToastNotification(notif.message, notif.type);
             
-            setTimeout(processNotificationQueue, 1500);
+            setTimeout(processNotificationQueue, 2000);
         }
 
         function addNotificationToQueue(message, type) {
@@ -1501,9 +1427,6 @@
         @endif
         
         function showInitialNotifications() {
-            // Cegah notifikasi muncul berulang kali
-            if (initialNotificationsShown || notificationShown) return;
-            
             var warningNotifs = [];
             var expiredNotifs = [];
             
@@ -1520,24 +1443,15 @@
                 return a.sisa_hari - b.sisa_hari;
             });
             
-            // Tampilkan notifikasi expired terlebih dahulu (lebih urgent)
-            for(var e = 0; e < expiredNotifs.length; e++) {
-                var notif = expiredNotifs[e];
-                addNotificationToQueue(notif.pesan, notif.jenis);
-            }
-            
             for(var w = 0; w < warningNotifs.length; w++) {
                 var notif = warningNotifs[w];
                 addNotificationToQueue(notif.pesan, notif.jenis);
             }
             
-            initialNotificationsShown = true;
-            notificationShown = true;
-            
-            // Simpan ke session storage agar tidak muncul lagi
-            try {
-                sessionStorage.setItem('notifications_shown', 'true');
-            } catch(e) {}
+            for(var e = 0; e < expiredNotifs.length; e++) {
+                var notif = expiredNotifs[e];
+                addNotificationToQueue(notif.pesan, notif.jenis);
+            }
         }
 
         function formatNotifDate(dateString) {
@@ -1589,11 +1503,11 @@
             
             if (unreadCount > 0) {
                 badge.classList.remove('hidden');
-                badge.style.display = 'flex';
+                badge.classList.add('flex');
                 badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
             } else {
                 badge.classList.add('hidden');
-                badge.style.display = 'none';
+                badge.classList.remove('flex');
             }
             
             var allNotifs = [];
@@ -1611,12 +1525,12 @@
             }
             
             if (allNotifs.length === 0) {
-                listContainer.innerHTML = '<div class="p-4 text-center text-gray-500 text-xs">Belum ada notifikasi</div>';
+                listContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Belum ada notifikasi</div>';
                 return;
             }
             
             var html = '';
-            var maxItems = Math.min(8, allNotifs.length);
+            var maxItems = Math.min(10, allNotifs.length);
             for(var item = 0; item < maxItems; item++) {
                 var notif = allNotifs[item];
                 var isUnread = !notif.is_read;
@@ -1625,21 +1539,21 @@
                 var color = getNotifColor(notif.type);
                 var notifId = notif.id ? notif.id : 0;
                 
-                html += '<div class="notif-item border-b border-gray-100 ' + bgClass + ' cursor-pointer hover:bg-gray-50 transition" onclick="markNotifAsRead(' + notifId + ')">';
-                html += '<div class="flex gap-2 items-start">';
-                html += '<span class="notif-icon material-icons-outlined text-sm mt-0.5 ' + color + '">' + icon + '</span>';
-                html += '<div class="flex-1 min-w-0">';
-                html += '<p class="notif-text text-gray-800 leading-relaxed">' + escapeNotifHtml(notif.message) + '</p>';
-                html += '<p class="notif-time text-gray-400 mt-0.5">' + formatNotifDate(notif.created_at) + '</p>';
+                html += '<div class="p-3 border-b border-gray-100 ' + bgClass + ' cursor-pointer hover:bg-gray-50 transition notification-item" onclick="markNotifAsRead(' + notifId + ')">';
+                html += '<div class="flex gap-2">';
+                html += '<span class="material-icons-outlined ' + color + '">' + icon + '</span>';
+                html += '<div class="flex-1">';
+                html += '<p class="text-sm text-gray-800">' + escapeNotifHtml(notif.message) + '</p>';
+                html += '<p class="text-xs text-gray-400 mt-1">' + formatNotifDate(notif.created_at) + '</p>';
                 if(isUnread) {
-                    html += '<span class="text-[9px] text-blue-500 mt-0.5 inline-block font-medium">● Baru</span>';
+                    html += '<span class="text-xs text-blue-500 mt-1 inline-block">● Baru</span>';
                 }
                 html += '</div></div></div>';
             }
             
-            if (allNotifs.length > 8) {
-                html += '<div class="p-1.5 text-center border-t border-gray-100">';
-                html += '<span class="text-[10px] text-gray-400">+ ' + (allNotifs.length - 8) + ' notifikasi lainnya</span>';
+            if (allNotifs.length > 10) {
+                html += '<div class="p-2 text-center border-t border-gray-100">';
+                html += '<span class="text-xs text-gray-400">+ ' + (allNotifs.length - 10) + ' notifikasi lainnya</span>';
                 html += '</div>';
             }
             
@@ -1853,41 +1767,26 @@
                 e.preventDefault();
                 var formData = new FormData(this);
                 
-                // Validasi tambahan di sisi client
-                var invoiceId = document.getElementById('tambahInvoice').value;
-                if (!invoiceId) {
-                    notyf.error('Silakan pilih invoice terlebih dahulu');
-                    return;
-                }
-                
                 fetch(this.action, {
                     method: 'POST',
                     body: formData,
-                    headers: { 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
                 })
                 .then(function(response) {
                     return response.json();
                 })
                 .then(function(data) {
                     if (data.success) {
-                        notyf.success(data.message || 'Project berhasil ditambahkan');
+                        showToast(data.message, 'success');
                         closeAllModals();
                         setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        var errorMsg = data.message || 'Gagal menyimpan';
-                        if (data.errors) {
-                            var errors = Object.values(data.errors).flat();
-                            errorMsg = errors.join('\n');
-                        }
-                        notyf.error(errorMsg);
+                        showToast(data.message || 'Gagal menyimpan', 'error');
                     }
                 })
                 .catch(function(error) {
                     console.error('Error:', error);
-                    notyf.error('Terjadi kesalahan pada server');
+                    showToast('Terjadi kesalahan', 'error');
                 });
             });
         }
@@ -1902,31 +1801,23 @@
                 fetch('/admin/project/' + id, {
                     method: 'POST',
                     body: formData,
-                    headers: { 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
                 })
                 .then(function(response) {
                     return response.json();
                 })
                 .then(function(data) {
                     if (data.success) {
-                        notyf.success(data.message || 'Project berhasil diupdate');
+                        showToast(data.message, 'success');
                         closeAllModals();
                         setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        var errorMsg = data.message || 'Gagal update';
-                        if (data.errors) {
-                            var errors = Object.values(data.errors).flat();
-                            errorMsg = errors.join('\n');
-                        }
-                        notyf.error(errorMsg);
+                        showToast(data.message || 'Gagal update', 'error');
                     }
                 })
                 .catch(function(error) {
                     console.error('Error:', error);
-                    notyf.error('Terjadi kesalahan pada server');
+                    showToast('Terjadi kesalahan', 'error');
                 });
             });
         }
@@ -1949,16 +1840,16 @@
                 })
                 .then(function(data) {
                     if (data.success) {
-                        notyf.success(data.message || 'Project berhasil dihapus');
+                        showToast(data.message, 'success');
                         closeAllModals();
                         setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        notyf.error(data.message || 'Gagal hapus');
+                        showToast(data.message || 'Gagal hapus', 'error');
                     }
                 })
                 .catch(function(error) {
                     console.error('Error:', error);
-                    notyf.error('Terjadi kesalahan pada server');
+                    showToast('Terjadi kesalahan', 'error');
                 });
             });
         }
@@ -1968,17 +1859,9 @@
         // ============================
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Cek session storage untuk mencegah notifikasi ganda
-            try {
-                if (sessionStorage.getItem('notifications_shown')) {
-                    notificationShown = true;
-                }
-            } catch(e) {}
-            
-            // Tampilkan notifikasi hanya sekali saat load
             setTimeout(function() {
                 showInitialNotifications();
-            }, 1500);
+            }, 500);
             
             var tambahBtn = document.getElementById('tambahProjectBtn');
             var tambahModal = document.getElementById('tambahModal');
@@ -2028,10 +1911,8 @@
                 }
             });
             
-            // Update notifikasi secara berkala (tanpa menampilkan toast)
-            setInterval(function() {
-                fetchProjectNotifications();
-            }, 60000);
+            fetchProjectNotifications();
+            setInterval(fetchProjectNotifications, 60000);
         });
         
         window.openDetailModal = openDetailModal;

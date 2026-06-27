@@ -45,17 +45,9 @@ class Karyawan extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function divisi()
-    {
-        return $this->belongsTo(Divisi::class, 'divisi_id');
-    }
-
-    /**
-     * Tambahan: Alias agar error divisiRelation teratasi
-     */
     public function divisiRelation()
     {
-        return $this->divisi();
+        return $this->belongsTo(Divisi::class, 'divisi_id');
     }
 
     public function tim()
@@ -98,6 +90,20 @@ class Karyawan extends Model
     public function tunjanganMaster()
     {
         return $this->tunjangan();
+    }
+
+    /**
+     * Relasi ke tabel karyawan_tunjangan (pivot simpel, tanpa bulan/tahun)
+     * Digunakan untuk menyimpan tunjangan default/template karyawan
+     */
+    public function tunjanganDefault()
+    {
+        return $this->belongsToMany(
+            TunjanganMaster::class,
+            'karyawan_tunjangan',
+            'karyawan_id',
+            'tunjangan_id'
+        )->withTimestamps();
     }
 
     /**

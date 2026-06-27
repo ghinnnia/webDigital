@@ -24,6 +24,45 @@ class AdminKaryawanController extends Controller
     }
 
     /**
+     * API: Ambil tunjangan per karyawan (format sesuai frontend hr/data_karyawan.blade.php)
+     * Response:
+     * {
+     *   success: true,
+     *   data: { tetap: [{id:...}], tidak_tetap:[{id:...}] }
+     * }
+     */
+    public function getTunjanganKaryawanApi($id)
+    {
+        try {
+            $karyawan = Karyawan::with('user')->findOrFail($id);
+
+            $all = $karyawan->tunjanganDefault()->get();
+
+            $tetap = $all->where('tipe', 'bulanan')->values()->map(function ($t) {
+                return ['id' => $t->id];
+            })->all();
+
+            $tidakTetap = $all->whereIn('tipe', ['bonus', 'insentif'])->values()->map(function ($t) {
+                return ['id' => $t->id];
+            })->all();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tetap' => $tetap,
+                    'tidak_tetap' => $tidakTetap,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('getTunjanganKaryawanApi error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil tunjangan karyawan'
+            ], 500);
+        }
+    }
+
+    /**
      * Get gaji terbaru karyawan dari data HR
      */
     public function getGajiTerbaru($userId)
@@ -120,7 +159,9 @@ class AdminKaryawanController extends Controller
                     'potongan' => $item->potongan_bpjs,
                     'total_gaji' => $item->total_gaji,
                     'total_gaji_formatted' => 'Rp ' . number_format($item->total_gaji, 0, ',', '.'),
-                    'status' => $item->status ?? 'draft'
+                    'status' => $item->status ?? 'draft',
+                    'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                    'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
                 ];
             });
             
@@ -164,7 +205,7 @@ class AdminKaryawanController extends Controller
 
             DB::beginTransaction();
 
-            // Buat user
+            // Buat user (User::boot() otomatis membuat Karyawan)
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -174,6 +215,8 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
                 'kontak' => $validated['kontak'] ?? null,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ]);
 
             // Handle foto
@@ -200,7 +243,7 @@ class AdminKaryawanController extends Controller
                 $tunjanganTidakTetapIds = json_decode($tunjanganTidakTetapIds, true);
             }
             
-            $allTunjanganIds = array_merge((array)$tunjanganTetapIds, (array)$tunjanganTidakTetapIds);
+            $allTunjanganIds = array_filter(array_merge((array)$tunjanganTetapIds, (array)$tunjanganTidakTetapIds));
             
             \Log::info('Saving tunjangan IDs to pivot:', [
                 'tetap_decoded' => $tunjanganTetapIds,
@@ -208,29 +251,50 @@ class AdminKaryawanController extends Controller
                 'all_ids' => $allTunjanganIds
             ]);
 
-            // Buat karyawan
-            $karyawan = Karyawan::create([
-                'user_id' => $user->id,
-                'nama' => $validated['name'],
-                'email' => $validated['email'],
-                'role' => $validated['role'],
-                'divisi_id' => $validated['divisi_id'] ?? null,
-                'tim_id' => $validated['tim_id'] ?? null,
-                'alamat' => $validated['alamat'] ?? '',
-                'kontak' => $validated['kontak'] ?? '',
-                'gaji' => $validated['gaji'] ?? null,
-                'status_kerja' => $validated['status_kerja'] ?? 'aktif',
-                'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                'foto' => $fotoPath
-            ]);
+            // Ambil Karyawan yang sudah dibuat otomatis oleh User::boot()
+            // PERBAIKAN: Tidak membuat Karyawan baru (sudah dibuat di User::boot) → mencegah double data
+            $karyawan = Karyawan::where('user_id', $user->id)->first();
 
-            // Sync tunjangan ke pivot table
+            if (!$karyawan) {
+                // Fallback jika boot() tidak membuat karyawan
+                $karyawan = Karyawan::create([
+                    'user_id' => $user->id,
+                    'nama' => $validated['name'],
+                    'email' => $validated['email'],
+                    'role' => $validated['role'],
+                    'divisi_id' => $validated['divisi_id'] ?? null,
+                    'tim_id' => $validated['tim_id'] ?? null,
+                    'alamat' => $validated['alamat'] ?? '',
+                    'kontak' => $validated['kontak'] ?? '',
+                    'gaji' => $validated['gaji'] ?? null,
+                    'status_kerja' => $validated['status_kerja'] ?? 'aktif',
+                    'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
+                    'foto' => $fotoPath,
+                    'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                    'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
+                ]);
+            } else {
+                // Update field tambahan yang tidak ada di User::boot()
+                // tim_id hanya ada di tabel karyawan (bukan users)
+                $updateData = [
+                    'divisi_id' => $validated['divisi_id'] ?? null,
+                    'tim_id' => $validated['tim_id'] ?? null,
+                    'status_kerja' => $validated['status_kerja'] ?? 'aktif',
+                    'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
+                ];
+                if ($fotoPath) {
+                    $updateData['foto'] = $fotoPath;
+                }
+                $karyawan->update($updateData);
+            }
+
+            // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)
             \Log::info('Before sync - karyawan ID:', ['id' => $karyawan->id, 'tunjangan_ids' => $allTunjanganIds]);
-            $syncResult = $karyawan->tunjanganMaster()->sync($allTunjanganIds);
+            $syncResult = $karyawan->tunjanganDefault()->sync($allTunjanganIds);
             \Log::info('After sync - result:', $syncResult);
             
             // Verify sync worked
-            $verifyCount = $karyawan->tunjanganMaster()->count();
+            $verifyCount = $karyawan->tunjanganDefault()->count();
             \Log::info('Verify count after sync:', ['count' => $verifyCount]);
 
             DB::commit();
@@ -282,6 +346,8 @@ class AdminKaryawanController extends Controller
                 'alamat' => 'nullable|string',
                 'kontak' => 'nullable|string',
                 'gaji' => 'nullable|numeric',
+                'kontrak_mulai' => 'nullable|date',
+                'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
                 'status_kerja' => 'nullable|string',
                 'status_karyawan' => 'nullable|string',
                 'tunjangan_tetap_ids' => 'nullable',
@@ -300,6 +366,8 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
                 'kontak' => $validated['kontak'] ?? null,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ];
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
@@ -344,11 +412,13 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'status_kerja' => $validated['status_kerja'] ?? 'aktif',
                 'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                'foto' => $fotoPath
+                'foto' => $fotoPath,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ]);
 
-            // Sync tunjangan ke pivot table
-            $karyawan->tunjanganMaster()->sync($allTunjanganIds);
+            // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)
+            $karyawan->tunjanganDefault()->sync($allTunjanganIds);
 
             DB::commit();
 
@@ -390,7 +460,16 @@ class AdminKaryawanController extends Controller
                 Storage::disk('public')->delete($karyawan->foto);
             }
 
+            // Hapus pivot tunjangan default
+            $karyawan->tunjanganDefault()->detach();
+
+            // Hapus record karyawan
             $karyawan->delete();
+
+            // Hapus user juga agar tidak muncul lagi di daftar
+            if ($userId) {
+                User::where('id', $userId)->delete();
+            }
 
             return response()->json([
                 'success' => true,
@@ -410,25 +489,33 @@ class AdminKaryawanController extends Controller
     {
         try {
             $karyawan = Karyawan::with(['user', 'divisiRelation', 'tim'])->findOrFail($id);
-            
+
+            // Baca tunjangan dari karyawan_tunjangan (pivot bersih)
+            $semuaTunjangan = $karyawan->tunjanganDefault()->get();
+            $tetapIds = $semuaTunjangan->where('tipe', 'bulanan')->pluck('id')->toArray();
+            $tidakTetapIds = $semuaTunjangan->whereIn('tipe', ['bonus', 'insentif'])->pluck('id')->toArray();
+
+            // Ambil data dari user jika tersedia
+            $user = $karyawan->user;
+
             return response()->json([
                 'success' => true,
                 'data' => [
                     'id' => $karyawan->id,
                     'user_id' => $karyawan->user_id,
-                    'nama' => $karyawan->nama,
-                    'email' => $karyawan->email,
-                    'role' => $karyawan->role,
-                    'divisi_id' => $karyawan->divisi_id,
+                    'nama' => $user->name ?? $karyawan->nama,
+                    'email' => $user->email ?? $karyawan->email,
+                    'role' => $user->role ?? $karyawan->role,
+                    'divisi_id' => $user->divisi_id ?? $karyawan->divisi_id,
                     'tim_id' => $karyawan->tim_id,
-                    'alamat' => $karyawan->alamat,
-                    'kontak' => $karyawan->kontak,
-                    'gaji' => $karyawan->gaji,
+                    'alamat' => $user->alamat ?? $karyawan->alamat,
+                    'kontak' => $user->kontak ?? $karyawan->kontak,
+                    'gaji' => $user->gaji ?? $karyawan->gaji,
                     'status_kerja' => $karyawan->status_kerja,
                     'status_karyawan' => $karyawan->status_karyawan,
                     'foto' => $karyawan->foto ? asset('storage/' . $karyawan->foto) : null,
-                    'tunjangan_tetap_ids' => $karyawan->tunjanganTetap->pluck('id')->toArray(),
-                    'tunjangan_tidak_tetap_ids' => $karyawan->tunjanganTidakTetap->pluck('id')->toArray()
+                    'tunjangan_tetap_ids' => $tetapIds,
+                    'tunjangan_tidak_tetap_ids' => $tidakTetapIds
                 ]
             ]);
             
@@ -441,36 +528,12 @@ class AdminKaryawanController extends Controller
         }
     }
     
-       /**
+    /**
      * Get karyawan data for general manager view
      */
     public function karyawanGeneral(Request $request)
     {
-        $query = Karyawan::with(['user', 'divisiRelation', 'tim']);
-
-        // Logika Search (mendukung parameter 'search' atau 'keyword')
-        if ($request->filled('search') || $request->filled('keyword')) {
-            $keyword = $request->input('search') ?? $request->input('keyword');
-            
-            $query->where(function($q) use ($keyword) {
-                $q->where('nama', 'like', "%$keyword%")
-                  ->orWhere('email', 'like', "%$keyword%")
-                  ->orWhere('role', 'like', "%$keyword%")
-                  ->orWhereHas('user', function($qu) use ($keyword) {
-                      $qu->where('email', 'like', "%$keyword%")
-                        ->orWhere('role', 'like', "%$keyword%");
-                  });
-            });
-        }
-
-        // Logika Filter Divisi (mendukung parameter 'divisi' atau 'divisi_id')
-        if ($request->filled('divisi') || $request->filled('divisi_id')) {
-            $divisiId = $request->input('divisi') ?? $request->input('divisi_id');
-            $query->where('divisi_id', $divisiId);
-        }
-
-        $karyawan = $query->paginate(10);
-        
+        $karyawan = Karyawan::with(['user', 'divisiRelation', 'tim'])->paginate(10);
         return view('general_manajer.data_karyawan', compact('karyawan'));
     }
     
@@ -483,7 +546,7 @@ class AdminKaryawanController extends Controller
         return view('finance.daftar_karyawan', compact('karyawans'));
     }
     
-       /**
+    /**
      * Get daftar karyawan view for manager divisi
      */
     public function daftarKaryawanView(Request $request)
@@ -494,28 +557,15 @@ class AdminKaryawanController extends Controller
         $divisi = Divisi::find($divisiId);
         $namaDivisiManager = $divisi ? $divisi->divisi : null;
         
-        $query = Karyawan::with(['user', 'divisi', 'tim'])
+        $query = Karyawan::with(['user', 'tim'])
             ->where('divisi_id', $divisiId);
             
-        // Gunakan $request->filled() agar pencarian kosong tidak merusak query
-        if ($request->filled('search')) {
+        if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                // 1. Cari berdasarkan data langsung di tabel karyawan
                 $q->where('nama', 'like', "%$search%")
                   ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('role', 'like', "%$search%")
-                  
-                  // 2. Tambahan: Cari berdasarkan nama divisi di tabel divisi
-                  ->orWhereHas('divisi', function($qd) use ($search) {
-                      $qd->where('divisi', 'like', "%$search%");
-                  })
-                  
-                  // 3. Tambahan: Cari berdasarkan email dan role di tabel users (jika di tabel karyawan kosong)
-                  ->orWhereHas('user', function($qu) use ($search) {
-                      $qu->where('email', 'like', "%$search%")
-                        ->orWhere('role', 'like', "%$search%");
-                  });
+                  ->orWhere('role', 'like', "%$search%");
             });
         }
         
@@ -523,6 +573,7 @@ class AdminKaryawanController extends Controller
         
         return view('manager_divisi.daftar_karyawan', compact('karyawan', 'namaDivisiManager'));
     }
+
     /**
      * Get karyawan by divisi for manager
      */

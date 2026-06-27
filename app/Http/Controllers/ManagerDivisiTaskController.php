@@ -43,9 +43,11 @@ class ManagerDivisiTaskController extends Controller
         ]);
     }
 
-    // ============================================================
-    // API UNTUK TUGAS DARI KARYAWAN KE MANAGER
-    // ============================================================
+    /**
+     * ==============================================
+     * API UNTUK TUGAS DARI KARYAWAN KE MANAGER
+     * ==============================================
+     */
 
     /**
      * API: Mendapatkan daftar tugas dari karyawan untuk Manager Divisi
@@ -199,92 +201,101 @@ class ManagerDivisiTaskController extends Controller
     }
 
     /**
-     * API: Approve tugas dari karyawan
+     * API: Approve tugas dari karyawan (DIPERBAIKI)
      */
-    public function approveTaskFromKaryawan(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-            
-            if ($user->role !== 'manager_divisi') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hanya manager divisi yang dapat menyetujui tugas'
-                ], 403);
-            }
-
-            $task = Task::find($id);
-            
-            if (!$task) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tugas tidak ditemukan'
-                ], 404);
-            }
-
-            $validated = $request->validate([
-                'action' => 'required|in:approved,rejected,returned',
-                'notes' => 'nullable|string|required_if:action,returned',
-                'status' => 'required_if:action,approved|in:proses,selesai,dibatalkan'
-            ]);
-
-            $message = '';
-
-            if ($validated['action'] === 'approved') {
-                $task->status = $validated['status'];
-                $task->completed_at = now();
-                
-                $approveNote = "[APPROVED] " . now()->format('d/m/Y H:i') . " - Disetujui oleh " . $user->name . "\n";
-                $task->catatan_update = ($task->catatan_update ?? '') . $approveNote;
-                
-                $task->save();
-                $message = 'Tugas berhasil disetujui';
-            } 
-            elseif ($validated['action'] === 'rejected') {
-                $task->status = 'dibatalkan';
-                $rejectNote = "[REJECTED] " . now()->format('d/m/Y H:i') . " - Ditolak oleh " . $user->name . "\n";
-                $task->catatan_update = ($task->catatan_update ?? '') . $rejectNote;
-                $task->save();
-                $message = 'Tugas ditolak';
-            } 
-            elseif ($validated['action'] === 'returned') {
-                $catatanLama = $task->catatan_update ?? '';
-                $jumlahRevisiSebelum = $this->countRevisi($catatanLama);
-                $revisiKe = $jumlahRevisiSebelum + 1;
-                
-                $revisiBaru = sprintf(
-                    "REVISI %d: %s - %s\n",
-                    $revisiKe,
-                    now()->format('d/m/Y H:i'),
-                    $validated['notes']
-                );
-                
-                $task->catatan_update = $catatanLama . $revisiBaru;
-                $task->status = 'proses';
-                $task->save();
-                
-                $message = 'Tugas berhasil dikembalikan untuk revisi';
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => $task
-            ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
+   public function approveTaskFromKaryawan(Request $request, $id)
+{
+    try {
+        $user = Auth::user();
+        
+        if ($user->role !== 'manager_divisi') {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all())
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Error approveTaskFromKaryawan: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Hanya manager divisi yang dapat menyetujui tugas'
+            ], 403);
         }
+
+        $task = Task::find($id);
+        
+        if (!$task) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tugas tidak ditemukan'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approved,rejected,returned',
+            'notes' => 'nullable|string|required_if:action,returned',
+            'status' => 'required_if:action,approved|in:proses,selesai,dibatalkan'
+        ]);
+
+        // Inisialisasi variabel message agar tidak undefined
+        $message = '';
+
+        if ($validated['action'] === 'approved') {
+            // ========== APPROVE TUGAS ==========
+            $task->status = $validated['status'];
+            $task->completed_at = now();
+            
+            $approveNote = "[APPROVED] " . now()->format('d/m/Y H:i') . " - Disetujui oleh " . $user->name . "\n";
+            $task->catatan_update = ($task->catatan_update ?? '') . $approveNote;
+            
+            $task->save();
+            $message = 'Tugas berhasil disetujui';
+        } 
+        elseif ($validated['action'] === 'rejected') {
+            // ========== REJECT TUGAS ==========
+            $task->status = 'dibatalkan';
+            $rejectNote = "[REJECTED] " . now()->format('d/m/Y H:i') . " - Ditolak oleh " . $user->name . "\n";
+            $task->catatan_update = ($task->catatan_update ?? '') . $rejectNote;
+            $task->save();
+            $message = 'Tugas ditolak';
+        } 
+        elseif ($validated['action'] === 'returned') {
+            // ========== RETURN/REVISI TUGAS ==========
+            $catatanLama = $task->catatan_update ?? '';
+            
+            // Gunakan helper countRevisi (pastikan fungsi ini ada di controller Anda)
+            $jumlahRevisiSebelum = method_exists($this, 'countRevisi') ? $this->countRevisi($catatanLama) : 0;
+            $revisiKe = $jumlahRevisiSebelum + 1;
+            
+            $revisiBaru = sprintf(
+                "REVISI %d: %s - %s\n",
+                $revisiKe,
+                now()->format('d/m/Y H:i'),
+                $validated['notes']
+            );
+            
+            $task->catatan_update = $catatanLama . $revisiBaru;
+            
+            // Kembalikan status ke 'proses' agar karyawan bisa mengupload ulang
+            $task->status = 'proses';
+            $task->save();
+            
+            $message = 'Tugas berhasil dikembalikan untuk revisi';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $task
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Tangani error validasi agar pesan errornya jelas (notes kosong dll)
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all())
+        ], 422);
+    } catch (\Exception $e) {
+        Log::error('Error approveTaskFromKaryawan: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Hitung jumlah revisi dari catatan_update
@@ -389,9 +400,11 @@ class ManagerDivisiTaskController extends Controller
         }
     }
 
-    // ============================================================
-    // API UNTUK TUGAS BIASA (Manager ke Karyawan)
-    // ============================================================
+    /**
+     * ==============================================
+     * API UNTUK TUGAS BIASA (Manager ke Karyawan)
+     * ==============================================
+     */
 
     /**
      * API: Mendapatkan daftar tugas untuk Manager Divisi
@@ -403,12 +416,10 @@ class ManagerDivisiTaskController extends Controller
             
             Log::info('API getTasksApi called', ['user_id' => $user->id]);
             
-            $tasks = Task::where(function($query) use ($user) {
-                    $query->where('target_divisi_id', $user->divisi_id)
-                        ->orWhere('created_by', $user->id)
-                        ->orWhere('assigned_by_manager', $user->id);
-                })
-                ->select('id', 'judul', 'nama_tugas', 'deskripsi', 'deadline', 'status', 'priority', 'project_id', 'assigned_to', 'assigned_to_ids', 'submission_file', 'submitted_at', 'catatan_update', 'created_at', 'type')
+            $tasks = Task::where('target_divisi_id', $user->divisi_id)
+                ->orWhere('created_by', $user->id)
+                ->orWhere('assigned_by_manager', $user->id)
+                ->select('id', 'judul', 'nama_tugas', 'deskripsi', 'deadline', 'status', 'priority', 'project_id', 'assigned_to', 'assigned_to_ids', 'submission_file', 'submitted_at', 'catatan_update', 'created_at')
                 ->orderBy('created_at', 'desc')
                 ->get();
             
@@ -418,22 +429,21 @@ class ManagerDivisiTaskController extends Controller
                 ->get();
             
             $transformedTasks = $tasks->map(function($task) {
+                // Dapatkan nama assignee dari assigned_to_ids
                 $assigneeNames = $this->getAssigneeNames($task);
                 
                 return [
                     'id' => $task->id,
-                    'type' => $task->type ?? 'regular',
+                    'type' => 'regular',
                     'judul' => $task->judul,
                     'nama_tugas' => $task->nama_tugas,
                     'deskripsi' => $task->deskripsi,
                     'deadline' => $task->deadline,
                     'status' => $task->status,
                     'priority' => $task->priority,
-                    'project_id' => $task->project_id,
                     'project_name' => $task->project ? $task->project->nama : null,
                     'assignee_name' => $assigneeNames,
                     'assigned_names' => $assigneeNames,
-                    'assigned_to' => $task->assigned_to,
                     'assigned_to_ids' => $task->assigned_to_ids,
                     'submission_file' => $task->submission_file,
                     'submitted_at' => $task->submitted_at,
@@ -451,7 +461,6 @@ class ManagerDivisiTaskController extends Controller
                     'deskripsi' => $task->deskripsi,
                     'deadline' => $task->deadline,
                     'status' => $task->status,
-                    'project_id' => $task->project_id,
                     'project_name' => $task->project ? $task->project->nama : null,
                     'created_by_name' => $task->karyawan ? $task->karyawan->name : null,
                     'submission_file' => $task->lampiran,
@@ -650,6 +659,7 @@ class ManagerDivisiTaskController extends Controller
             
             $targetDivisiId = $validated['target_divisi_id'] ?? $user->divisi_id;
             
+            // Validasi setiap karyawan
             foreach ($assignedToValues as $karyawanId) {
                 $karyawan = User::where('id', (int)$karyawanId)->where('role', 'karyawan')->first();
                 if (!$karyawan) {
@@ -674,7 +684,6 @@ class ManagerDivisiTaskController extends Controller
                 'assigned_by_manager' => $user->id,
                 'target_type'         => 'karyawan',
                 'is_broadcast'        => false,
-                'type'                => 'regular'
             ];
 
             $attachmentMeta = null;
@@ -736,21 +745,14 @@ class ManagerDivisiTaskController extends Controller
         }
     }
     
-    // ============================================================
-    // UPDATE TASK - DIPERBAIKI UNTUK MULTIPLE ASSIGNEES
-    // ============================================================
+    /**
+     * Update: Mengupdate Tugas
+     */
     public function update(Request $request, $id)
     {
         try {
-            Log::info('Update task called', [
-                'task_id' => $id,
-                'user_id' => auth()->id(),
-                'request_data' => $request->all()
-            ]);
-
             $task = Task::findOrFail($id);
             
-            // Validasi
             $validated = $request->validate([
                 'judul' => 'nullable|string|max:255',
                 'nama_tugas' => 'required|string|max:255',
@@ -758,64 +760,21 @@ class ManagerDivisiTaskController extends Controller
                 'deadline' => 'required|date',
                 'status' => 'required|in:pending,proses,selesai,dibatalkan',
                 'project_id' => 'nullable|exists:project,id',
-                'catatan' => 'nullable|string',
-                'assigned_to' => 'nullable|array',
-                'assigned_to.*' => 'exists:users,id',
-                'priority' => 'nullable|in:low,medium,high,urgent'
+                'catatan' => 'nullable|string'
             ]);
             
-            // Set judul jika kosong
             if (!isset($validated['judul']) || empty($validated['judul'])) {
                 $validated['judul'] = $validated['nama_tugas'];
             }
             
-            // Handle assigned_to untuk multiple assignees
-            $updateData = [
-                'judul' => $validated['judul'],
-                'nama_tugas' => $validated['nama_tugas'],
-                'deskripsi' => $validated['deskripsi'],
-                'deadline' => $validated['deadline'],
-                'status' => $validated['status'],
-                'project_id' => $validated['project_id'] ?? null,
-                'catatan' => $validated['catatan'] ?? null,
-                'priority' => $validated['priority'] ?? 'medium',
-            ];
-            
-            // Handle assigned_to
-            if ($request->has('assigned_to') && is_array($request->assigned_to)) {
-                $assignedTo = array_filter($request->assigned_to);
-                if (!empty($assignedTo)) {
-                    $updateData['assigned_to'] = (int)$assignedTo[0];
-                    $updateData['assigned_to_ids'] = $assignedTo;
-                }
-            }
-            
-            $task->update($updateData);
-            
-            Log::info('Task updated successfully', [
-                'task_id' => $task->id,
-                'updated_data' => $updateData
-            ]);
+            $task->update($validated);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Tugas berhasil diupdate',
-                'data' => $task->fresh()
+                'data' => $task
             ]);
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Tugas tidak ditemukan'
-            ], 404);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
-            Log::error('Error updating task: ' . $e->getMessage());
             return response()->json([
                 'success' => false, 
                 'message' => 'Gagal mengupdate tugas: ' . $e->getMessage()
@@ -870,10 +829,6 @@ class ManagerDivisiTaskController extends Controller
                     'message' => 'Tugas tidak ditemukan'
                 ], 404);
             }
-            
-            // Tambahkan assigned_names
-            $assigneeNames = $this->getAssigneeNames($task);
-            $task->assigned_names = $assigneeNames;
             
             return response()->json([
                 'success' => true,
@@ -933,178 +888,6 @@ class ManagerDivisiTaskController extends Controller
             return response()->json([
                 'success' => false, 
                 'message' => 'Gagal mengambil statistik'
-            ], 500);
-        }
-    }
-
-    // ============================================================
-    // METODE TAMBAHAN UNTUK ENDPOINT YANG DIPERLUKAN
-    // ============================================================
-
-    /**
-     * API: Get task detail by ID (untuk frontend)
-     */
-    public function getTaskDetail($id)
-    {
-        try {
-            $user = Auth::user();
-            
-            $task = Task::with(['assignee', 'project', 'creator', 'files'])
-                ->find($id);
-            
-            if (!$task) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tugas tidak ditemukan'
-                ], 404);
-            }
-            
-            // Tambahkan assigned_names
-            $assigneeNames = $this->getAssigneeNames($task);
-            $task->assigned_names = $assigneeNames;
-            
-            // Tambahkan data karyawan jika ada
-            if ($task->type === 'task_from_karyawan') {
-                $karyawan = User::find($task->created_by);
-                if ($karyawan) {
-                    $task->created_by_name = $karyawan->name;
-                }
-            }
-            
-            return response()->json([
-                'success' => true,
-                'data' => $task
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error getTaskDetail: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil detail tugas: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * API: Upload attachment untuk tugas
-     */
-    public function uploadAttachment(Request $request, $id)
-    {
-        try {
-            $task = Task::findOrFail($id);
-            
-            $validator = Validator::make($request->all(), [
-                'attachment' => 'required|file|max:10240|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,ppt,pptx'
-            ]);
-            
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validasi gagal',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            
-            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
-                $file = $request->file('attachment');
-                $path = $file->store('tasks/' . $id, 'public');
-                
-                $taskFile = TaskFile::create([
-                    'task_id' => $task->id,
-                    'user_id' => auth()->id(),
-                    'filename' => $file->getClientOriginalName(),
-                    'original_name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => 'File berhasil diupload',
-                    'data' => $taskFile
-                ]);
-            }
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada file yang diupload'
-            ], 400);
-            
-        } catch (\Exception $e) {
-            Log::error('Error uploadAttachment: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal upload file: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * API: Get files for task
-     */
-    public function getTaskFiles($id)
-    {
-        try {
-            $task = Task::findOrFail($id);
-            $files = $task->files()->orderBy('created_at', 'desc')->get();
-            
-            // Tambahkan URL
-            $files->each(function($file) {
-                $file->url = Storage::url($file->path);
-            });
-            
-            return response()->json([
-                'success' => true,
-                'data' => $files
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error getTaskFiles: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil file tugas: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * API: Get all tasks for manager (termasuk dari karyawan)
-     */
-    public function getAllTasksApi(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            
-            // Tugas dari manager
-            $managerTasks = Task::where(function($query) use ($user) {
-                    $query->where('target_divisi_id', $user->divisi_id)
-                        ->orWhere('created_by', $user->id)
-                        ->orWhere('assigned_by_manager', $user->id);
-                })
-                ->with(['assignee', 'project', 'creator'])
-                ->orderBy('created_at', 'desc')
-                ->get();
-            
-            // Tugas dari karyawan
-            $karyawanTasks = TugasKaryawanToManager::where('manager_divisi_id', $user->id)
-                ->with(['karyawan', 'project'])
-                ->orderBy('created_at', 'desc')
-                ->get();
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'manager_tasks' => $managerTasks,
-                    'karyawan_tasks' => $karyawanTasks
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error getAllTasksApi: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data tugas: ' . $e->getMessage()
             ], 500);
         }
     }

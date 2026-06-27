@@ -1024,29 +1024,24 @@
 <script>
     // ==================== GLOBAL FUNCTIONS ====================
     function switchTab(tabName) {
-        const panels = document.querySelectorAll('.tab-panel');
-        const buttons = document.querySelectorAll('.tab-button');
-        
-        panels.forEach(panel => panel.classList.add('hidden'));
-        buttons.forEach(button => button.classList.remove('active'));
+        // Hide all panels and remove active class from all tabs
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
 
+        // Show selected panel and add active class to clicked tab
         document.getElementById(`${tabName}Panel`).classList.remove('hidden');
         document.getElementById(`${tabName}Tab`).classList.add('active');
     }
 
     function openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
+        document.getElementById(modalId).classList.remove('hidden');
     }
 
     function closeModal(modalId) {
+        console.log(`Closing modal: ${modalId}`);
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.classList.add('hidden');
-            document.body.style.overflow = '';
         }
     }
 
@@ -1054,12 +1049,13 @@
         document.querySelectorAll('.modal').forEach(modal => {
             modal.classList.add('hidden');
         });
-        document.body.style.overflow = '';
+        console.log('All modals forced closed');
     }
 
     function showMinimalPopup(title, message, type = 'success') {
         const popup = document.getElementById('minimalPopup');
         if (!popup) {
+            console.error('Minimal popup not found!');
             alert(`${title}: ${message}`);
             return;
         }
@@ -1068,16 +1064,13 @@
         const popupMessage = popup.querySelector('.minimal-popup-message');
         const popupIcon = popup.querySelector('.minimal-popup-icon span');
 
-        if (popupTitle) popupTitle.textContent = title;
-        if (popupMessage) popupMessage.textContent = message;
-        
+        popupTitle.textContent = title;
+        popupMessage.textContent = message;
         popup.className = `minimal-popup show ${type}`;
 
-        if (popupIcon) {
-            if (type === 'success') popupIcon.textContent = 'check';
-            else if (type === 'error') popupIcon.textContent = 'error';
-            else if (type === 'warning') popupIcon.textContent = 'warning';
-        }
+        if (type === 'success') popupIcon.textContent = 'check';
+        else if (type === 'error') popupIcon.textContent = 'error';
+        else if (type === 'warning') popupIcon.textContent = 'warning';
 
         setTimeout(() => {
             popup.classList.remove('show');
@@ -1096,55 +1089,46 @@
         };
     }
 
-    function refreshPage() {
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
+    function toggleDropdown(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.classList.toggle('show');
     }
 
-    // ==================== SEARCH FUNCTIONS ====================
-    function searchDivisi(searchTerm) {
-        const rows = document.querySelectorAll('#divisiTableBody tr');
-        rows.forEach(row => {
-            const namaDivisi = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-            if (searchTerm === '' || namaDivisi.includes(searchTerm.toLowerCase())) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+    function applyTimFilter() {
+        console.log('Applying tim filter...');
+        // Implementation for filtering tim
+    }
+
+    function resetTimFilter() {
+        console.log('Resetting tim filter...');
+        const checkboxes = document.querySelectorAll('#filterTimDropdown input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checkbox.id === 'filterTimAll';
         });
-        
-        // Update count display
-        const visibleRows = document.querySelectorAll('#divisiTableBody tr:not([style*="display: none"])').length;
-        const countSpan = document.getElementById('divisiCount');
-        if (countSpan) countSpan.textContent = visibleRows;
     }
 
     function searchTim(searchTerm) {
-        const rows = document.querySelectorAll('#timTableBody tr');
-        rows.forEach(row => {
-            const namaTim = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-            const divisi = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
-            if (searchTerm === '' || namaTim.includes(searchTerm.toLowerCase()) || divisi.includes(searchTerm.toLowerCase())) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        // Update count display
-        const visibleRows = document.querySelectorAll('#timTableBody tr:not([style*="display: none"])').length;
-        const countSpan = document.getElementById('timCount');
-        if (countSpan) countSpan.textContent = visibleRows;
+        console.log('Searching tim for:', searchTerm);
+        // Implementation for searching tim
+    }
+
+    function searchDivisi(searchTerm) {
+        console.log('Searching divisi for:', searchTerm);
+        // Implementation for searching divisi
     }
 
     // ==================== CRUD HANDLERS ====================
     function handleAddTim(e) {
         e.preventDefault();
+        console.log('handleAddTim called');
+
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        console.log('Data to send:', data);
+
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1152,6 +1136,7 @@
             submitBtn.textContent = 'Menyimpan...';
         }
 
+        // TAMBAHKAN validasi client-side
         if (!data.tim || !data.divisi) {
             showMinimalPopup('Error', 'Nama tim dan divisi harus diisi', 'error');
             if (submitBtn) {
@@ -1162,37 +1147,50 @@
         }
 
         fetch('/general_manajer/tim', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMinimalPopup('Berhasil', data.message || 'Tim berhasil ditambahkan', 'success');
-                e.target.reset();
-                closeModal('tambahTimModal');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    // Coba parse sebagai JSON, jika gagal tampilkan text
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success response:', data);
+                if (data.success) {
+                    showMinimalPopup('Berhasil', data.message || 'Tim berhasil ditambahkan', 'success');
+                    e.target.reset();
+                    closeModal('tambahTimModal');
+                    
+                    // Reload page after 1 second
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Full error details:', error);
+                showMinimalPopup('Error', 'Gagal menambahkan tim. Error: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Gagal menambahkan tim. Error: ' + error.message, 'error');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+            });
     }
 
     function handleEditTim(e) {
@@ -1202,6 +1200,7 @@
         const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1209,42 +1208,58 @@
             submitBtn.textContent = 'Memperbarui...';
         }
 
+        // Use POST with _method: PUT for Laravel
         fetch(`/general_manajer/tim/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal('editTimModal');
-                showMinimalPopup('Berhasil', 'Data tim berhasil diperbarui', 'success');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeModal('editTimModal');
+                    showMinimalPopup('Berhasil', 'Data tim berhasil diperbarui', 'success');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
     }
 
     function handleDeleteTim(e) {
         e.preventDefault();
         const id = document.getElementById('deleteTimId').value;
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1252,42 +1267,67 @@
             submitBtn.textContent = 'Menghapus...';
         }
 
+        // Use POST with _method: DELETE for Laravel
         fetch(`/general_manajer/tim/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal('deleteTimModal');
-                showMinimalPopup('Berhasil', 'Data tim berhasil dihapus', 'success');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeModal('deleteTimModal');
+                    showMinimalPopup('Berhasil', 'Data tim berhasil dihapus', 'success');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
     }
 
     function handleAddDivisi(e) {
         e.preventDefault();
+        console.log('handleAddDivisi called');
+
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        console.log('Data to send:', data);
+
+        // Validation
+        if (!data.divisi || data.divisi.trim() === '') {
+            showMinimalPopup('Error', 'Nama divisi harus diisi', 'error');
+            return;
+        }
+
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1295,45 +1335,48 @@
             submitBtn.textContent = 'Menyimpan...';
         }
 
-        if (!data.divisi || data.divisi.trim() === '') {
-            showMinimalPopup('Error', 'Nama divisi harus diisi', 'error');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-            return;
-        }
-
         fetch('/general_manajer/divisi', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMinimalPopup('Berhasil', data.message || 'Divisi berhasil ditambahkan', 'success');
-                e.target.reset();
-                closeModal('tambahDivisiModal');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Gagal menambahkan divisi: ' + error.message, 'error');
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success response:', data);
+                if (data.success) {
+                    showMinimalPopup('Berhasil', data.message || 'Divisi berhasil ditambahkan', 'success');
+                    e.target.reset();
+                    closeModal('tambahDivisiModal');
+                    
+                    // Reload page after 1 second
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMinimalPopup('Error', 'Gagal menambahkan divisi: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
     }
 
     function handleEditDivisi(e) {
@@ -1343,6 +1386,7 @@
         const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1350,42 +1394,58 @@
             submitBtn.textContent = 'Memperbarui...';
         }
 
+        // Use POST with _method: PUT for Laravel
         fetch(`/general_manajer/divisi/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal('editDivisiModal');
-                showMinimalPopup('Berhasil', 'Data divisi berhasil diperbarui', 'success');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeModal('editDivisiModal');
+                    showMinimalPopup('Berhasil', 'Data divisi berhasil diperbarui', 'success');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
     }
 
     function handleDeleteDivisi(e) {
         e.preventDefault();
         const id = document.getElementById('deleteDivisiId').value;
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+        // Disable submit button
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
         if (submitBtn) {
@@ -1393,187 +1453,223 @@
             submitBtn.textContent = 'Menghapus...';
         }
 
+        // Use POST with _method: DELETE for Laravel
         fetch(`/general_manajer/divisi/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal('deleteDivisiModal');
-                showMinimalPopup('Berhasil', 'Data divisi berhasil dihapus', 'success');
-                refreshPage();
-            } else {
-                showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeModal('deleteDivisiModal');
+                    showMinimalPopup('Berhasil', 'Data divisi berhasil dihapus', 'success');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMinimalPopup('Error', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMinimalPopup('Error', 'Terjadi kesalahan pada server: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
     }
 
     // ==================== EVENT LISTENERS SETUP ====================
     document.addEventListener('DOMContentLoaded', function() {
         console.log('=== DOM Loaded ===');
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        console.log('CSRF Token:', csrfToken ? 'Found' : 'NOT FOUND');
+
         // Tab Switching
-        const divisiTab = document.getElementById('divisiTab');
-        const timTab = document.getElementById('timTab');
-        
-        if (divisiTab) {
-            divisiTab.addEventListener('click', () => switchTab('divisi'));
-        }
-        if (timTab) {
-            timTab.addEventListener('click', () => switchTab('tim'));
-        }
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const tabName = this.id.replace('Tab', '');
+                switchTab(tabName);
+            });
+        });
 
         // Modal Controls
         document.querySelectorAll('.close-modal, .cancel-modal').forEach(button => {
             button.addEventListener('click', function() {
                 const targetId = this.getAttribute('data-target');
-                if (targetId) closeModal(targetId);
+                closeModal(targetId);
             });
         });
 
         // Form Submissions
         const tambahTimForm = document.getElementById('tambahTimForm');
-        if (tambahTimForm) tambahTimForm.addEventListener('submit', handleAddTim);
+        if (tambahTimForm) {
+            tambahTimForm.addEventListener('submit', handleAddTim);
+        }
 
         const tambahDivisiForm = document.getElementById('tambahDivisiForm');
-        if (tambahDivisiForm) tambahDivisiForm.addEventListener('submit', handleAddDivisi);
+        if (tambahDivisiForm) {
+            tambahDivisiForm.addEventListener('submit', handleAddDivisi);
+        }
 
         const editTimForm = document.getElementById('editTimForm');
-        if (editTimForm) editTimForm.addEventListener('submit', handleEditTim);
+        if (editTimForm) {
+            editTimForm.addEventListener('submit', handleEditTim);
+        }
 
         const deleteTimForm = document.getElementById('deleteTimForm');
-        if (deleteTimForm) deleteTimForm.addEventListener('submit', handleDeleteTim);
+        if (deleteTimForm) {
+            deleteTimForm.addEventListener('submit', handleDeleteTim);
+        }
 
         const editDivisiForm = document.getElementById('editDivisiForm');
-        if (editDivisiForm) editDivisiForm.addEventListener('submit', handleEditDivisi);
+        if (editDivisiForm) {
+            editDivisiForm.addEventListener('submit', handleEditDivisi);
+        }
 
         const deleteDivisiForm = document.getElementById('deleteDivisiForm');
-        if (deleteDivisiForm) deleteDivisiForm.addEventListener('submit', handleDeleteDivisi);
+        if (deleteDivisiForm) {
+            deleteDivisiForm.addEventListener('submit', handleDeleteDivisi);
+        }
 
         // Button Click Handlers
-        const tambahTimBtn = document.getElementById('tambahTimBtn');
-        if (tambahTimBtn) {
-            tambahTimBtn.addEventListener('click', () => {
-                const form = document.getElementById('tambahTimForm');
-                if (form) form.reset();
-                openModal('tambahTimModal');
-            });
-        }
+        document.getElementById('tambahTimBtn')?.addEventListener('click', () => {
+            openModal('tambahTimModal');
+        });
 
-        const tambahDivisiBtn = document.getElementById('tambahDivisiBtn');
-        if (tambahDivisiBtn) {
-            tambahDivisiBtn.addEventListener('click', () => {
-                const form = document.getElementById('tambahDivisiForm');
-                if (form) form.reset();
-                openModal('tambahDivisiModal');
-            });
-        }
+        document.getElementById('tambahDivisiBtn')?.addEventListener('click', () => {
+            openModal('tambahDivisiModal');
+            // Reset form when opening
+            const form = document.getElementById('tambahDivisiForm');
+            if (form) form.reset();
+        });
 
         // Search Functionality
         const searchTimInput = document.getElementById('searchTimInput');
         if (searchTimInput) {
             searchTimInput.addEventListener('input', debounce(function(e) {
-                searchTim(e.target.value.trim());
+                const searchTerm = e.target.value.trim();
+                searchTim(searchTerm);
             }, 300));
         }
 
         const searchDivisiInput = document.getElementById('searchDivisiInput');
         if (searchDivisiInput) {
             searchDivisiInput.addEventListener('input', debounce(function(e) {
-                searchDivisi(e.target.value.trim());
+                const searchTerm = e.target.value.trim();
+                searchDivisi(searchTerm);
             }, 300));
         }
 
+        // Filter Controls
+        document.getElementById('filterTimBtn')?.addEventListener('click', () => {
+            toggleDropdown('filterTimDropdown');
+        });
+
+        document.getElementById('applyTimFilter')?.addEventListener('click', applyTimFilter);
+        document.getElementById('resetTimFilter')?.addEventListener('click', resetTimFilter);
+
         // Popup Close
-        const popupClose = document.querySelector('.minimal-popup-close');
-        if (popupClose) {
-            popupClose.addEventListener('click', () => {
-                document.getElementById('minimalPopup')?.classList.remove('show');
-            });
-        }
+        document.querySelector('.minimal-popup-close')?.addEventListener('click', () => {
+            document.getElementById('minimalPopup').classList.remove('show');
+        });
 
-        // Close popup when clicking outside
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
-            const popup = document.getElementById('minimalPopup');
-            if (popup && !popup.contains(e.target) && popup.classList.contains('show')) {
-                popup.classList.remove('show');
-            }
-        });
-
-        // Close modal when clicking outside
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal(this.id);
-                }
-            });
-        });
-
-        // Close modal with ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                forceCloseAllModals();
+            if (!e.target.closest('.relative')) {
+                document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
             }
         });
 
         // Dynamic Button Handlers (Edit/Delete buttons in tables)
         document.body.addEventListener('click', function(e) {
-            // Edit Tim
-            if (e.target.closest('.edit-tim-btn')) {
+                if (e.target.closest('.edit-tim-btn')) {
                 const btn = e.target.closest('.edit-tim-btn');
                 const id = btn.dataset.id;
                 const nama = btn.dataset.nama;
                 const divisi = btn.dataset.divisi;
                 
+                // Populate the form with data
                 document.getElementById('editTimId').value = id;
                 document.getElementById('editNamaTim').value = nama;
                 document.getElementById('editDivisiSelect').value = divisi;
+                
+                // Open the modal
                 openModal('editTimModal');
             }
             
-            // Delete Tim
             if (e.target.closest('.delete-tim-btn')) {
-                const id = e.target.closest('.delete-tim-btn').dataset.id;
+                const id = parseInt(e.target.closest('.delete-tim-btn').dataset.id);
                 document.getElementById('deleteTimId').value = id;
                 openModal('deleteTimModal');
             }
             
-            // Edit Divisi
             if (e.target.closest('.edit-divisi-btn')) {
                 const btn = e.target.closest('.edit-divisi-btn');
                 const id = btn.dataset.id;
                 const nama = btn.dataset.nama;
                 
+                // Populate the form with data
                 document.getElementById('editDivisiId').value = id;
                 document.getElementById('editNamaDivisi').value = nama;
+                
+                // Open the modal
                 openModal('editDivisiModal');
             }
             
-            // Delete Divisi
             if (e.target.closest('.delete-divisi-btn')) {
-                const id = e.target.closest('.delete-divisi-btn').dataset.id;
+                const id = parseInt(e.target.closest('.delete-divisi-btn').dataset.id);
                 document.getElementById('deleteDivisiId').value = id;
                 openModal('deleteDivisiModal');
             }
         });
 
+        // Update counters
+        const timCountElement = document.getElementById('timCount');
+        if (timCountElement) {
+            const timRows = document.querySelectorAll('#timTableBody tr').length;
+            timCountElement.textContent = timRows;
+        }
+
+        const divisiCountElement = document.getElementById('divisiCount');
+        if (divisiCountElement) {
+            const divisiRows = document.querySelectorAll('#divisiTableBody tr').length;
+            divisiCountElement.textContent = divisiRows;
+        }
+
         console.log('=== Event Listeners Attached ===');
     });
+
+    // ==================== PAGINATION FUNCTIONS (Optional) ====================
+    function setupPagination(tableId, itemsPerPage = 10) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        const rows = table.querySelectorAll('tbody tr');
+        const totalPages = Math.ceil(rows.length / itemsPerPage);
+        
+        // Implementation depends on your pagination structure
+        console.log(`Pagination setup for ${tableId}: ${totalPages} pages`);
+    }
 </script>
 </body>
 

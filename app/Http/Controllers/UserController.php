@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    /**
+    /**p
      * Halaman utama user management
      */
 public function index()

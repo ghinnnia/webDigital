@@ -65,7 +65,7 @@
                     @foreach($karyawan as $k)
                         <option value="{{ $k->id }}"
                             {{ old('karyawan_id', $task->assigned_to) == $k->id ? 'selected' : '' }}>
-                            {{ $k->nama }} - {{ $k->divisi ?? 'Tanpa Divisi' }}
+                            <!-- {{ $k->nama }} - {{ $k->divisi ?? 'Tanpa Divisi' }} -->
                         </option>
                     @endforeach
                 </select>

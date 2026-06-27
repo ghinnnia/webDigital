@@ -16,103 +16,40 @@ use Carbon\Carbon;
 class GeneralManagerController extends Controller
 {
     /**
-     * Halaman Beranda (Dashboard Utama)
+     * Halaman Beranda
      */
     public function home()
     {
-        $totalKaryawan = User::whereIn('role', ['karyawan', 'manager_divisi'])->count();
-        $totalLayanan  = Layanan::count();
-        $totalProject  = Project::count();
-
-        $divisionsDropdown = DB::table('divisi')
-                               ->select('id', 'divisi')
-                               ->orderBy('divisi', 'asc')
-                               ->get();
-
-        return view('general_manajer.home', compact('totalKaryawan', 'totalLayanan', 'totalProject', 'divisionsDropdown'));
+        $totalKaryawan = User::where('role', 'karyawan')->count();
+        $totalLayanan = Layanan::count();
+        $totalProject = Project::count();
+        
+        return view('general_manajer.home', compact('totalKaryawan', 'totalLayanan', 'totalProject'));
     }
-
+    
     /**
-     * Get data karyawan untuk dashboard (API)
-     */
-    public function getKaryawanData(Request $request)
-    {
-        try {
-            $karyawan = User::whereIn('role', ['karyawan', 'manager_divisi'])->get();
-
-            return response()->json([
-                'success' => true,
-                'data'    => $karyawan,
-                'total'   => $karyawan->count(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Get dashboard stats untuk GM (API)
-     */
-    public function getDashboardStats(Request $request)
-    {
-        try {
-            $stats = [
-                'total_karyawan' => User::whereIn('role', ['karyawan', 'manager_divisi'])->count(),
-                'total_layanan'  => Layanan::count(),
-                'total_project'  => Project::count(),
-                'total_divisi'   => DB::table('divisi')->count(),
-                'total_manager'  => User::where('role', 'manager_divisi')->count(),
-            ];
-
-            return response()->json(['success' => true, 'data' => $stats]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * ============================================================
-     * Halaman Data Karyawan — FIXED
-     * ============================================================
+     * Halaman Data Karyawan
      */
     public function data_karyawan(Request $request)
     {
-        $search   = trim($request->get('search', ''));
-        $divisiId = $request->get('divisi', '');
-
-        // Menggunakan Eloquent model User dengan leftJoin ke tabel divisi
-        // untuk mendapatkan nama divisi dan menghindari konflik relasi.
-        $query = User::leftJoin('divisi', 'users.divisi_id', '=', 'divisi.id')
-            ->select(
-                'users.*',
-                'users.name          as nama',
-                'divisi.divisi       as nama_divisi'  // alias berbeda agar tidak konflik
-            )
-            ->whereIn('users.role', ['karyawan', 'manager_divisi']);
-
-        // Filter search: nama atau email
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('users.name',  'LIKE', "%{$search}%")
-                  ->orWhere('users.email', 'LIKE', "%{$search}%");
+        $query = User::where('role', 'karyawan')->with('divisi');
+        
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
-
-        // Filter divisi
-        if ($divisiId !== '') {
-            $query->where('users.divisi_id', $divisiId);
+        
+        if ($request->filled('divisi')) {
+            $query->where('divisi_id', $request->divisi);
         }
-
-        $karyawan = $query->orderBy('users.name', 'asc')
-                          ->paginate(10)
-                          ->withQueryString();
-
-        // Ambil semua data divisi untuk dropdown filter
-        $divisionsDropdown = Divisi::orderBy('divisi', 'asc')->get();
-
-        return view('general_manajer.data_karyawan', compact('karyawan', 'divisionsDropdown'));
+        
+        $karyawan = $query->paginate(10)->withQueryString();
+        
+        return view('general_manajer.data_karyawan', compact('karyawan'));
     }
-
+    
     /**
      * Halaman Layanan
      */
@@ -121,45 +58,46 @@ class GeneralManagerController extends Controller
         $layanan = Layanan::all();
         return view('general_manajer.data_layanan', compact('layanan'));
     }
-
+    
     /**
      * Halaman Data Project
      */
     public function data_project(Request $request)
     {
         $query = Project::with(['layanan', 'penanggungJawab']);
-
+        
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
+            $query->where(function($q) use ($request) {
                 $q->where('nama', 'like', '%' . $request->search . '%')
                   ->orWhere('deskripsi', 'like', '%' . $request->search . '%');
             });
         }
-
-        $projects  = $query->paginate(10)->withQueryString();
-        $managers  = User::where('role', 'manager_divisi')->get();
-        $karyawans = User::where('role', 'karyawan')->get();
-
+        
+        $projects = $query->paginate(10)->withQueryString();
+        
+        $managers = User::where('role', 'manager_divisi')->with('divisi')->get();
+        $karyawans = User::where('role', 'karyawan')->with('divisi')->get();
+        
         return view('general_manajer.data_project', compact('projects', 'managers', 'karyawans'));
     }
-
+    
     /**
      * Update Penanggung Jawab Project
      */
     public function update_project(Request $request, $id)
     {
         $project = Project::findOrFail($id);
-
+        
         $project->update([
-            'penanggung_jawab_id'           => $request->penanggung_jawab_id,
-            'penanggung_jawab_ids'          => $request->penanggung_jawab_ids,
-            'karyawan_penanggung_jawab_id'  => $request->karyawan_penanggung_jawab_id,
+            'penanggung_jawab_id' => $request->penanggung_jawab_id,
+            'penanggung_jawab_ids' => $request->penanggung_jawab_ids,
+            'karyawan_penanggung_jawab_id' => $request->karyawan_penanggung_jawab_id,
             'karyawan_penanggung_jawab_ids' => $request->karyawan_penanggung_jawab_ids,
         ]);
-
+        
         return response()->json(['success' => true, 'message' => 'Penanggung jawab berhasil ditetapkan!']);
     }
-
+    
     /**
      * Halaman Tim & Divisi
      */
@@ -168,33 +106,39 @@ class GeneralManagerController extends Controller
         $divisi = Divisi::with(['karyawan'])->get();
         return view('general_manajer.tim_dan_divisi', compact('divisi'));
     }
-
+    
     /**
-     * Hitung total nilai KPA dari indikator yang ADA nilainya
+     * Hitung total nilai KPA dari indikator
      */
-    private function hitungTotalNilaiKPA($penilaianList, $indikators)
-    {
-        $totalNilai = 0;
-        $totalBobot = 0;
-
-        foreach ($indikators as $indikator) {
-            $penilaian = $penilaianList->firstWhere('indikator_id', $indikator->id);
-            $nilai     = $penilaian ? $penilaian->nilai : null;
-
-            if ($indikator->aspek && $nilai !== null && $nilai >= 0) {
-                $kontribusi  = ($nilai / 100) * $indikator->bobot * ($indikator->aspek->bobot / 100);
-                $totalNilai += $kontribusi;
-                $totalBobot += $indikator->bobot * ($indikator->aspek->bobot / 100);
-            }
+    /**
+ * Hitung total nilai KPA dari indikator yang ADA nilainya
+ */
+private function hitungTotalNilaiKPA($penilaianList, $indikators)
+{
+    $totalNilai = 0;
+    $totalBobot = 0;
+    
+    foreach ($indikators as $indikator) {
+        $penilaian = $penilaianList->firstWhere('indikator_id', $indikator->id);
+        $nilai = $penilaian ? $penilaian->nilai : 0;
+        
+        // Hanya hitung jika ada nilai (termasuk nilai 0 itu tetap dihitung)
+        if ($indikator->aspek && $nilai >= 0) {
+            // Kontribusi = (Nilai/100) × Bobot Indikator × (Bobot Aspek/100)
+            $kontribusi = ($nilai / 100) * $indikator->bobot * ($indikator->aspek->bobot / 100);
+            $totalNilai += $kontribusi;
+            $totalBobot += $indikator->bobot * ($indikator->aspek->bobot / 100);
         }
-
-        if ($totalBobot > 0) {
-            $totalNilai = ($totalNilai / $totalBobot) * 100;
-        }
-
-        return min(100, round($totalNilai, 2));
     }
-
+    
+    // Normalisasi ke 100
+    if ($totalBobot > 0) {
+        $totalNilai = ($totalNilai / $totalBobot) * 100;
+    }
+    
+    return min(100, round($totalNilai, 2));
+}
+    
     /**
      * Tentukan grade berdasarkan nilai
      */
@@ -205,143 +149,188 @@ class GeneralManagerController extends Controller
         if ($nilai >= 60) return 'C';
         return 'D';
     }
-
+    
     /**
-     * Dapatkan nama divisi dari ID — pakai DB::table agar aman
+     * Dapatkan nama divisi dari ID
      */
     private function getNamaDivisi($divisiId)
     {
         if (!$divisiId) return '-';
-        $divisi = DB::table('divisi')->where('id', $divisiId)->first();
+        $divisi = Divisi::find($divisiId);
         return $divisi ? $divisi->divisi : '-';
     }
-
+    
     /**
-     * Halaman Top & Low Grade
+     * Halaman Top & Low Grade (Menggunakan data dari tabel penilaian_kpa)
      */
-    public function index(Request $request)
-    {
-        $bulan = $request->get('bulan', now()->month);
-        $tahun = $request->get('tahun', now()->year);
-
-        $indikators = IndikatorKpa::with('aspek')->where('is_active', true)->get();
-
-        // 1. DATA MANAGER DIVISI
-        $managerDivisi = User::where('role', 'manager_divisi')
+  public function index(Request $request)
+{
+    $bulan = $request->get('bulan', now()->month);
+    $tahun = $request->get('tahun', now()->year);
+    
+    // Ambil semua indikator
+    $indikators = IndikatorKpa::with('aspek')->where('is_active', true)->get();
+    
+    // ============================================================
+    // 1. DATA MANAGER DIVISI
+    // ============================================================
+    
+    $managerDivisi = User::where('role', 'manager_divisi')
+        ->where('status_kerja', 'aktif')
+        ->get();
+    
+    $managerData = [];
+    
+    foreach ($managerDivisi as $manager) {
+        // Ambil semua karyawan di divisi manager ini
+        $karyawanIds = Karyawan::where('divisi_id', $manager->divisi_id)
             ->where('status_kerja', 'aktif')
-            ->get();
-
-        $managerData = [];
-
-        foreach ($managerDivisi as $manager) {
-            $karyawanIds = Karyawan::where('divisi_id', $manager->divisi_id)
-                ->where('status_kerja', 'aktif')
-                ->pluck('user_id')
-                ->toArray();
-
-            if (empty($karyawanIds)) continue;
-
-            $penilaianList = PenilaianKpa::with('indikator.aspek')
-                ->whereIn('karyawan_id', $karyawanIds)
-                ->where('bulan', $bulan)
-                ->where('tahun', $tahun)
-                ->get()
-                ->groupBy('karyawan_id');
-
-            $totalNilaiDivisi          = 0;
-            $jumlahKaryawanDenganNilai = 0;
-
-            foreach ($karyawanIds as $karyawanId) {
-                $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
-                $nilaiKaryawan     = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
-
-                if ($nilaiKaryawan > 0) {
-                    $totalNilaiDivisi          += $nilaiKaryawan;
-                    $jumlahKaryawanDenganNilai++;
+            ->pluck('user_id')
+            ->toArray();
+        
+        if (empty($karyawanIds)) {
+            continue;
+        }
+        
+        // Ambil penilaian KPA karyawan
+        $penilaianList = PenilaianKpa::with('indikator.aspek')
+            ->whereIn('karyawan_id', $karyawanIds)
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun)
+            ->get()
+            ->groupBy('karyawan_id');
+        
+        // Hitung rata-rata nilai seluruh karyawan di divisi
+        $totalNilaiDivisi = 0;
+        $jumlahKaryawanDenganNilai = 0;
+        
+        foreach ($karyawanIds as $karyawanId) {
+            $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
+            
+            // Hitung nilai rata-rata karyawan dari semua indikator yang ADA
+            $totalNilaiKaryawan = 0;
+            $jumlahIndikator = 0;
+            
+            foreach ($indikators as $indikator) {
+                $penilaian = $karyawanPenilaian->firstWhere('indikator_id', $indikator->id);
+                $nilai = $penilaian ? $penilaian->nilai : null;
+                
+                if ($nilai !== null) {
+                    $totalNilaiKaryawan += $nilai;
+                    $jumlahIndikator++;
                 }
             }
-
-            $rataNilaiManager = $jumlahKaryawanDenganNilai > 0
-                ? round($totalNilaiDivisi / $jumlahKaryawanDenganNilai, 1)
-                : 0;
-
-            if ($rataNilaiManager > 0) {
-                $managerData[] = [
-                    'name'            => $manager->name,
-                    'divisi'          => $this->getNamaDivisi($manager->divisi_id),
-                    'nilai'           => $rataNilaiManager,
-                    'grade'           => $this->getGrade($rataNilaiManager),
-                    'jumlah_karyawan' => count($karyawanIds),
-                ];
+            
+            $nilaiKaryawan = $jumlahIndikator > 0 ? round($totalNilaiKaryawan / $jumlahIndikator, 2) : 0;
+            
+            if ($nilaiKaryawan > 0) {
+                $totalNilaiDivisi += $nilaiKaryawan;
+                $jumlahKaryawanDenganNilai++;
             }
         }
-
-        $sortedManagers = collect($managerData)->sortByDesc('nilai')->values();
-        $topManagers    = $sortedManagers->take(5);
-        $lowManagers    = $sortedManagers->reverse()->take(5)->values();
-
-        // 2. DATA DIVISI
-        $divisiList = DB::table('divisi')->get();
-        $divisiData = [];
-
-        foreach ($divisiList as $divisi) {
-            $karyawanIds = Karyawan::where('divisi_id', $divisi->id)
-                ->where('status_kerja', 'aktif')
-                ->pluck('user_id')
-                ->toArray();
-
-            if (empty($karyawanIds)) continue;
-
-            $penilaianList = PenilaianKpa::with('indikator.aspek')
-                ->whereIn('karyawan_id', $karyawanIds)
-                ->where('bulan', $bulan)
-                ->where('tahun', $tahun)
-                ->get()
-                ->groupBy('karyawan_id');
-
-            $totalNilaiDivisi          = 0;
-            $jumlahKaryawanDenganNilai = 0;
-
-            foreach ($karyawanIds as $karyawanId) {
-                $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
-                $nilaiKaryawan     = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
-
-                if ($nilaiKaryawan > 0) {
-                    $totalNilaiDivisi          += $nilaiKaryawan;
-                    $jumlahKaryawanDenganNilai++;
-                }
-            }
-
-            $rataNilaiDivisi = $jumlahKaryawanDenganNilai > 0
-                ? round($totalNilaiDivisi / $jumlahKaryawanDenganNilai, 1)
-                : 0;
-
-            if ($rataNilaiDivisi > 0) {
-                $divisiData[] = [
-                    'nama'            => $divisi->divisi,
-                    'jumlah_karyawan' => count($karyawanIds),
-                    'nilai_rata_rata' => $rataNilaiDivisi,
-                    'grade'           => $this->getGrade($rataNilaiDivisi),
-                ];
-            }
+        
+        $rataNilaiManager = $jumlahKaryawanDenganNilai > 0 
+            ? round($totalNilaiDivisi / $jumlahKaryawanDenganNilai, 1)
+            : 0;
+        
+        if ($rataNilaiManager > 0) {
+            $managerData[] = [
+                'name' => $manager->name,
+                'divisi' => $this->getNamaDivisi($manager->divisi_id),
+                'nilai' => $rataNilaiManager,
+                'grade' => $this->getGrade($rataNilaiManager),
+                'jumlah_karyawan' => count($karyawanIds),
+            ];
         }
-
-        $sortedDivisi = collect($divisiData)->sortByDesc('nilai_rata_rata')->values();
-        $topDivisi    = $sortedDivisi->take(5);
-        $lowDivisi    = $sortedDivisi->reverse()->take(5)->values();
-
-        $statistik = [
-            'total_manager'    => User::where('role', 'manager_divisi')->count(),
-            'total_divisi'     => DB::table('divisi')->count(),
-            'rata_rata_manager' => $managerData ? round(collect($managerData)->avg('nilai'), 1) : 0,
-            'rata_rata_divisi'  => $divisiData  ? round(collect($divisiData)->avg('nilai_rata_rata'), 1) : 0,
-        ];
-
-        return view('general_manajer.top_low_grade', compact(
-            'topManagers', 'lowManagers', 'topDivisi', 'lowDivisi', 'statistik', 'bulan', 'tahun'
-        ));
     }
-
+    
+    // Urutkan manager
+    $sortedManagers = collect($managerData)->sortByDesc('nilai')->values();
+    $topManagers = $sortedManagers->take(5);
+    $lowManagers = $sortedManagers->reverse()->take(5)->values();
+    
+    // ============================================================
+    // 2. DATA DIVISI
+    // ============================================================
+    
+    $divisiList = Divisi::all();
+    $divisiData = [];
+    
+    foreach ($divisiList as $divisi) {
+        $karyawanIds = Karyawan::where('divisi_id', $divisi->id)
+            ->where('status_kerja', 'aktif')
+            ->pluck('user_id')
+            ->toArray();
+        
+        if (empty($karyawanIds)) {
+            continue;
+        }
+        
+        $penilaianList = PenilaianKpa::with('indikator.aspek')
+            ->whereIn('karyawan_id', $karyawanIds)
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun)
+            ->get()
+            ->groupBy('karyawan_id');
+        
+        $totalNilaiDivisi = 0;
+        $jumlahKaryawanDenganNilai = 0;
+        
+        foreach ($karyawanIds as $karyawanId) {
+            $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
+            
+            $totalNilaiKaryawan = 0;
+            $jumlahIndikator = 0;
+            
+            foreach ($indikators as $indikator) {
+                $penilaian = $karyawanPenilaian->firstWhere('indikator_id', $indikator->id);
+                $nilai = $penilaian ? $penilaian->nilai : null;
+                
+                if ($nilai !== null) {
+                    $totalNilaiKaryawan += $nilai;
+                    $jumlahIndikator++;
+                }
+            }
+            
+            $nilaiKaryawan = $jumlahIndikator > 0 ? round($totalNilaiKaryawan / $jumlahIndikator, 2) : 0;
+            
+            if ($nilaiKaryawan > 0) {
+                $totalNilaiDivisi += $nilaiKaryawan;
+                $jumlahKaryawanDenganNilai++;
+            }
+        }
+        
+        $rataNilaiDivisi = $jumlahKaryawanDenganNilai > 0 
+            ? round($totalNilaiDivisi / $jumlahKaryawanDenganNilai, 1)
+            : 0;
+        
+        if ($rataNilaiDivisi > 0) {
+            $divisiData[] = [
+                'nama' => $divisi->divisi,
+                'jumlah_karyawan' => count($karyawanIds),
+                'nilai_rata_rata' => $rataNilaiDivisi,
+                'grade' => $this->getGrade($rataNilaiDivisi),
+            ];
+        }
+    }
+    
+    $sortedDivisi = collect($divisiData)->sortByDesc('nilai_rata_rata')->values();
+    $topDivisi = $sortedDivisi->take(5);
+    $lowDivisi = $sortedDivisi->reverse()->take(5)->values();
+    
+    // Statistik
+    $statistik = [
+        'total_manager' => User::where('role', 'manager_divisi')->count(),
+        'total_divisi' => Divisi::count(),
+        'rata_rata_manager' => $managerData ? round(collect($managerData)->avg('nilai'), 1) : 0,
+        'rata_rata_divisi' => $divisiData ? round(collect($divisiData)->avg('nilai_rata_rata'), 1) : 0,
+    ];
+    
+    return view('general_manajer.top_low_grade', compact(
+        'topManagers', 'lowManagers', 'topDivisi', 'lowDivisi', 'statistik', 'bulan', 'tahun'
+    ));
+}
+    
     /**
      * API untuk ranking manager
      */
@@ -349,60 +338,63 @@ class GeneralManagerController extends Controller
     {
         $bulan = $request->get('bulan', now()->month);
         $tahun = $request->get('tahun', now()->year);
-
-        $indikators    = IndikatorKpa::with('aspek')->where('is_active', true)->get();
-        $managerDivisi = User::where('role', 'manager_divisi')->where('status_kerja', 'aktif')->get();
-
+        
+        $indikators = IndikatorKpa::with('aspek')->where('is_active', true)->get();
+        
+        $managerDivisi = User::where('role', 'manager_divisi')
+            ->where('status_kerja', 'aktif')
+            ->get();
+        
         $result = [];
-
+        
         foreach ($managerDivisi as $manager) {
             $karyawanIds = Karyawan::where('divisi_id', $manager->divisi_id)
                 ->where('status_kerja', 'aktif')
                 ->pluck('user_id')
                 ->toArray();
-
-            if (empty($karyawanIds)) continue;
-
+            
+            if (empty($karyawanIds)) {
+                continue;
+            }
+            
             $penilaianList = PenilaianKpa::with('indikator.aspek')
                 ->whereIn('karyawan_id', $karyawanIds)
                 ->where('bulan', $bulan)
                 ->where('tahun', $tahun)
                 ->get()
                 ->groupBy('karyawan_id');
-
+            
             $totalNilaiDivisi = 0;
-            $jumlahKaryawan   = 0;
-
+            $jumlahKaryawan = 0;
+            
             foreach ($karyawanIds as $karyawanId) {
                 $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
-                $nilaiKaryawan     = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
-
+                $nilaiKaryawan = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
+                
                 if ($nilaiKaryawan > 0) {
                     $totalNilaiDivisi += $nilaiKaryawan;
                     $jumlahKaryawan++;
                 }
             }
-
+            
             $rataNilai = $jumlahKaryawan > 0 ? $totalNilaiDivisi / $jumlahKaryawan : 0;
-
-            if ($rataNilai > 0) {
-                $result[] = [
-                    'id'              => $manager->id,
-                    'name'            => $manager->name,
-                    'divisi'          => $this->getNamaDivisi($manager->divisi_id),
-                    'nilai'           => round($rataNilai, 1),
-                    'grade'           => $this->getGrade($rataNilai),
-                    'jumlah_karyawan' => count($karyawanIds),
-                ];
-            }
+            
+            $result[] = [
+                'id' => $manager->id,
+                'name' => $manager->name,
+                'divisi' => $this->getNamaDivisi($manager->divisi_id),
+                'nilai' => round($rataNilai, 1),
+                'grade' => $this->getGrade($rataNilai),
+                'jumlah_karyawan' => count($karyawanIds),
+            ];
         }
-
+        
         return response()->json([
             'success' => true,
-            'data'    => collect($result)->sortByDesc('nilai')->values(),
+            'data' => collect($result)->sortByDesc('nilai')->values(),
         ]);
     }
-
+    
     /**
      * API untuk ranking divisi
      */
@@ -410,56 +402,55 @@ class GeneralManagerController extends Controller
     {
         $bulan = $request->get('bulan', now()->month);
         $tahun = $request->get('tahun', now()->year);
-
+        
         $indikators = IndikatorKpa::with('aspek')->where('is_active', true)->get();
-        $divisiList = DB::table('divisi')->get();
-
+        $divisiList = Divisi::all();
         $result = [];
-
+        
         foreach ($divisiList as $divisi) {
             $karyawanIds = Karyawan::where('divisi_id', $divisi->id)
                 ->where('status_kerja', 'aktif')
                 ->pluck('user_id')
                 ->toArray();
-
-            if (empty($karyawanIds)) continue;
-
+            
+            if (empty($karyawanIds)) {
+                continue;
+            }
+            
             $penilaianList = PenilaianKpa::with('indikator.aspek')
                 ->whereIn('karyawan_id', $karyawanIds)
                 ->where('bulan', $bulan)
                 ->where('tahun', $tahun)
                 ->get()
                 ->groupBy('karyawan_id');
-
-            $totalNilai     = 0;
+            
+            $totalNilai = 0;
             $jumlahKaryawan = 0;
-
+            
             foreach ($karyawanIds as $karyawanId) {
                 $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
-                $nilaiKaryawan     = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
-
+                $nilaiKaryawan = $this->hitungTotalNilaiKPA($karyawanPenilaian, $indikators);
+                
                 if ($nilaiKaryawan > 0) {
                     $totalNilai += $nilaiKaryawan;
                     $jumlahKaryawan++;
                 }
             }
-
+            
             $rataNilai = $jumlahKaryawan > 0 ? $totalNilai / $jumlahKaryawan : 0;
-
-            if ($rataNilai > 0) {
-                $result[] = [
-                    'id'              => $divisi->id,
-                    'nama'            => $divisi->divisi,
-                    'nilai_rata_rata' => round($rataNilai, 1),
-                    'grade'           => $this->getGrade($rataNilai),
-                    'jumlah_karyawan' => count($karyawanIds),
-                ];
-            }
+            
+            $result[] = [
+                'id' => $divisi->id,
+                'nama' => $divisi->divisi,
+                'nilai_rata_rata' => round($rataNilai, 1),
+                'grade' => $this->getGrade($rataNilai),
+                'jumlah_karyawan' => count($karyawanIds),
+            ];
         }
-
+        
         return response()->json([
             'success' => true,
-            'data'    => collect($result)->sortByDesc('nilai_rata_rata')->values(),
+            'data' => collect($result)->sortByDesc('nilai_rata_rata')->values(),
         ]);
     }
 }

@@ -206,17 +206,41 @@ class PayrollCalculator
      */
     protected function ambilNilaiKPA($userId)
     {
-        $kpa = DB::table('kpa')
-            ->where('karyawan_id', $userId)
-            ->where('bulan', $this->period->bulan)
-            ->where('tahun', $this->period->tahun)
-            ->first();
-        
-        if ($kpa) {
-            // Prioritaskan nilai_akhir, kalau tidak ada pakai nilai_rata_rata
-            return (float) ($kpa->nilai_akhir ?? $kpa->nilai_rata_rata ?? 75);
+        // Mode aman: KPA legacy (tabel `kpa`) bisa saja tidak ada,
+        // jadi lakukan fallback ke struktur baru (penilaian_kpa).
+
+        // 1) Coba legacy table `kpa`
+        $legacyNilai = null;
+        if (\Schema::hasTable('kpa')) {
+            $kpa = DB::table('kpa')
+                ->where('karyawan_id', $userId)
+                ->where('bulan', $this->period->bulan)
+                ->where('tahun', $this->period->tahun)
+                ->first();
+
+            if ($kpa) {
+                $legacyNilai = (float) ($kpa->nilai_akhir ?? $kpa->nilai_rata_rata ?? null);
+            }
         }
-        
+
+        if (is_numeric($legacyNilai)) {
+            return (float) $legacyNilai;
+        }
+
+        // 2) Fallback: tabel struktur baru `penilaian_kpa`
+        // Ambil nilai rata-rata untuk indikator yang sudah dinilai dalam periode.
+        if (\Schema::hasTable('penilaian_kpa')) {
+            $avg = DB::table('penilaian_kpa')
+                ->where('karyawan_id', $userId)
+                ->where('bulan', $this->period->bulan)
+                ->where('tahun', $this->period->tahun)
+                ->avg('nilai');
+
+            if (is_numeric($avg)) {
+                return (float) $avg;
+            }
+        }
+
         // Default nilai 75 jika belum ada KPA
         return 75;
     }

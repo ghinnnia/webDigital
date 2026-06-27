@@ -19,11 +19,8 @@ class ManagerDivisiController extends Controller
     {
         $user = auth()->user();
         
-        // 1. Ambil nama divisi dari manager yang sedang login
-        $divisi = $user->divisi_id ? Divisi::find($user->divisi_id) : null;
-        $namaDivisi = $divisi ? $divisi->divisi : null;
-
-        if (!$user->divisi_id && !$namaDivisi) {
+        // Cek apakah manager punya divisi
+        if (!$user->divisi_id) {
             return view('manager_divisi.top_low_grade', [
                 'topKaryawan' => collect([]),
                 'lowKaryawan' => collect([]),
@@ -41,43 +38,16 @@ class ManagerDivisiController extends Controller
         
         $bulan = $request->get('bulan', now()->month);
         $tahun = $request->get('tahun', now()->year);
-        $namaDivisiTeks = $namaDivisi ?? 'Divisi Anda';
         
-        // 2. Ambil User ID bawahan (Karyawan) secara langsung dari tabel Users dan Karyawan
-        // Query ini digabung agar jika divisi_id NULL tapi teks 'divisi'-nya sesuai, datanya tetap masuk.
-        $karyawanIds = User::where('role', 'karyawan')
-            ->where('id', '!=', $user->id) // Proteksi agar manager tidak masuk list
-            ->whereHas('karyawan', function($query) use ($user, $namaDivisi) {
-                $query->where('status_kerja', 'aktif')
-                      ->where(function($q) use ($user, $namaDivisi) {
-                          if ($user->divisi_id) {
-                              $q->where('divisi_id', $user->divisi_id);
-                          }
-                          if ($namaDivisi) {
-                              $q->orWhere('divisi', 'like', '%' . $namaDivisi . '%');
-                          }
-                      });
-            })
-            ->pluck('id')
+        // Ambil divisi
+        $divisi = Divisi::find($user->divisi_id);
+        $namaDivisi = $divisi ? $divisi->divisi : 'Divisi Anda';
+        
+        // Ambil semua karyawan di divisi manager
+        $karyawanIds = Karyawan::where('divisi_id', $user->divisi_id)
+            ->where('status_kerja', 'aktif')
+            ->pluck('user_id')
             ->toArray();
-        
-        // Fallback Query: Jika relasi di atas kosong karena masalah setup model Eloquent,
-        // Ambil mentah dari table karyawan berdasarkan user_id.
-        if (empty($karyawanIds)) {
-            $karyawanIds = Karyawan::where('status_kerja', 'aktif')
-                ->where('user_id', '!=', $user->id)
-                ->where(function($query) use ($user, $namaDivisi) {
-                    if ($user->divisi_id) {
-                        $query->where('divisi_id', $user->divisi_id);
-                    }
-                    if ($namaDivisi) {
-                        $query->orWhere('divisi', 'like', '%' . $namaDivisi . '%');
-                    }
-                })
-                ->pluck('user_id')
-                ->filter()
-                ->toArray();
-        }
         
         if (empty($karyawanIds)) {
             return view('manager_divisi.top_low_grade', [
@@ -89,33 +59,23 @@ class ManagerDivisiController extends Controller
                     'rata_rata_nilai' => 0,
                     'total_tugas' => 0,
                 ],
-                'namaDivisi' => $namaDivisiTeks,
+                'namaDivisi' => $namaDivisi,
                 'bulan' => $bulan,
                 'tahun' => $tahun,
             ]);
         }
         
-        // 3. Ambil data User lengkap untuk nama & role display
-        $users = User::whereIn('id', $karyawanIds)->get()->keyBy('id');
-        
-        // ========== AMBIL DATA KPA DARI HR ==========
+        // ========== AMBIL DATA KPA DARI HR (tabel penilaian_kpa) ==========
+        // Ambil semua indikator untuk menghitung total nilai
         $indikators = IndikatorKpa::with('aspek')->where('is_active', true)->get();
         
-        // Antisipasi: Query Penilaian menggunakan user_id atau karyawan_id 
-        // Kita cari yang COCOK dengan array $karyawanIds di kedua kemungkinan nama kolomnya
+        // Ambil penilaian per karyawan
         $penilaianList = PenilaianKpa::with('indikator.aspek')
-            ->where(function($q) use ($karyawanIds) {
-                $q->whereIn('karyawan_id', $karyawanIds)
-                  ->orWhereIn('user_id', $karyawanIds);
-            })
+            ->whereIn('karyawan_id', $karyawanIds)
             ->where('bulan', $bulan)
             ->where('tahun', $tahun)
-            ->get();
-            
-        // Grouping yang fleksibel (berdasarkan kolom mana yang terisi data id-nya)
-        $penilaianGrouped = $penilaianList->groupBy(function($item) {
-            return $item->karyawan_id ?? $item->user_id;
-        });
+            ->get()
+            ->groupBy('karyawan_id');
         
         // ========== AMBIL DATA TUGAS ==========
         $tasks = Task::whereIn('assigned_to', $karyawanIds)
@@ -123,23 +83,32 @@ class ManagerDivisiController extends Controller
             ->whereMonth('created_at', $bulan)
             ->get();
         
-        $taskCompleted = $tasks->where('status', 'selesai')->groupBy('assigned_to')->map(fn($t) => $t->count());
-        $totalTasks = $tasks->groupBy('assigned_to')->map(fn($t) => $t->count());
+        // Hitung tugas selesai per karyawan
+        $taskCompleted = Task::whereIn('assigned_to', $karyawanIds)
+            ->whereYear('created_at', $tahun)
+            ->whereMonth('created_at', $bulan)
+            ->where('status', 'selesai')
+            ->get()
+            ->groupBy('assigned_to')
+            ->map(fn($t) => $t->count());
         
-        // Ambil data target kuantitas (antisipasi kolom karyawan_id / user_id)
-        $targetKuantitasRaw = TargetKuantitas::where(function($q) use ($karyawanIds) {
-                $q->whereIn('karyawan_id', $karyawanIds)
-                  ->orWhereIn('user_id', $karyawanIds);
-            })
+        $totalTasks = $tasks->groupBy('assigned_to')
+            ->map(fn($t) => $t->count());
+        
+        // Ambil data target kuantitas
+        $targetKuantitas = TargetKuantitas::whereIn('karyawan_id', $karyawanIds)
             ->where('bulan', $bulan)
             ->where('tahun', $tahun)
-            ->get();
-
-        $targetKuantitas = $targetKuantitasRaw->keyBy(function($item) {
-            return $item->karyawan_id ?? $item->user_id;
-        });
+            ->get()
+            ->keyBy('karyawan_id');
         
-        // Hitung nilai akhir per karyawan
+        // Ambil data users
+        $users = User::whereIn('id', $karyawanIds)
+            ->where('role', 'karyawan')
+            ->get()
+            ->keyBy('id');
+        
+        // Hitung per karyawan
         $dataKaryawan = collect();
         $gradeCount = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0];
         $totalNilai = 0;
@@ -148,15 +117,16 @@ class ManagerDivisiController extends Controller
             $userData = $users[$karyawanId] ?? null;
             if (!$userData) continue;
             
-            // Hitung total nilai KPA dari semua indikator jika ada
+            // Hitung total nilai KPA dari semua indikator
             $totalNilaiKPA = 0;
-            $karyawanPenilaian = $penilaianGrouped[$karyawanId] ?? collect();
+            $karyawanPenilaian = $penilaianList[$karyawanId] ?? collect();
             
             foreach ($indikators as $indikator) {
                 $penilaian = $karyawanPenilaian->firstWhere('indikator_id', $indikator->id);
                 $nilai = $penilaian ? $penilaian->nilai : 0;
                 
                 if ($indikator->aspek && $nilai > 0) {
+                    // Kontribusi = (Nilai/100) × Bobot Indikator × (Bobot Aspek/100)
                     $kontribusi = ($nilai / 100) * $indikator->bobot * ($indikator->aspek->bobot / 100);
                     $totalNilaiKPA += $kontribusi;
                 }
@@ -170,12 +140,12 @@ class ManagerDivisiController extends Controller
                 $nilaiTarget = min(100, ($tk->realisasi / $tk->target) * 100);
             }
             
-            // Nilai Tugas
+            // Nilai Tugas (berdasarkan penyelesaian)
             $totalTugas = $totalTasks[$karyawanId] ?? 0;
             $tugasSelesai = $taskCompleted[$karyawanId] ?? 0;
             $nilaiTugas = $totalTugas > 0 ? ($tugasSelesai / $totalTugas) * 100 : 100;
             
-            // Formula Nilai akhir (70% KPA, 30% Tugas)
+            // Nilai akhir (70% KPA, 30% Tugas)
             if ($totalNilaiKPA > 0 && $nilaiTugas > 0) {
                 $nilaiAkhir = ($totalNilaiKPA * 0.7) + ($nilaiTugas * 0.3);
             } elseif ($totalNilaiKPA > 0) {
@@ -201,12 +171,14 @@ class ManagerDivisiController extends Controller
             ]);
         }
         
-        // Urutkan berdasarkan nilai tertinggi ke terendah
+        // Urutkan berdasarkan nilai
         $sortedData = $dataKaryawan->sortByDesc('nilai')->values();
         
+        // Ambil TOP 5 dan LOW 5
         $topKaryawan = $sortedData->take(5);
         $lowKaryawan = $sortedData->reverse()->take(5)->values();
         
+        // Statistik
         $totalKaryawan = $dataKaryawan->count();
         $rataRata = $totalKaryawan > 0 ? $totalNilai / $totalKaryawan : 0;
         
@@ -231,7 +203,7 @@ class ManagerDivisiController extends Controller
             'topKaryawan',
             'lowKaryawan',
             'statistik',
-            'namaDivisiTeks',
+            'namaDivisi',
             'bulan',
             'tahun'
         ));

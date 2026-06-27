@@ -50,15 +50,15 @@ use App\Http\Controllers\DivisiController;
 use App\Http\Controllers\TimController;
 use App\Http\Controllers\GajiTemplateController;
 use App\Models\GajiTemplate;
-use App\Http\Controllers\ManagerDivisi\TopLowGradeController;
-// use App\Http\Controllers\LemburController;
-use App\Http\Controllers\Finance\OvertimeSettingController;
-use App\Http\Controllers\Karyawan\LemburController as KaryawanLemburController;
-use App\Http\Controllers\ManagerDivisi\LemburController as ManagerLemburController;
-use App\Http\Controllers\Finance\LemburFinanceController;
-use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
+use App\Http\Controllers\LemburController;
 
 
+
+/*
+|--------------------------------------------------------------------------
+| Helper Functions
+|--------------------------------------------------------------------------
+*/
 
 if (!function_exists('redirectToRolePage')) {
     function redirectToRolePage($user)
@@ -144,9 +144,7 @@ Route::get('/hr/kpa/preview-nilai', [HRKPAController::class, 'previewNilai'])->n
 // Hapus aspek & indikator
 Route::delete('/kpa/aspek/{id}', [HRKPAController::class, 'aspekDestroy'])->name('hr.kpa.aspek.destroy');
 Route::delete('/kpa/indikator/{id}', [HRKPAController::class, 'indikatorDestroy'])->name('hr.kpa.indikator.destroy');
-// Tunjangan
-Route::get('/tunjangan', [HRKPAController::class, 'tunjanganIndex'])->name('hr.tunjangan.index');
-Route::post('/tunjangan', [HRKPAController::class, 'simpanTunjangan'])->name('hr.tunjangan.store');
+// Tunjangan - route asli ada di bawah (TunjanganHrController)
     
 // ========== ABSENSI HR ==========
 Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(function () {
@@ -162,11 +160,13 @@ Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(functio
 });
 
 // ========== TUNJANGAN HR ==========
-Route::get('/tunjangan', [TunjanganHrController::class, 'index'])->name('hr.tunjangan.index');
-Route::post('/tunjangan', [TunjanganHrController::class, 'store'])->name('hr.tunjangan.store');
-Route::post('/tunjangan/add', [TunjanganHrController::class, 'addTunjangan'])->name('hr.tunjangan.add');
-Route::put('/tunjangan/{id}', [TunjanganHrController::class, 'update'])->name('hr.tunjangan.update');
-Route::delete('/tunjangan/{id}', [TunjanganHrController::class, 'destroy'])->name('hr.tunjangan.destroy');
+Route::middleware(['auth', 'role:hr,admin'])->prefix('hr')->name('hr.')->group(function () {
+    Route::get('/tunjangan', [TunjanganHrController::class, 'index'])->name('tunjangan.index');
+    Route::post('/tunjangan', [TunjanganHrController::class, 'store'])->name('tunjangan.store');
+    Route::post('/tunjangan/add', [TunjanganHrController::class, 'addTunjangan'])->name('tunjangan.add');
+    Route::put('/tunjangan/{id}', [TunjanganHrController::class, 'updateTunjangan'])->name('tunjangan.update');
+    Route::delete('/tunjangan/{id}', [TunjanganHrController::class, 'destroyTunjangan'])->name('tunjangan.destroy');
+});
 
 // Routes untuk Gaji Template
 Route::middleware(['auth'])->prefix('hr/gaji-template')->group(function () {
@@ -237,77 +237,33 @@ Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(functio
     Route::post('/gaji/apply-template', [GajiHrController::class, 'applyTemplate'])->name('gaji.apply-template');
     Route::post('/gaji/kirim-ke-finance', [GajiHrController::class, 'kirimKeFinance'])->name('gaji.kirim-ke-finance');
 });
+// ========== ROUTE LEMBUR ==========
 
-// ============================================
-// ROUTE KARYAWAN - Lembur Mandiri
-// ============================================
+// Untuk Karyawan
 Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        // Menggunakan KaryawanLemburController hasil dari alias di atas
-        Route::get('/', [KaryawanLemburController::class, 'index'])->name('index');
-        Route::get('/create', [KaryawanLemburController::class, 'create'])->name('create');
-        Route::post('/', [KaryawanLemburController::class, 'store'])->name('store');
-        Route::post('/terima-perintah/{id}', [KaryawanLemburController::class, 'terimaPerintah'])->name('terima_perintah');
-    });
-}); 
-
-// ============================================
-// ROUTE MANAGER DIVISI - Approve & Perintah Lembur
-// ============================================
-
-Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
-    Route::prefix('lembur')->name('lembur.')->group(function () {
-        // Menggunakan KaryawanLemburController hasil dari alias di atas
-        Route::get('/', [KaryawanLemburController::class, 'index'])->name('index');
-        Route::get('/create', [KaryawanLemburController::class, 'create'])->name('create');
-        Route::post('/', [KaryawanLemburController::class, 'store'])->name('store');
-        Route::post('/terima-perintah/{id}', [KaryawanLemburController::class, 'terimaPerintah'])->name('terima_perintah');
+        Route::get('/', [LemburController::class, 'index'])->name('index');
+        Route::get('/create', [LemburController::class, 'create'])->name('create');
+        Route::post('/', [LemburController::class, 'store'])->name('store');
     });
 });
 
-
-
-// ============================================
-// ROUTE MANAGER DIVISI - Approve & Perintah Lembur
-// ============================================
-Route::middleware(['auth', 'role:manager_divisi'])->prefix('manager-divisi')->name('manager_divisi.')->group(function () {
-    
-    // LEMBUR (Approve & Perintah)
+// Untuk HR 
+Route::middleware(['auth', 'role:hr'])->prefix('hr')->name('hr.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        // Menggunakan ManagerLemburController hasil dari alias di atas
-        // Route Utama & Kalkulasi
-        Route::get('/', [ManagerLemburController::class, 'index'])->name('index');
-        Route::post('/order', [ManagerLemburController::class, 'order'])->name('order');
-        Route::post('/calculate', [ManagerLemburController::class, 'calculate'])->name('calculate');
-        
-        // Route Manajemen Data (Edit & Simpan Perubahan Perintah)
-        Route::post('/{id}/update', [ManagerLemburController::class, 'update'])->name('update'); 
-
-        // Route Aksi Persetujuan/Pembatalan
-        Route::post('/{id}/approve', [ManagerLemburController::class, 'approve'])->name('approve');
-        Route::post('/{id}/reject', [ManagerLemburController::class, 'reject'])->name('reject');
-        Route::post('/{id}/cancel', [ManagerLemburController::class, 'cancel'])->name('cancel');
-        
-        // Route Detail (Diletakkan paling bawah agar parameter {id} tidak menangkap teks 'order' / 'calculate')
-        Route::get('/{id}', [ManagerLemburController::class, 'show'])->name('show');
+        Route::get('/', [LemburController::class, 'hrIndex'])->name('index');
+        Route::post('/{id}/approve', [LemburController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [LemburController::class, 'reject'])->name('reject');
     });
 });
 
-// ============================================
-// ROUTE FINANCE - Rekap & Pembayaran Lembur
-// ============================================
+// Untuk Finance
 Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')->group(function () {
     Route::prefix('lembur')->name('lembur.')->group(function () {
-        // Menggunakan FinanceLemburController hasil dari alias di atas
-        Route::get('/', [FinanceLemburController::class, 'financeIndex'])->name('index');
-        Route::post('/mark-paid', [FinanceLemburController::class, 'markAsPaid'])->name('mark-paid');
+        Route::get('/', [LemburController::class, 'financeIndex'])->name('index');
+        Route::post('/mark-paid', [LemburController::class, 'markAsPaid'])->name('mark-paid');
+        Route::post('/set-upah', [LemburController::class, 'setUpahLembur'])->name('set-upah');
     });
-    
-    // ROUTE FINANCE - Setting Upah Lembur
-    Route::get('/overtime-settings', [OvertimeSettingController::class, 'index'])->name('overtime-settings.index');
-    Route::put('/overtime-settings/default', [OvertimeSettingController::class, 'updateDefault'])->name('overtime-settings.update-default');
-    Route::put('/overtime-settings/division/{divisionId}', [OvertimeSettingController::class, 'updateDivision'])->name('overtime-settings.update-division');
-    Route::delete('/overtime-settings/division/{divisionId}', [OvertimeSettingController::class, 'resetDivision'])->name('overtime-settings.reset-division');
 });
 
 // Di dalam route api group
@@ -419,48 +375,12 @@ Route::post('/notifications/read-all', function() {
     return response()->json(['success' => true]);
 })->name('api.notifications.read-all');
 
-
-// notifikasi di karyawan
-
-
-// ROUTE KARYAWAN TUGAS
-Route::prefix('karyawan')->middleware(['auth'])->group(function () {
-    Route::get('/tugas', [TaskController::class, 'karyawanTasks'])->name('karyawan.tugas.index');
-    Route::get('/tugas/{id}', [TaskController::class, 'karyawanShow'])->name('karyawan.tugas.show');
-    Route::post('/tugas/{id}/upload', [TaskController::class, 'uploadTaskFile'])->name('karyawan.tugas.upload');
-    Route::post('/tugas/{id}/terima', [TaskController::class, 'terimaTugas'])->name('karyawan.tugas.terima');
-});
-
-// ROUTE NOTIFICATIONS
-Route::prefix('notifications')->middleware(['auth'])->group(function () {
-    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-});
-
-// API ROUTES
-Route::prefix('api')->middleware(['auth'])->group(function () {
-    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
-    Route::get('/notifications/count', function () {
-        return response()->json([
-            'count' => \App\Models\Notification::where('user_id', auth()->id())->count()
-        ]);
-    });
-});
-
 // Route untuk karyawan - slip gaji
 Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan.')->group(function () {
     Route::prefix('slip-gaji')->name('slip-gaji.')->group(function () {
         Route::get('/', [App\Http\Controllers\Karyawan\SlipGajiController::class, 'index'])->name('index');
         Route::get('/{id}', [App\Http\Controllers\Karyawan\SlipGajiController::class, 'show'])->name('show');
     });
-});
-Route::prefix('notifications')->group(function () {
-    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 // ========== PENGUMUMAN (Admin & HR - Satu Route) ==========
@@ -475,65 +395,28 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/admin/karyawan/get-gaji/{userId}', [AdminKaryawanController::class, 'getGajiTerbaru']);
 
-// Route untuk TTD Digital (Admin/HR)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::prefix('ttd')->name('ttd.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\TtdSettingController::class, 'index'])->name('index');
-        Route::post('/store', [App\Http\Controllers\Admin\TtdSettingController::class, 'store'])->name('store');
-        Route::delete('/{id}', [App\Http\Controllers\Admin\TtdSettingController::class, 'destroy'])->name('destroy');
-    });
-});
-
-// ============================================
-// ROUTE FINANCE
-// ============================================
+// ========== FINANCE - PENGGAJIAN ==========
 Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')->group(function () {
     
-    // ============================================
-    // PAYROLL (Penggajian)
-    // ============================================
-    Route::prefix('payroll')->name('payroll.')->group(function () {
-        
-        // 1. ROUTE STATIS
-        Route::get('/', [PayrollController::class, 'index'])->name('index');
-        Route::get('/create', [PayrollController::class, 'create'])->name('create');
-        Route::post('/', [PayrollController::class, 'store'])->name('store');
-        
-        // 2. ROUTE DATA DARI HR
-        Route::get('/dari-hr', [PayrollController::class, 'daftarDariHR'])->name('dari-hr');
-        Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
-        
-        // 3. ROUTE SETTING OVERTIME
-        Route::prefix('overtime-settings')->name('overtime-settings.')->group(function () {
-            Route::get('/', [OvertimeSettingController::class, 'index'])->name('index');
-            Route::put('/default', [OvertimeSettingController::class, 'updateDefault'])->name('update-default');
-            Route::put('/division/{divisionId}', [OvertimeSettingController::class, 'updateDivision'])->name('update-division');
-            Route::delete('/division/{divisionId}', [OvertimeSettingController::class, 'resetDivision'])->name('reset-division');
-        });
-        
-        // 4. ROUTE WILDCARD
-        Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
-        Route::get('/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('slip');
-        Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');
-        Route::post('/{id}/approve', [PayrollController::class, 'approve'])->name('approve');
-        Route::post('/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('paid');
-        Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
-        Route::post('/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('send-notification-mass');
-        Route::post('/{periodId}/send-email/{detailId}', [PayrollController::class, 'sendSlipToEmail'])->name('send-email');
-        Route::get('/{id}/export', [PayrollController::class, 'export'])->name('export');
-        Route::get('/settings', [PayrollController::class, 'settings'])->name('settings');
-        Route::post('/settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
-    });
+    Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+    Route::get('/payroll/create', [PayrollController::class, 'create'])->name('payroll.create');
+    Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
+    Route::get('/payroll/{id}', [PayrollController::class, 'show'])->name('payroll.show');
+    Route::get('/payroll/{periodId}/slip/{detailId}', [PayrollController::class, 'slip'])->name('payroll.slip');
+    // Di dalam group finance payroll
+Route::post('/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('send-notification');
+    // TAMBAHKAN ROUTE INI
+    Route::post('/payroll/{id}/hitung-potongan', [PayrollController::class, 'hitungSemuaPotongan'])->name('payroll.hitung-potongan');
     
-    // ============================================
-    // LEMBUR (Monitoring Lembur untuk Finance)
-    // ============================================
-    Route::prefix('lembur')->name('lembur.')->group(function () {
-        Route::get('/', [LemburFinanceController::class, 'index'])->name('index');
-        Route::post('/mark-paid', [LemburFinanceController::class, 'markAsPaid'])->name('mark-paid');
-    });
+    // Ambil data dari HR
+    Route::get('/payroll-dari-hr', [PayrollController::class, 'daftarDariHR'])->name('payroll.dari-hr');
+    Route::post('/payroll-ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('payroll.ambil-dari-hr');
     
+    // Approve & Payment
+    Route::post('/payroll/{id}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+    Route::post('/payroll/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('payroll.paid');
 });
+
 // Routes for getting lists (no auth required for these specific endpoints)
 Route::get('/roles/list', [RoleController::class, 'list'])->name('roles.list');
 Route::get('/divisis/list', [DivisiController::class, 'list'])->name('divisis.list');
@@ -545,6 +428,10 @@ Route::middleware(['auth'])->prefix('admin/karyawan')->group(function () {
     Route::put('/update/{id}', [AdminKaryawanController::class, 'update'])->name('admin.karyawan.update');
     Route::delete('/delete/{id}', [AdminKaryawanController::class, 'destroy'])->name('admin.karyawan.delete');
     Route::get('/get/{id}', [AdminKaryawanController::class, 'getKaryawan'])->name('admin.karyawan.get');
+
+    // 🔧 Tambahan: endpoint untuk ambil tunjangan per karyawan (agar checklist tidak hilang saat edit)
+    Route::get('/{id}/tunjangan', [AdminKaryawanController::class, 'getTunjanganKaryawanApi'])
+        ->name('admin.karyawan.tunjangan.get');
 });
 
 // Routes for divisi management (if needed)
@@ -580,7 +467,7 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
     
     // Halaman Data Karyawan
     Route::get('/data_karyawan', [GeneralManagerController::class, 'data_karyawan'])->name('data_karyawan');
-    Route::get('/general_manajer/data_karyawan', [GeneralManagerController::class, 'data_karyawan'])->name('general.data_karyawan');
+    
     // Halaman Layanan
     Route::get('/layanan', [GeneralManagerController::class, 'layanan'])->name('layanan');
     
@@ -591,7 +478,7 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
     // Halaman Tim & Divisi
     Route::get('/tim_divisi', [GeneralManagerController::class, 'tim_divisi'])->name('tim_divisi');
     
-    // Halaman Top & Low Grade
+    // 🔥 HALAMAN TOP & LOW GRADE
     Route::get('/top-low-grade', [GeneralManagerController::class, 'index'])->name('top_low_grade');
     
     // API Endpoints
@@ -599,45 +486,9 @@ Route::middleware(['auth', 'role:general_manager'])->prefix('general_manager')->
     Route::get('/api/divisi-ranking', [GeneralManagerController::class, 'divisiRanking'])->name('api.divisi-ranking');
 });
 
-// Manager Divisi - Task Management
-Route::prefix('manager-divisi')->middleware(['auth', 'role:manager_divisi'])->group(function () {
-    // View
-    Route::get('/kelola-tugas', [ManagerDivisiTaskController::class, 'index'])->name('manager.tasks.index');
-    Route::get('/tugas-dari-karyawan', [ManagerDivisiTaskController::class, 'tugasDariKaryawan'])->name('manager.tasks.karyawan');
-    
-    // API Tasks
-    Route::get('/api/tasks-api', [ManagerDivisiTaskController::class, 'getTasksApi'])->name('manager.tasks.api');
-    Route::get('/api/tasks/statistics', [ManagerDivisiTaskController::class, 'getStatistics'])->name('manager.tasks.statistics');
-    Route::get('/api/tasks/{id}', [ManagerDivisiTaskController::class, 'getTaskDetail'])->name('manager.tasks.detail');
-    Route::get('/api/tasks/files/{id}', [ManagerDivisiTaskController::class, 'getTaskFiles'])->name('manager.tasks.files');
-    Route::get('/api/all-tasks', [ManagerDivisiTaskController::class, 'getAllTasksApi'])->name('manager.tasks.all');
-    
-    // Create Task
-    Route::post('/tasks/createTask', [ManagerDivisiTaskController::class, 'createTask'])->name('manager.tasks.create');
-    Route::post('/tasks/{id}/upload', [ManagerDivisiTaskController::class, 'uploadAttachment'])->name('manager.tasks.upload');
-    
-    // Update Task
-    Route::put('/tasks/{id}', [ManagerDivisiTaskController::class, 'update'])->name('manager.tasks.update');
-    Route::post('/tasks/{id}', [ManagerDivisiTaskController::class, 'update'])->name('manager.tasks.update.post');
-    
-    // Delete Task
-    Route::delete('/tasks/{id}', [ManagerDivisiTaskController::class, 'destroy'])->name('manager.tasks.delete');
-    
-    // Task from Karyawan
-    Route::get('/api/tugas-karyawan', [ManagerDivisiTaskController::class, 'getTasksFromKaryawan'])->name('manager.tasks.karyawan.api');
-    Route::get('/api/tugas-karyawan/statistics', [ManagerDivisiTaskController::class, 'getTasksFromKaryawanStatistics'])->name('manager.tasks.karyawan.statistics');
-    Route::get('/api/tugas-karyawan/{id}', [ManagerDivisiTaskController::class, 'getTaskFromKaryawanDetail'])->name('manager.tasks.karyawan.detail');
-    Route::post('/api/tugas-karyawan/{id}/approve', [ManagerDivisiTaskController::class, 'approveTaskFromKaryawan'])->name('manager.tasks.karyawan.approve');
-    
-    // Dropdowns
-    Route::get('/api/projects-dropdown', [ManagerDivisiTaskController::class, 'getProjectsDropdown'])->name('manager.tasks.projects.dropdown');
-    Route::get('/api/karyawan-dropdown', [ManagerDivisiTaskController::class, 'getKaryawanDropdown'])->name('manager.tasks.karyawan.dropdown');
-    Route::get('/api/karyawan-in-divisi', [ManagerDivisiTaskController::class, 'getKaryawanInDivisi'])->name('manager.tasks.karyawan.divisi');
-});
-
 // Route untuk Manager Divisi - Top Low Grade
 Route::middleware(['auth', 'role:manager_divisi'])->prefix('manager-divisi')->group(function () {
-    Route::get('/top-low-grade', [TopLowGradeController::class, 'index'])->name('manager_divisi.top_low_grade');
+    Route::get('/top-low-grade', [App\Http\Controllers\ManagerDivisiController::class, 'dashboard'])->name('manager_divisi.top_low_grade');
 });
 
 Route::prefix('manager/divisi')->name('manager.divisi.')->group(function () {
@@ -948,10 +799,16 @@ Route::middleware('auth')->group(function () {
         // HR Specific APIs
         Route::prefix('hr')->middleware(['role:hr'])->name('hr.')->group(function () {
             Route::get('/karyawan/count', function () {
-                return response()->json(['count' => \App\Models\User::where('role', 'karyawan')->count()]);
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
+            $count = \App\Models\User::whereIn('role', $roles)->count();
+            return response()->json(['count' => $count]);
             })->name('karyawan.count');
+
             Route::get('/karyawan/active', function () {
-                return response()->json(['count' => \App\Models\User::where('role', 'karyawan')->count()]);
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
+            $count = \App\Models\User::whereIn('role', $roles)->count(); 
+            return response()->json(['count' => $count]);
+
             })->name('karyawan.active');
             Route::get('/meeting-notes-dates', [CatatanRapatController::class, 'getMeetingDatesApi'])->name('meeting.notes.dates');
             Route::get('/meeting-notes', [CatatanRapatController::class, 'getMeetingNotesApi'])->name('meeting.notes.get');
@@ -975,15 +832,15 @@ Route::middleware('auth')->group(function () {
         });
 
         // Divisi API (Global)
-        // Route::get('/divisis/list', function () {
-        //     try {
-        //         $divisis = \App\Models\Divisi::select('id', 'divisi')->get();
-        //         return response()->json($divisis);
-        //     } catch (\Exception $e) {
-        //         \Log::error('Divisi list error: ' . $e->getMessage());
-        //         return response()->json(['error' => 'Failed to load divisis', 'message' => $e->getMessage()], 500);
-        //     }
-        // })->name('divisis.list');
+        Route::get('/divisis/list', function () {
+            try {
+                $divisis = \App\Models\Divisi::select('id', 'divisi')->get();
+                return response()->json($divisis);
+            } catch (\Exception $e) {
+                \Log::error('Divisi list error: ' . $e->getMessage());
+                return response()->json(['error' => 'Failed to load divisis', 'message' => $e->getMessage()], 500);
+            }
+        })->name('divisis.list');
     });
 });
 
@@ -1199,12 +1056,6 @@ Route::middleware(['auth', 'role:admin,hr'])
         Route::get('/pengumuman', function () {
             return redirect()->route('pengumuman.index');
         });
-        // Data Project - Route notifikasi
-Route::get('/project/notifications', [DataProjectController::class, 'notifications'])->name('project.notifications');
-Route::put('/project/notifications/{id}/read', [DataProjectController::class, 'markAsRead'])->name('project.notifications.read');
-Route::put('/project/notifications/mark-all-read', [DataProjectController::class, 'markAllAsRead'])->name('project.notifications.mark-all');
-Route::get('/project/invoice/{id}/details', [DataProjectController::class, 'getInvoiceDetails']);
-Route::post('/project/sync-from-invoice/{id}', [DataProjectController::class, 'syncFromInvoice'])->name('admin.project.sync');
     });
 
 /*
@@ -1218,7 +1069,7 @@ Route::middleware(['auth', 'role:karyawan'])
     ->group(function () {
         // Dashboard
         Route::get('/home', [KaryawanController::class, 'home'])->name('home');
-        
+
         // Profile
         Route::get('/profile', [KaryawanProfileController::class, 'index'])->name('profile');
         Route::post('/profile/update', [KaryawanProfileController::class, 'update'])->name('profile.update');
@@ -1296,11 +1147,7 @@ Route::middleware(['auth', 'role:karyawan'])
         Route::get('/pengajuan_cuti', function () {
             return redirect()->route('karyawan.cuti.index');
         });
-         // Route untuk pengumuman karyawan biasa (BARU DITAMBAHKAN)
-    Route::get('/api/announcements/employee', [App\Http\Controllers\PengumumanController::class, 'getAnnouncementsForEmployee']);
-    Route::get('/api/announcement-dates/employee', [App\Http\Controllers\PengumumanController::class, 'getAnnouncementDatesForEmployee']);
-});
-    
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -1405,10 +1252,10 @@ Route::middleware(['auth', 'role:general_manager'])
             Route::delete('/{id}', [TimDivisiController::class, 'destroyDivisi'])->name('divisi.destroy');
             Route::get('/search', [TimDivisiController::class, 'searchDivisi'])->name('divisi.search');
         });
+
+        // Utility route
+        Route::get('/divisis/list', [TimDivisiController::class, 'getDivisis'])->name('divisis.list');
     });
-    //     // Utility route
-    //     Route::get('/divisis/list', [TimDivisiController::class, 'getDivisis'])->name('divisis.list');
-    // });
 
 // Convenience route: Rekap Absensi (auth-only)
 Route::middleware(['auth'])->get('/rekap_absensi', [AbsensiController::class, 'rekapAbsensi'])->name('rekap_absensi');
@@ -1554,7 +1401,7 @@ Route::middleware(['auth', 'role:finance'])
             Route::get('/', [PayrollController::class, 'index'])->name('index');
             Route::get('/create', [PayrollController::class, 'create'])->name('create');
             Route::post('/', [PayrollController::class, 'store'])->name('store');
-            Route::post('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
+            Route::get('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
             Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
             Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
             Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');
@@ -1711,6 +1558,13 @@ Route::middleware(['auth', 'role:manager_divisi'])
             Route::put('/{cuti}', [CutiController::class, 'update'])->name('update');
             Route::get('/karyawan-by-divisi', [CutiController::class, 'getKaryawanByDivisi'])->name('karyawan.by-divisi');
             Route::get('/summary', [CutiController::class, 'getSummary'])->name('summary');
+        });
+
+        // LEMBUR MANAGEMENT (Manager Divisi)
+        Route::prefix('lembur')->name('lembur.')->group(function () {
+            Route::get('/', [LemburController::class, 'managerDivisiIndex'])->name('index');
+            Route::post('/{id}/approve', [LemburController::class, 'approveByManager'])->name('approve');
+            Route::post('/{id}/reject', [LemburController::class, 'rejectByManager'])->name('reject');
         });
 
         // DATA PROJECT
@@ -1881,7 +1735,7 @@ Route::middleware(['auth'])->group(function () {
 
     // API endpoints
     Route::get('/users/data', [UserController::class, 'getData']);
-    // Route::get('/divisis/list', [UserController::class, 'getDivisis'])->name('divisis.list');
+    Route::get('/divisis/list', [UserController::class, 'getDivisis'])->name('divisis.list');
     Route::get('/roles/list', [UserController::class, 'getRoles'])->name('roles.list');
     Route::get('/tims/by-divisi/{id}', [TimDivisiController::class, 'getTimsByDivisi'])->name('tims.by_divisi');
 });

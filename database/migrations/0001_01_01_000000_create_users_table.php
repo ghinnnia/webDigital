@@ -27,6 +27,8 @@ return new class extends Migration
             
             // Data karyawan
             $table->decimal('gaji', 15, 2)->nullable();
+            $table->date('kontrak_mulai')->nullable();
+            $table->date('kontrak_selesai')->nullable();
             $table->text('alamat')->nullable();
             $table->string('kontak', 20)->nullable();
             $table->string('foto')->nullable();
