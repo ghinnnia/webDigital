@@ -72,13 +72,19 @@ class User extends Authenticatable
         parent::boot();
 
         static::created(function ($user) {
+            \Log::info('User.created event kontrak', [
+                'user_id' => $user->id,
+                'kontrak_mulai' => $user->kontrak_mulai,
+                'kontrak_selesai' => $user->kontrak_selesai,
+            ]);
+
             $divisiName = null;
             if ($user->divisi_id) {
                 $divisi = Divisi::find($user->divisi_id);
                 $divisiName = $divisi ? $divisi->divisi : null;
             }
 
-            Karyawan::create([
+            $karyawan = Karyawan::create([
                 'user_id' => $user->id,
                 'nama' => $user->name,
                 'email' => $user->email,
@@ -93,19 +99,31 @@ class User extends Authenticatable
                 'kontrak_mulai' => $user->kontrak_mulai,
                 'kontrak_selesai' => $user->kontrak_selesai,
             ]);
+
+            \Log::info('User.created event karyawan created kontrak', [
+                'karyawan_id' => $karyawan->id ?? null,
+                'kontrak_mulai' => $karyawan->kontrak_mulai ?? null,
+                'kontrak_selesai' => $karyawan->kontrak_selesai ?? null,
+            ]);
         });
+
 
         static::updated(function ($user) {
             if ($user->karyawan) {
                 $karyawan = $user->karyawan;
-                
+
                 $divisiName = null;
                 if ($user->divisi_id) {
                     $divisi = Divisi::find($user->divisi_id);
                     $divisiName = $divisi ? $divisi->divisi : null;
                 }
 
-                $karyawan->update([
+                // Penting: jangan overwrite kontrak dengan null.
+                // Kasus yang kamu alami biasanya: event updated dipanggil tapi nilai kontrak pada $user kosong.
+                $kontrakMulai = $user->kontrak_mulai;
+                $kontrakSelesai = $user->kontrak_selesai;
+
+                $updatePayload = [
                     'nama' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
@@ -116,11 +134,20 @@ class User extends Authenticatable
                     'foto' => $user->foto,
                     'status_kerja' => $user->status_kerja,
                     'status_karyawan' => $user->status_karyawan,
-                    'kontrak_mulai' => $user->kontrak_mulai,
-                    'kontrak_selesai' => $user->kontrak_selesai,
-                ]);
+                ];
+
+                if (!empty($kontrakMulai)) {
+                    $updatePayload['kontrak_mulai'] = $kontrakMulai;
+                }
+
+                if (!empty($kontrakSelesai)) {
+                    $updatePayload['kontrak_selesai'] = $kontrakSelesai;
+                }
+
+                $karyawan->update($updatePayload);
             }
         });
+
     }
 
     // ============================================

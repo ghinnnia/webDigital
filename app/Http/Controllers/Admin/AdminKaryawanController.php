@@ -159,7 +159,9 @@ class AdminKaryawanController extends Controller
                     'potongan' => $item->potongan_bpjs,
                     'total_gaji' => $item->total_gaji,
                     'total_gaji_formatted' => 'Rp ' . number_format($item->total_gaji, 0, ',', '.'),
-                    'status' => $item->status ?? 'draft'
+                    'status' => $item->status ?? 'draft',
+                    'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                    'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
                 ];
             });
             
@@ -213,6 +215,8 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
                 'kontak' => $validated['kontak'] ?? null,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ]);
 
             // Handle foto
@@ -265,7 +269,9 @@ class AdminKaryawanController extends Controller
                     'gaji' => $validated['gaji'] ?? null,
                     'status_kerja' => $validated['status_kerja'] ?? 'aktif',
                     'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                    'foto' => $fotoPath
+                    'foto' => $fotoPath,
+                    'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                    'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
                 ]);
             } else {
                 // Update field tambahan yang tidak ada di User::boot()
@@ -340,6 +346,8 @@ class AdminKaryawanController extends Controller
                 'alamat' => 'nullable|string',
                 'kontak' => 'nullable|string',
                 'gaji' => 'nullable|numeric',
+                'kontrak_mulai' => 'nullable|date',
+                'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
                 'status_kerja' => 'nullable|string',
                 'status_karyawan' => 'nullable|string',
                 'tunjangan_tetap_ids' => 'nullable',
@@ -358,6 +366,8 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
                 'kontak' => $validated['kontak'] ?? null,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ];
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
@@ -402,7 +412,9 @@ class AdminKaryawanController extends Controller
                 'gaji' => $validated['gaji'] ?? null,
                 'status_kerja' => $validated['status_kerja'] ?? 'aktif',
                 'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                'foto' => $fotoPath
+                'foto' => $fotoPath,
+                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ]);
 
             // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)

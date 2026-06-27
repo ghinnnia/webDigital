@@ -1122,8 +1122,9 @@
                                                                 data-status_kerja="{{ $item->status_kerja }}"
                                                                 data-status_karyawan="{{ $item->status_karyawan }}"
                                                                 data-gaji="{{ $item->gaji }}"
-                                                                data-kontrak_mulai="{{ $item->kontrak_mulai ?? '' }}"
-                                                                data-kontrak_selesai="{{ $item->kontrak_selesai ?? '' }}"
+data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
+                                                                data-kontrak_selesai="{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('Y-m-d') : '' }}"
+
                                                                 data-foto="{{ $item->foto ?? '' }}">
                                                                 <span class="material-icons-outlined">edit</span>
                                                             </button>
@@ -1440,6 +1441,7 @@
                 <option value="freelance">Freelance</option>
             </select>
         </div>
+        <!-- BAGIAN 3.5: KONTRAK -->
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Kontrak Mulai</label>
             <input type="date" name="kontrak_mulai" id="formKontrakMulai"
@@ -2152,8 +2154,14 @@
         document.getElementById('formAlamat').value = data.alamat || '';
         document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
         document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
-        document.getElementById('formKontrakMulai').value = data.kontrak_mulai || '';
-        document.getElementById('formKontrakSelesai').value = data.kontrak_selesai || '';
+// Pastikan value input[type="date"] selalu format YYYY-MM-DD
+        document.getElementById('formKontrakMulai').value = (data.kontrak_mulai && String(data.kontrak_mulai).length)
+            ? String(data.kontrak_mulai).slice(0,10)
+            : '';
+        document.getElementById('formKontrakSelesai').value = (data.kontrak_selesai && String(data.kontrak_selesai).length)
+            ? String(data.kontrak_selesai).slice(0,10)
+            : '';
+
 
         // Sembunyikan divisi/tim jika role = general_manager
         toggleDivisiTim(data.role);
@@ -2379,7 +2387,9 @@
                         kontak: button.dataset.kontak,
                         gaji: button.dataset.gaji,
                         status_kerja: button.dataset.status_kerja,
-                        status_karyawan: button.dataset.status_karyawan
+                        status_karyawan: button.dataset.status_karyawan,
+                        kontrak_mulai: button.dataset.kontrak_mulai || '',
+                        kontrak_selesai: button.dataset.kontrak_selesai || ''
                     };
                     openKaryawanModal('edit', data);
                 }
