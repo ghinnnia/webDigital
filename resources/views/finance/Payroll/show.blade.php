@@ -191,7 +191,7 @@
                                     <div class="font-semibold text-slate-800">{{ $detail->user->name ?? '-' }}</div>
                                     <div class="text-xs text-slate-400">{{ $detail->user->email ?? '-' }}</div>
                                 </td>
-                                <td class="px-5 py-4 text-slate-600">{{ $detail->divisi ?? '-' }}</td>
+                                <td class="px-5 py-4 text-slate-600">{{ $detail->user->divisi->divisi ?? '-' }}</td>
                                 <td class="px-5 py-4 text-right font-mono">Rp {{ number_format($gajiPokok, 0, ',', '.') }}</td>
                                 <td class="px-5 py-4 text-right font-mono">Rp {{ number_format($tunjanganTetap, 0, ',', '.') }}</td>
                                 <td class="px-5 py-4 text-right font-mono">Rp {{ number_format($tunjanganKinerja, 0, ',', '.') }}</td>

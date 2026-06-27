@@ -468,7 +468,7 @@ class PayrollController extends Controller
 
     public function show($id)
     {
-        $period = PayrollPeriod::with(['details', 'details.user'])->findOrFail($id);
+        $period = PayrollPeriod::with(['details', 'details.user.divisi'])->findOrFail($id);
         
         $totalGaji = $period->details->sum('gaji_pokok');
         $totalTunjangan = $period->details->sum('tunjangan_tetap') + $period->details->sum('tunjangan_kinerja');
