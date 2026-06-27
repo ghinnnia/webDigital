@@ -931,7 +931,8 @@
                                             <th style="min-width: 250px;">Alamat</th>
                                             <th style="min-width: 150px;">Kontak</th>
                                             <th style="min-width: 150px;">Gaji</th>
-                                            <th style="min-width: 180px;">Kontrak</th>
+                                            <th style="min-width: 150px;">Kontrak Mulai</th>
+                                            <th style="min-width: 150px;">Kontrak Selesai</th>
                                             <th style="min-width: 120px;">Status Kerja</th>
                                             <th style="min-width: 150px;">Status Karyawan</th>
                                             <th style="min-width: 200px;">Tunjangan Tetap</th>
@@ -990,7 +991,7 @@
                                                             {{ $item->role }}
                                                         </span>
                                                     </td>
-                                                    <td style="min-width: 150px;">
+                                                    <!-- <td style="min-width: 150px;">
                                                         @if(isset($divisiMap[$item->divisi_id]))
                                                             @php
                                                                 $divisiName = strtolower(trim($divisiMap[$item->divisi_id]));
@@ -1007,7 +1008,7 @@
                                                         @else
                                                             -
                                                         @endif
-                                                    </td>
+                                                    </td> -->
                                                     <td style="min-width: 150px;">
                                                         @php
                                                             $timBadgeClass = 'bg-gray-100 text-gray-800';
@@ -1033,16 +1034,11 @@
                                                             Rp {{ number_format($item->gaji, 0, ',', '.') }}
                                                         </div>
                                                     </td>
-                                                    <td style="min-width: 180px;">
-                                                        @php
-                                                            $kontrakText = '-';
-                                                            if (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai)) {
-                                                                $mulai = $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-';
-                                                                $selesai = $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-';
-                                                                $kontrakText = "$mulai - $selesai";
-                                                            }
-                                                        @endphp
-                                                        <div class="text-sm">{{ $kontrakText }}</div>
+                                                    <td style="min-width: 150px;">
+                                                        {{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-' }}
+                                                    </td>
+                                                    <td style="min-width: 150px;">
+                                                        {{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-' }}
                                                     </td>
                                                     <td style="min-width: 120px;">
                                                         @php
@@ -1281,25 +1277,23 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        @if($item->gaji)
-                                            <div class="mt-3 pt-3 border-t border-gray-100">
-                                                <div>
-                                            <p class="text-text-muted-light">Kontrak</p>
-                                            <p class="font-medium text-sm">
-                                                @php
-                                                    $kontrakTextMobile = '-';
-                                                    if (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai)) {
-                                                        $mulai = $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-';
-                                                        $selesai = $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-';
-                                                        $kontrakTextMobile = "$mulai - $selesai";
-                                                    }
-                                                @endphp
-                                                {{ $kontrakTextMobile }}
-                                            </p>
-                                        </div>
+                                        @if($item->gaji || $item->kontrak_mulai || $item->kontrak_selesai)
+                                        <div class="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-sm">
+                                            @if($item->gaji)
+                                            <div>
                                                 <p class="text-text-muted-light">Gaji</p>
                                                 <p class="font-medium">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p>
                                             </div>
+                                            @endif
+                                            <div>
+                                                <p class="text-text-muted-light">Kontrak Mulai</p>
+                                                <p class="font-medium">{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-' }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-text-muted-light">Kontrak Selesai</p>
+                                                <p class="font-medium">{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-' }}</p>
+                                            </div>
+                                        </div>
                                         @endif
                                     </div>
                                 @endforeach
