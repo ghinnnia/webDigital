@@ -7,14 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     protected $fillable = [
-        'user_id', 
-        'title', 
-        'message', 
-        'type', 
-        'link', 
-        'is_read',
-        'task_id', 
-        'payroll_id' 
+        'user_id', 'title', 'message', 'type', 'link', 'is_read'
     ];
     
     protected $casts = [
@@ -24,10 +17,5 @@ class Notification extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-    
-    public function task()
-    {
-        return $this->belongsTo(Task::class);
     }
 }

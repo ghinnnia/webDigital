@@ -13,7 +13,7 @@ return new class extends Migration
             Schema::create('tims', function (Blueprint $table) {
                 $table->id();
                 $table->string('tim');
-                $table->foreignId('divisi_id')->constrained('divisis')->onDelete('cascade');
+                $table->foreignId('divisi_id')->constrained('divisi')->onDelete('cascade');
                 $table->text('deskripsi')->nullable();
                 $table->timestamps();
             });

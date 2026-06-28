@@ -251,6 +251,11 @@
                 <span class="sidebar-text">Penggajian</span>
             </a>
 
+            <a class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" href="{{ route('finance.lembur.index') }}">
+                <span class="material-icons sidebar-icon">more_time</span>
+                <span class="sidebar-text">Uang Lembur</span>
+            </a>
+
             <!-- Item Pemasukan & Pengeluaran (menggantikan dropdown Keuangan) -->
             <a class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" href="{{ route('finance.cashflow.index') }}">
                 <span class="material-icons sidebar-icon">swap_vert</span>

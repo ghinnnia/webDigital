@@ -72,13 +72,19 @@ class User extends Authenticatable
         parent::boot();
 
         static::created(function ($user) {
+            \Log::info('User.created event kontrak', [
+                'user_id' => $user->id,
+                'kontrak_mulai' => $user->kontrak_mulai,
+                'kontrak_selesai' => $user->kontrak_selesai,
+            ]);
+
             $divisiName = null;
             if ($user->divisi_id) {
                 $divisi = Divisi::find($user->divisi_id);
                 $divisiName = $divisi ? $divisi->divisi : null;
             }
 
-            Karyawan::create([
+            $karyawan = Karyawan::create([
                 'user_id' => $user->id,
                 'nama' => $user->name,
                 'email' => $user->email,
@@ -93,19 +99,31 @@ class User extends Authenticatable
                 'kontrak_mulai' => $user->kontrak_mulai,
                 'kontrak_selesai' => $user->kontrak_selesai,
             ]);
+
+            \Log::info('User.created event karyawan created kontrak', [
+                'karyawan_id' => $karyawan->id ?? null,
+                'kontrak_mulai' => $karyawan->kontrak_mulai ?? null,
+                'kontrak_selesai' => $karyawan->kontrak_selesai ?? null,
+            ]);
         });
+
 
         static::updated(function ($user) {
             if ($user->karyawan) {
                 $karyawan = $user->karyawan;
-                
+
                 $divisiName = null;
                 if ($user->divisi_id) {
                     $divisi = Divisi::find($user->divisi_id);
                     $divisiName = $divisi ? $divisi->divisi : null;
                 }
 
-                $karyawan->update([
+                // Penting: jangan overwrite kontrak dengan null.
+                // Kasus yang kamu alami biasanya: event updated dipanggil tapi nilai kontrak pada $user kosong.
+                $kontrakMulai = $user->kontrak_mulai;
+                $kontrakSelesai = $user->kontrak_selesai;
+
+                $updatePayload = [
                     'nama' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
@@ -116,152 +134,30 @@ class User extends Authenticatable
                     'foto' => $user->foto,
                     'status_kerja' => $user->status_kerja,
                     'status_karyawan' => $user->status_karyawan,
-                    'kontrak_mulai' => $user->kontrak_mulai,
-                    'kontrak_selesai' => $user->kontrak_selesai,
-                ]);
+                ];
+
+                if (!empty($kontrakMulai)) {
+                    $updatePayload['kontrak_mulai'] = $kontrakMulai;
+                }
+
+                if (!empty($kontrakSelesai)) {
+                    $updatePayload['kontrak_selesai'] = $kontrakSelesai;
+                }
+
+                $karyawan->update($updatePayload);
             }
         });
+
     }
 
     // ============================================
     // RELASI
     // ============================================
-/**
- * Relasi ke tabel lembur (pengajuan/perintah lembur)
- */
-public function lembur()
+
+  public function karyawan()
 {
-    return $this->hasMany(Lembur::class, 'user_id');
+    return $this->hasOne(Karyawan::class, 'user_id');
 }
-
-/**
- * Relasi ke tabel lembur (perintah yang diberikan)
- */
-public function lemburPerintah()
-{
-    return $this->hasMany(Lembur::class, 'ordered_by');
-}
-
-/**
- * Relasi ke tabel lembur (yang diapprove)
- */
-public function lemburApproved()
-{
-    return $this->hasMany(Lembur::class, 'approved_by');
-}
-
-    public function karyawan()
-    {
-        return $this->hasOne(Karyawan::class, 'user_id');
-    }
-
-    // ========== RELASI TASKS (TUGAS) ==========
-    /**
-     * Relasi ke tabel tasks (tugas yang ditugaskan ke user)
-     * Menggunakan kolom 'assigned_to' di tabel tasks
-     */
-    public function tasks()
-    {
-        return $this->hasMany(Task::class, 'assigned_to', 'id');
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang dibuat oleh user)
-     */
-    public function createdTasks()
-    {
-        return $this->hasMany(Task::class, 'created_by', 'id');
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang diberikan oleh user sebagai manager)
-     */
-    public function assignedByManagerTasks()
-    {
-        return $this->hasMany(Task::class, 'assigned_by_manager', 'id');
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang ditargetkan ke manager)
-     */
-    public function targetManagerTasks()
-    {
-        return $this->hasMany(Task::class, 'target_manager_id', 'id');
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang sudah selesai)
-     */
-    public function completedTasks()
-    {
-        return $this->hasMany(Task::class, 'assigned_to', 'id')
-            ->where('status', 'selesai');
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang sedang berjalan)
-     */
-    public function pendingTasks()
-    {
-        return $this->hasMany(Task::class, 'assigned_to', 'id')
-            ->whereIn('status', ['pending', 'proses']);
-    }
-
-    /**
-     * Relasi ke tabel tasks (tugas yang melebihi deadline)
-     */
-    public function overdueTasks()
-    {
-        return $this->hasMany(Task::class, 'assigned_to', 'id')
-            ->where('deadline', '<', now())
-            ->whereNotIn('status', ['selesai', 'dibatalkan']);
-    }
-
-    /**
-     * Hitung jumlah tugas selesai per bulan tertentu
-     */
-    public function getCompletedTasksCount($bulan = null, $tahun = null)
-    {
-        $bulan = $bulan ?? now()->month;
-        $tahun = $tahun ?? now()->year;
-
-        return $this->hasMany(Task::class, 'assigned_to', 'id')
-            ->where('status', 'selesai')
-            ->whereMonth('completed_at', $bulan)
-            ->whereYear('completed_at', $tahun)
-            ->count();
-    }
-
-    /**
-     * Hitung skor kinerja berdasarkan tugas selesai per bulan
-     * Target default: 5 tugas = 100%
-     */
-    public function getPerformanceScore($bulan = null, $tahun = null, $target = 5)
-    {
-        $completedCount = $this->getCompletedTasksCount($bulan, $tahun);
-        
-        if ($target <= 0) {
-            return 0;
-        }
-        
-        $score = ($completedCount / $target) * 100;
-        return min(100, round($score, 1));
-    }
-
-    /**
-     * Dapatkan grade kinerja berdasarkan skor
-     */
-    public function getPerformanceGrade($bulan = null, $tahun = null, $target = 5)
-    {
-        $score = $this->getPerformanceScore($bulan, $tahun, $target);
-        
-        if ($score >= 90) return 'A';
-        if ($score >= 75) return 'B';
-        if ($score >= 60) return 'C';
-        return 'D';
-    }
-
-    // ========== RELASI LAINNYA ==========
 
     public function cuti()
     {
@@ -325,7 +221,7 @@ public function lemburApproved()
     }
 
     /**
-     * Relasi ke DIVISI
+     * 🔥 RELASI KE DIVISI (HANYA SATU, TIDAK BOLEH DUPLIKAT)
      */
     public function divisi()
     {
@@ -348,70 +244,53 @@ public function lemburApproved()
         return $this->belongsTo(Tim::class, 'tim_id');
     }
 
-    /**
-     * Relasi ke Tunjangan Tetap (melalui Karyawan)
-     */
-    public function tunjanganTetap()
-    {
-        $karyawan = $this->karyawan;
-        if (!$karyawan) {
-            return collect();
-        }
-        
-        return $karyawan->tunjanganTetap();
-    }
+   // HAPUS relasi tunjangan yang lama dan GANTI dengan ini:
 
-    /**
-     * Relasi ke Tunjangan Tidak Tetap
-     */
-    public function tunjanganTidakTetap()
-    {
-        $karyawan = $this->karyawan;
-        if (!$karyawan) {
-            return collect();
-        }
-        
-        return $karyawan->tunjanganTidakTetap();
+/**
+ * Relasi ke Tunjangan Tetap (melalui Karyawan)
+ */
+public function tunjanganTetap()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) {
+        return collect();
     }
+    
+    return $karyawan->tunjanganTetap();
+}
 
-    /**
-     * Relasi untuk tunjangan tetap bulan ini
-     */
-    public function tunjanganTetapBulanIni()
-    {
-        $karyawan = $this->karyawan;
-        if (!$karyawan) return collect();
-        return $karyawan->tunjanganTetapBulanIni();
+/**
+ * Relasi ke Tunjangan Tidak Tetap
+ */
+public function tunjanganTidakTetap()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) {
+        return collect();
     }
+    
+    return $karyawan->tunjanganTidakTetap();
+}
 
-    /**
-     * Relasi untuk tunjangan tidak tetap bulan ini
-     */
-    public function tunjanganTidakTetapBulanIni()
-    {
-        $karyawan = $this->karyawan;
-        if (!$karyawan) return collect();
-        return $karyawan->tunjanganTidakTetapBulanIni();
-    }
+/**
+ * Relasi untuk tunjangan tetap bulan ini
+ */
+public function tunjanganTetapBulanIni()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) return collect();
+    return $karyawan->tunjanganTetapBulanIni();
+}
 
-    /**
-     * Relasi ke tabel kinerja_pegawai
-     */
-    public function kinerja()
-    {
-        return $this->hasMany(KinerjaPegawai::class, 'karyawan_id');
-    }
-
-    /**
-     * Relasi ke tabel kinerja_pegawai untuk periode tertentu
-     */
-    public function kinerjaPeriode($bulan, $tahun)
-    {
-        return $this->hasOne(KinerjaPegawai::class, 'karyawan_id')
-            ->where('bulan', $bulan)
-            ->where('tahun', $tahun);
-    }
-
+/**
+ * Relasi untuk tunjangan tidak tetap bulan ini
+ */
+public function tunjanganTidakTetapBulanIni()
+{
+    $karyawan = $this->karyawan;
+    if (!$karyawan) return collect();
+    return $karyawan->tunjanganTidakTetapBulanIni();
+}
     // ============================================
     // HELPER METHODS & SCOPES
     // ============================================
@@ -485,6 +364,24 @@ public function lemburApproved()
             
             $karyawan->save();
         }
+    }
+
+    /**
+     * Relasi ke tabel kinerja_pegawai
+     */
+    public function kinerja()
+    {
+        return $this->hasMany(KinerjaPegawai::class, 'karyawan_id');
+    }
+
+    /**
+     * Relasi ke tabel kinerja_pegawai untuk periode tertentu
+     */
+    public function kinerjaPeriode($bulan, $tahun)
+    {
+        return $this->hasOne(KinerjaPegawai::class, 'karyawan_id')
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun);
     }
 
     public function getDivisiIdAttribute($value)

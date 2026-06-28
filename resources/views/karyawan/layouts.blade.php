@@ -5,6 +5,14 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>{{ $title ?? 'Employee Dashboard' }}</title>
+    {{-- Inisialisasi dark mode sebelum render untuk mencegah flash --}}
+    <script>
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
@@ -13,12 +21,15 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         primary: "#0ea5e9", // A shade of blue
                         background: "#ffffff",
+                        "background-dark": "#0f172a",
                         surface: "#f8fafc",
+                        "surface-dark": "#1e293b",
                         "text-primary": "#1e293b",
                         "text-secondary": "#64748b",
                         "border-color": "#e2e8f0",

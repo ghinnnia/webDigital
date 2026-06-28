@@ -96,7 +96,7 @@
             background-color: #e2e8f0;
         }
         
-        /* Action button styles */
+        /* Action button styles - Perbesar dan warna abu-abu */
         .action-btn {
             width: 36px;
             height: 36px;
@@ -183,6 +183,7 @@
         }
         
         /* Gaya untuk indikator aktif/hover */
+        /* Default untuk mobile: di sebelah kanan */
         .nav-item::before {
             content: '';
             position: absolute;
@@ -195,6 +196,7 @@
             transition: transform 0.3s ease;
         }
         
+        /* Override untuk desktop: di sebelah kiri */
         @media (min-width: 768px) {
             .nav-item::before {
                 right: auto;
@@ -208,6 +210,7 @@
             transform: translateX(0);
         }
         
+        /* Memastikan sidebar tetap di posisinya saat scroll */
         .sidebar-fixed {
             position: fixed;
             height: 100vh;
@@ -215,6 +218,7 @@
             z-index: 40;
         }
         
+        /* Menyesuaikan konten utama agar tidak tertutup sidebar */
         .main-content {
             margin-left: 0;
             transition: margin-left 0.3s ease-in-out;
@@ -222,10 +226,11 @@
         
         @media (min-width: 768px) {
             .main-content {
-                margin-left: 256px;
+                margin-left: 256px; /* Lebar sidebar */
             }
         }
         
+        /* Scrollbar kustom untuk sidebar */
         .sidebar-fixed::-webkit-scrollbar {
             width: 6px;
         }
@@ -243,6 +248,7 @@
             background: #555;
         }
         
+        /* Table mobile adjustments */
         @media (max-width: 639px) {
             .desktop-table {
                 display: none;
@@ -252,6 +258,7 @@
                 display: block;
             }
             
+            /* Hide desktop pagination on mobile */
             .desktop-pagination {
                 display: none !important;
             }
@@ -266,11 +273,13 @@
                 display: none;
             }
             
+            /* Hide mobile pagination on desktop */
             .mobile-pagination {
                 display: none !important;
             }
         }
         
+        /* Form input styles */
         .form-input {
             border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
@@ -281,6 +290,7 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         
+        /* Pagination styles */
         .page-btn {
             transition: all 0.2s ease;
         }
@@ -294,6 +304,7 @@
             cursor: not-allowed;
         }
         
+        /* Desktop pagination styles */
         .desktop-pagination {
             display: flex;
             justify-content: center;
@@ -351,6 +362,7 @@
             cursor: not-allowed;
         }
         
+        /* Mobile pagination styles */
         .mobile-pagination {
             display: flex;
             justify-content: space-between;
@@ -387,6 +399,7 @@
             cursor: not-allowed;
         }
         
+        /* Panel Styles */
         .panel {
             background: white;
             border-radius: 0.75rem;
@@ -418,6 +431,7 @@
             padding: 1.5rem;
         }
         
+        /* SCROLLABLE TABLE */
         .scrollable-table-container {
             width: 100%;
             overflow-x: auto;
@@ -427,6 +441,7 @@
             background: white;
         }
         
+        /* Force scrollbar to be visible */
         .scrollable-table-container {
             scrollbar-width: auto;
             -webkit-overflow-scrolling: touch;
@@ -452,9 +467,10 @@
             background: #94a3b8;
         }
         
+        /* Table with fixed width to ensure scrolling */
         .data-table {
             width: 100%;
-            min-width: 1000px;
+            min-width: 1000px; /* Fixed minimum width */
             border-collapse: collapse;
         }
         
@@ -483,10 +499,12 @@
             background: #f3f4f6;
         }
         
+        /* Shadow effect */
         .table-shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         
+        /* Minimalist Popup Styles - Modified to match second file */
         .minimal-popup {
             position: fixed;
             top: 20px;
@@ -573,6 +591,92 @@
             color: #64748b;
         }
         
+        /* Filter Dropdown Styles */
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            min-width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .filter-dropdown.show {
+            display: block;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-option:hover {
+            color: #3b82f6;
+        }
+        
+        .filter-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .filter-option label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .filter-actions button {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .filter-apply {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .filter-apply:hover {
+            background-color: #2563eb;
+        }
+        
+        .filter-reset {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+        
+        .filter-reset:hover {
+            background-color: #e2e8f0;
+        }
+        
+        /* Hidden class for filtering */
+        .hidden-by-filter {
+            display: none !important;
+        }
+        
+        /* Loading spinner */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
@@ -587,6 +691,7 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Selected user badge styles */
         .selected-user-badge {
             display: inline-flex;
             align-items: center;
@@ -608,6 +713,7 @@
             font-size: 14px;
         }
         
+        /* Checkbox styles for users */
         .user-checkbox-container {
             max-height: 200px;
             overflow-y: auto;
@@ -672,6 +778,7 @@
             background: #94a3b8;
         }
         
+        /* Attachment Preview Modal Styles */
         .attachment-modal {
             position: fixed;
             top: 0;
@@ -855,12 +962,6 @@
         .attachment-btn-secondary:hover {
             background-color: #e2e8f0;
         }
-
-        /* Required field indicator */
-        .required-star {
-            color: #ef4444;
-            margin-right: 2px;
-        }
     </style>
     
     <!-- Add CSRF Token -->
@@ -1009,7 +1110,7 @@
         </div>
     </div>
     
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Confirmation Modal - Modified to match second file -->
     <div id="deleteModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
             <div class="p-6">
@@ -1074,7 +1175,7 @@
         </div>
     </div>
 
-    <!-- Minimalist Popup -->
+    <!-- Minimalist Popup - Modified to match second file -->
     <div id="notification" class="minimal-popup">
         <div class="minimal-popup-icon">
             <span class="material-icons-outlined">check</span>
@@ -1095,7 +1196,7 @@
         let allUsers = [];
         let cachedUsers = [];
         let currentPage = 1;
-        let itemsPerPage = 5;
+        let itemsPerPage = 5; // Changed from 10 to 5
         let totalItems = 0;
         let totalPages = 1;
         let allData = [];
@@ -1118,7 +1219,7 @@
             // Load users data
             loadUsers();
             
-            // Event listeners
+            // Event listeners - with null checks
             const createBtn = document.getElementById('createBtn');
             if (createBtn) createBtn.addEventListener('click', openCreateModal);
             
@@ -1202,6 +1303,12 @@
                 });
             }
             
+            // Initialize filter
+            initializeFilter();
+            
+            // Initialize scroll detection for table
+            initializeScrollDetection();
+            
             // Initialize pagination
             initializePagination();
             
@@ -1211,6 +1318,7 @@
         
         // Initialize pagination
         function initializePagination() {
+            // Add event listeners for pagination buttons - with null checks
             const prevPage = document.getElementById('prevPage');
             if (prevPage) {
                 prevPage.addEventListener('click', () => {
@@ -1251,13 +1359,19 @@
                 });
             }
             
+            // Initial pagination update
             updatePagination();
         }
         
         // Update pagination
         function updatePagination() {
+            // Update desktop pagination
             updateDesktopPagination();
+            
+            // Update mobile pagination
             updateMobilePagination();
+            
+            // Update table data
             updateTableData();
         }
         
@@ -1267,8 +1381,10 @@
             const prevBtn = document.getElementById('prevPage');
             const nextBtn = document.getElementById('nextPage');
             
+            // Clear existing page numbers
             pageNumbers.innerHTML = '';
             
+            // If no pages, don't show pagination
             if (totalPages <= 1) {
                 document.getElementById('desktopPagination').style.display = 'none';
                 return;
@@ -1276,13 +1392,16 @@
                 document.getElementById('desktopPagination').style.display = 'flex';
             }
             
+            // Calculate page range to display
             let startPage = Math.max(1, currentPage - 2);
             let endPage = Math.min(totalPages, startPage + 4);
             
+            // Adjust start page if we're near the end
             if (endPage - startPage < 4 && startPage > 1) {
                 startPage = Math.max(1, endPage - 4);
             }
             
+            // Add first page and ellipsis if needed
             if (startPage > 1) {
                 addPageNumber(1);
                 if (startPage > 2) {
@@ -1290,10 +1409,12 @@
                 }
             }
             
+            // Add page numbers
             for (let i = startPage; i <= endPage; i++) {
                 addPageNumber(i);
             }
             
+            // Add ellipsis and last page if needed
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
                     addEllipsis();
@@ -1301,9 +1422,11 @@
                 addPageNumber(totalPages);
             }
             
+            // Update navigation buttons
             prevBtn.disabled = currentPage === 1;
             nextBtn.disabled = currentPage === totalPages;
             
+            // Helper functions
             function addPageNumber(pageNum) {
                 const pageBtn = document.createElement('div');
                 pageBtn.className = `desktop-page-btn ${pageNum === currentPage ? 'active' : ''}`;
@@ -1330,6 +1453,7 @@
             const prevBtn = document.getElementById('mobilePrevPage');
             const nextBtn = document.getElementById('mobileNextPage');
             
+            // Update page info
             if (totalPages <= 1) {
                 document.getElementById('mobilePagination').style.display = 'none';
                 return;
@@ -1338,30 +1462,44 @@
             }
             
             pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            
+            // Update navigation buttons
             prevBtn.disabled = currentPage === 1;
             nextBtn.disabled = currentPage === totalPages;
         }
         
         // Update table data based on current page
         function updateTableData() {
+            // Calculate start and end indices
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            
+            // Get data for current page
             const pageData = filteredData.slice(startIndex, endIndex);
             
+            // Update desktop table
             updateDesktopTable(pageData, startIndex);
+            
+            // Update mobile cards
             updateMobileCards(pageData);
+            
+            // Update total count
             document.getElementById('totalCount').textContent = filteredData.length;
         }
         
         // Update desktop table
         function updateDesktopTable(data, startIndex) {
             const tableBody = document.getElementById('tableBody');
+            
+            // Clear existing rows
             tableBody.innerHTML = '';
             
+            // Add rows for current page
             data.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.className = 'border-b hover:bg-gray-50';
                 
+                // Format users display
                 let usersDisplay = '<span class="text-gray-400">-</span>';
                 if (item.users && item.users.length > 0) {
                     const userNames = item.users.slice(0, 2).map(u => u.name).join(', ');
@@ -1369,6 +1507,7 @@
                     usersDisplay = `<span class="text-sm">${userNames}${moreText}</span>`;
                 }
                 
+                // Format attachment display
                 let attachmentDisplay = '<span class="text-gray-400">-</span>';
                 if (item.lampiran) {
                     attachmentDisplay = `
@@ -1380,6 +1519,7 @@
                     `;
                 }
                 
+                // Format date
                 const date = new Date(item.created_at).toLocaleDateString('id-ID');
                 
                 row.innerHTML = `
@@ -1412,13 +1552,17 @@
         // Update mobile cards
         function updateMobileCards(data) {
             const mobileCards = document.getElementById('mobileCards');
-            const cards = mobileCards.querySelectorAll('.border.rounded-lg:not(.mobile-pagination)');
+            
+            // Clear existing cards except pagination
+            const cards = mobileCards.querySelectorAll('.border.rounded-lg');
             cards.forEach(card => card.remove());
             
+            // Add cards for current page
             data.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'border rounded-lg p-4 card-hover';
                 
+                // Format users display
                 let usersDisplay = '-';
                 if (item.users && item.users.length > 0) {
                     const userNames = item.users.slice(0, 2).map(u => u.name).join(', ');
@@ -1426,8 +1570,10 @@
                     usersDisplay = `Kepada: ${userNames}${moreText}`;
                 }
                 
+                // Format date and time
                 const date = new Date(item.created_at).toLocaleString('id-ID');
                 
+                // Format attachment display
                 let attachmentDisplay = '';
                 if (item.lampiran) {
                     attachmentDisplay = `
@@ -1461,9 +1607,223 @@
                     </div>
                 `;
                 
+                // Insert before pagination
                 const pagination = mobileCards.querySelector('.mobile-pagination');
                 mobileCards.insertBefore(card, pagination);
             });
+        }
+        
+        // Show attachment in modal
+        function showAttachment(filename) {
+            currentAttachmentName = filename;
+            
+            // Clean filename to remove duplicate path if exists
+            let cleanFilename = filename;
+            if (filename.includes('pengumuman/')) {
+                cleanFilename = filename.split('pengumuman/').pop();
+            }
+            
+            // Update modal title
+            document.getElementById('attachmentTitle').textContent = 'Lampiran';
+            document.getElementById('attachmentFileName').textContent = cleanFilename;
+            
+            // Clear previous content and show loading
+            const previewContainer = document.getElementById('attachmentPreview');
+            previewContainer.innerHTML = `
+                <div class="attachment-loading">
+                    <div class="spinner"></div>
+                    <p class="text-gray-500">Memuat lampiran...</p>
+                </div>
+            `;
+            
+            // Show modal
+            document.getElementById('attachmentModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Determine file type and show appropriate preview
+            const fileExtension = cleanFilename.split('.').pop().toLowerCase();
+            
+            // Try multiple possible URLs
+            const possibleUrls = [
+                `/storage/pengumuman/${cleanFilename}`,
+                `/storage/${cleanFilename}`,
+                `/storage/pengumuman/pengumuman/${cleanFilename}`
+            ];
+            
+            // Try to load the file
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
+                // Image file - try each URL until one works
+                let urlIndex = 0;
+                
+                function tryLoadImage() {
+                    if (urlIndex >= possibleUrls.length) {
+                        // All URLs failed, show error
+                        showAttachmentError(cleanFilename);
+                        return;
+                    }
+                    
+                    const img = new Image();
+                    const currentUrl = possibleUrls[urlIndex];
+                    
+                    img.onload = function() {
+                        // Image loaded successfully
+                        currentAttachmentUrl = currentUrl;
+                        previewContainer.innerHTML = '';
+                        const imgElement = document.createElement('img');
+                        imgElement.src = currentUrl;
+                        imgElement.alt = cleanFilename;
+                        imgElement.className = 'max-w-full max-h-full object-contain';
+                        previewContainer.appendChild(imgElement);
+                    };
+                    
+                    img.onerror = function() {
+                        // Try next URL
+                        urlIndex++;
+                        tryLoadImage();
+                    };
+                    
+                    img.src = currentUrl;
+                }
+                
+                tryLoadImage();
+                
+            } else if (['pdf'].includes(fileExtension)) {
+                // PDF file - try each URL until one works
+                let urlIndex = 0;
+                
+                function tryLoadPDF() {
+                    if (urlIndex >= possibleUrls.length) {
+                        // All URLs failed, show error
+                        showAttachmentError(cleanFilename);
+                        return;
+                    }
+                    
+                    const currentUrl = possibleUrls[urlIndex];
+                    currentAttachmentUrl = currentUrl;
+                    
+                    // Create iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.src = currentUrl;
+                    iframe.title = cleanFilename;
+                    iframe.className = 'w-full h-full border-none rounded';
+                    
+                    // Set timeout to detect if PDF loads
+                    setTimeout(() => {
+                        try {
+                            // Check if iframe loaded content
+                            if (iframe.contentDocument && iframe.contentDocument.body) {
+                                previewContainer.innerHTML = '';
+                                previewContainer.appendChild(iframe);
+                            } else {
+                                // Try next URL
+                                urlIndex++;
+                                tryLoadPDF();
+                            }
+                        } catch (e) {
+                            // Try next URL
+                            urlIndex++;
+                            tryLoadPDF();
+                        }
+                    }, 2000);
+                    
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(iframe);
+                }
+                
+                tryLoadPDF();
+                
+            } else {
+                // Other file types - show file info
+                currentAttachmentUrl = possibleUrls[0]; // Use first URL as default
+                showFileInfo(cleanFilename);
+            }
+        }
+        
+        // Show attachment error
+        function showAttachmentError(filename) {
+            const previewContainer = document.getElementById('attachmentPreview');
+            previewContainer.innerHTML = `
+                <div class="attachment-error">
+                    <div class="attachment-error-icon">
+                        <span class="material-icons-outlined">error</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">File Tidak Ditemukan</h3>
+                    <p class="text-gray-500 mb-6">File "${filename}" tidak dapat ditemukan atau telah dipindahkan</p>
+                    <button onclick="downloadAttachment()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                        <span class="material-icons-outlined text-sm mr-2">download</span>
+                        Coba Unduh File
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Show file info for non-previewable files
+        function showFileInfo(filename) {
+            const previewContainer = document.getElementById('attachmentPreview');
+            previewContainer.innerHTML = `
+                <div class="text-center p-8">
+                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-icons-outlined text-4xl text-gray-400">description</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">${filename}</h3>
+                    <p class="text-gray-500 mb-6">Tidak dapat menampilkan pratinjau untuk jenis file ini</p>
+                    <button onclick="downloadAttachment()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                        <span class="material-icons-outlined text-sm mr-2">download</span>
+                        Unduh File
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Close attachment modal
+        function closeAttachmentModal() {
+            document.getElementById('attachmentModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            currentAttachmentUrl = '';
+            currentAttachmentName = '';
+        }
+        
+        // Download attachment
+        function downloadAttachment() {
+            if (currentAttachmentName) {
+                // Try multiple possible URLs for download
+                const cleanFilename = currentAttachmentName.includes('pengumuman/') ? 
+                    currentAttachmentName.split('pengumuman/').pop() : 
+                    currentAttachmentName;
+                
+                const possibleUrls = [
+                    `/storage/pengumuman/${cleanFilename}`,
+                    `/storage/${cleanFilename}`,
+                    `/storage/pengumuman/pengumuman/${cleanFilename}`
+                ];
+                
+                // Try first URL
+                const link = document.createElement('a');
+                link.href = possibleUrls[0];
+                link.download = cleanFilename;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show notification
+                showMinimalPopup('Info', 'Mengunduh file...', 'warning');
+            }
+        }
+        
+        // Open attachment in new tab
+        function openInNewTab() {
+            if (currentAttachmentUrl) {
+                window.open(currentAttachmentUrl, '_blank');
+            } else if (currentAttachmentName) {
+                // Try to open with first possible URL
+                const cleanFilename = currentAttachmentName.includes('pengumuman/') ? 
+                    currentAttachmentName.split('pengumuman/').pop() : 
+                    currentAttachmentName;
+                
+                const url = `/storage/pengumuman/${cleanFilename}`;
+                window.open(url, '_blank');
+            }
         }
         
         // Load users from server
@@ -1503,6 +1863,7 @@
                 'Simpan'
             );
             
+            // Load users into checkboxes after modal is shown
             setTimeout(() => populateUserCheckboxes(), 100);
         }
         
@@ -1534,15 +1895,13 @@
             document.body.style.overflow = 'auto';
         }
         
-        // 🔥 PERBAIKAN: Form template dengan field yang benar
+        // Form template
         function getFormTemplate(data = {}) {
-            // Tentukan nilai target_type
-let targetType = data.target || data.target_type || 'karyawan';            
             return `
                 <form id="pengumumanForm" class="space-y-4" onsubmit="return false;">
                     <div>
                         <label class="block text-sm font-medium mb-1 text-gray-700">
-                            <span class="required-star">*</span> Judul
+                            <span class="text-red-500">*</span> Judul
                         </label>
                         <input type="text" id="judulInput" name="judul"
                             value="${data.judul || ''}"
@@ -1553,7 +1912,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                     
                     <div>
                         <label class="block text-sm font-medium mb-1 text-gray-700">
-                            <span class="required-star">*</span> Isi Pesan
+                            <span class="text-red-500">*</span> Isi Pesan
                         </label>
                         <textarea id="isiInput" name="isi_pesan" rows="4"
                             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none resize-none"
@@ -1561,11 +1920,9 @@ let targetType = data.target || data.target_type || 'karyawan';
                             required>${data.isi_pesan || ''}</textarea>
                     </div>
                     
-                    <!-- 🔥 TAMBAHAN: Field target_type yang hidden -->
-<input type="hidden" id="targetTypeInput" name="target" value="${targetType}">                    
                     <div>
                         <label class="block text-sm font-medium mb-1 text-gray-700">
-                            <span class="required-star">*</span> Penerima
+                            <span class="text-red-500">*</span> Penerima
                         </label>
 
                         <!-- Search for recipients -->
@@ -1614,11 +1971,13 @@ let targetType = data.target || data.target_type || 'karyawan';
             
             if (!container) return;
             
+            // Preserve currently checked IDs so filtering doesn't lose selections
             const currentlyChecked = Array.from(document.querySelectorAll('#usersCheckboxContainer input[type="checkbox"]:checked')).map(cb => cb.value.toString());
             if ((!Array.isArray(selectedIds) || selectedIds.length === 0) && currentlyChecked.length > 0) {
                 selectedIds = currentlyChecked;
             }
 
+            // Clear existing content
             container.innerHTML = '';
             if (selectedUsersDiv) selectedUsersDiv.innerHTML = '';
             
@@ -1627,6 +1986,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                 return;
             }
             
+            // Apply search filter if present
             const searchInput = document.getElementById('userSearchInput');
             const searchTerm = searchInput && searchInput.value ? searchInput.value.trim().toLowerCase() : '';
 
@@ -1639,6 +1999,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                 });
             }
 
+            // Group users by role if available
             const groupedUsers = {};
             usersToDisplay.forEach(user => {
                 const role = user.role || 'User';
@@ -1648,12 +2009,15 @@ let targetType = data.target || data.target_type || 'karyawan';
                 groupedUsers[role].push(user);
             });
             
+            // Create checkboxes for each group
             Object.keys(groupedUsers).forEach(role => {
+                // Add role header
                 const roleHeader = document.createElement('div');
                 roleHeader.className = 'text-sm font-semibold text-gray-600 mb-2 mt-3 first:mt-0';
                 roleHeader.textContent = role;
                 container.appendChild(roleHeader);
                 
+                // Add users in this role
                 groupedUsers[role].forEach(user => {
                     const checkboxItem = document.createElement('div');
                     checkboxItem.className = 'user-checkbox-item';
@@ -1677,10 +2041,12 @@ let targetType = data.target || data.target_type || 'karyawan';
                 });
             });
 
+            // If no users match search, show message
             if (usersToDisplay.length === 0) {
                 container.innerHTML = '<div class="text-center text-gray-500 py-4">Tidak ada user sesuai pencarian</div>';
             }
             
+            // Update selected badges
             updateSelectedBadges();
         }
         
@@ -1764,10 +2130,12 @@ let targetType = data.target || data.target_type || 'karyawan';
                         'Update'
                     );
                     
+                    // Wait for modal to render, then populate users
                     setTimeout(() => {
                         const selectedUserIds = result.data.users?.map(u => u.id.toString()) || [];
                         populateUserCheckboxes(selectedUserIds);
                         
+                        // Show file preview if exists
                         if (result.data.lampiran) {
                             showFilePreview(result.data.lampiran);
                         }
@@ -1794,196 +2162,12 @@ let targetType = data.target || data.target_type || 'karyawan';
             }
         }
         
-        // Show attachment in modal
-        function showAttachment(filename) {
-            currentAttachmentName = filename;
-            
-            let cleanFilename = filename;
-            if (filename.includes('pengumuman/')) {
-                cleanFilename = filename.split('pengumuman/').pop();
-            }
-            
-            document.getElementById('attachmentTitle').textContent = 'Lampiran';
-            document.getElementById('attachmentFileName').textContent = cleanFilename;
-            
-            const previewContainer = document.getElementById('attachmentPreview');
-            previewContainer.innerHTML = `
-                <div class="attachment-loading">
-                    <div class="spinner"></div>
-                    <p class="text-gray-500">Memuat lampiran...</p>
-                </div>
-            `;
-            
-            document.getElementById('attachmentModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-            
-            const fileExtension = cleanFilename.split('.').pop().toLowerCase();
-            
-            const possibleUrls = [
-                `/storage/pengumuman/${cleanFilename}`,
-                `/storage/${cleanFilename}`,
-                `/storage/pengumuman/pengumuman/${cleanFilename}`
-            ];
-            
-            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
-                let urlIndex = 0;
-                
-                function tryLoadImage() {
-                    if (urlIndex >= possibleUrls.length) {
-                        showAttachmentError(cleanFilename);
-                        return;
-                    }
-                    
-                    const img = new Image();
-                    const currentUrl = possibleUrls[urlIndex];
-                    
-                    img.onload = function() {
-                        currentAttachmentUrl = currentUrl;
-                        previewContainer.innerHTML = '';
-                        const imgElement = document.createElement('img');
-                        imgElement.src = currentUrl;
-                        imgElement.alt = cleanFilename;
-                        imgElement.className = 'max-w-full max-h-full object-contain';
-                        previewContainer.appendChild(imgElement);
-                    };
-                    
-                    img.onerror = function() {
-                        urlIndex++;
-                        tryLoadImage();
-                    };
-                    
-                    img.src = currentUrl;
-                }
-                
-                tryLoadImage();
-                
-            } else if (['pdf'].includes(fileExtension)) {
-                let urlIndex = 0;
-                
-                function tryLoadPDF() {
-                    if (urlIndex >= possibleUrls.length) {
-                        showAttachmentError(cleanFilename);
-                        return;
-                    }
-                    
-                    const currentUrl = possibleUrls[urlIndex];
-                    currentAttachmentUrl = currentUrl;
-                    
-                    const iframe = document.createElement('iframe');
-                    iframe.src = currentUrl;
-                    iframe.title = cleanFilename;
-                    iframe.className = 'w-full h-full border-none rounded';
-                    
-                    setTimeout(() => {
-                        try {
-                            if (iframe.contentDocument && iframe.contentDocument.body) {
-                                previewContainer.innerHTML = '';
-                                previewContainer.appendChild(iframe);
-                            } else {
-                                urlIndex++;
-                                tryLoadPDF();
-                            }
-                        } catch (e) {
-                            urlIndex++;
-                            tryLoadPDF();
-                        }
-                    }, 2000);
-                    
-                    previewContainer.innerHTML = '';
-                    previewContainer.appendChild(iframe);
-                }
-                
-                tryLoadPDF();
-                
-            } else {
-                currentAttachmentUrl = possibleUrls[0];
-                showFileInfo(cleanFilename);
-            }
-        }
-        
-        // Show attachment error
-        function showAttachmentError(filename) {
-            const previewContainer = document.getElementById('attachmentPreview');
-            previewContainer.innerHTML = `
-                <div class="attachment-error">
-                    <div class="attachment-error-icon">
-                        <span class="material-icons-outlined">error</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">File Tidak Ditemukan</h3>
-                    <p class="text-gray-500 mb-6">File "${filename}" tidak dapat ditemukan atau telah dipindahkan</p>
-                    <button onclick="downloadAttachment()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
-                        <span class="material-icons-outlined text-sm mr-2">download</span>
-                        Coba Unduh File
-                    </button>
-                </div>
-            `;
-        }
-        
-        // Show file info for non-previewable files
-        function showFileInfo(filename) {
-            const previewContainer = document.getElementById('attachmentPreview');
-            previewContainer.innerHTML = `
-                <div class="text-center p-8">
-                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <span class="material-icons-outlined text-4xl text-gray-400">description</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">${filename}</h3>
-                    <p class="text-gray-500 mb-6">Tidak dapat menampilkan pratinjau untuk jenis file ini</p>
-                    <button onclick="downloadAttachment()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
-                        <span class="material-icons-outlined text-sm mr-2">download</span>
-                        Unduh File
-                    </button>
-                </div>
-            `;
-        }
-        
-        // Close attachment modal
-        function closeAttachmentModal() {
-            document.getElementById('attachmentModal').classList.remove('show');
-            document.body.style.overflow = 'auto';
-            currentAttachmentUrl = '';
-            currentAttachmentName = '';
-        }
-        
-        // Download attachment
-        function downloadAttachment() {
-            if (currentAttachmentName) {
-                const cleanFilename = currentAttachmentName.includes('pengumuman/') ? 
-                    currentAttachmentName.split('pengumuman/').pop() : 
-                    currentAttachmentName;
-                
-                const link = document.createElement('a');
-                link.href = `/storage/pengumuman/${cleanFilename}`;
-                link.download = cleanFilename;
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showMinimalPopup('Info', 'Mengunduh file...', 'warning');
-            }
-        }
-        
-        // Open attachment in new tab
-        function openInNewTab() {
-            if (currentAttachmentUrl) {
-                window.open(currentAttachmentUrl, '_blank');
-            } else if (currentAttachmentName) {
-                const cleanFilename = currentAttachmentName.includes('pengumuman/') ? 
-                    currentAttachmentName.split('pengumuman/').pop() : 
-                    currentAttachmentName;
-                
-                const url = `/storage/pengumuman/${cleanFilename}`;
-                window.open(url, '_blank');
-            }
-        }
-        
-        // 🔥 PERBAIKAN: Handle form submission
+        // Handle form submission
         async function handleConfirm() {
             try {
+                // Get form elements
                 const judulInput = document.getElementById('judulInput');
                 const isiInput = document.getElementById('isiInput');
-                const targetTypeInput = document.getElementById('targetTypeInput');
                 const checkboxes = document.querySelectorAll('#usersCheckboxContainer input[type="checkbox"]:checked');
                 const fileInput = document.getElementById('fileInput');
                 
@@ -1995,7 +2179,6 @@ let targetType = data.target || data.target_type || 'karyawan';
                 
                 const judul = judulInput.value.trim();
                 const isi = isiInput.value.trim();
-                const targetType = targetTypeInput ? targetTypeInput.value : 'karyawan';
                 const selectedUsers = Array.from(checkboxes).map(cb => cb.value);
                 
                 if (!judul || !isi) {
@@ -2012,7 +2195,6 @@ let targetType = data.target || data.target_type || 'karyawan';
                 const formData = new FormData();
                 formData.append('judul', judul);
                 formData.append('isi_pesan', isi);
-                formData.append('target', targetType);
                 
                 // Add users
                 selectedUsers.forEach(userId => {
@@ -2020,7 +2202,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                 });
                 
                 // Add file if exists
-                if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                if (fileInput && fileInput.files[0]) {
                     formData.append('lampiran', fileInput.files[0]);
                 }
                 
@@ -2028,7 +2210,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                 let url = '/pengumuman';
                 let method = 'POST';
                 
-                if (currentAction === 'edit' && currentId) {
+                if (currentAction === 'edit') {
                     url = `/pengumuman/${currentId}`;
                     method = 'PUT';
                     formData.append('_method', 'PUT');
@@ -2056,6 +2238,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                     showMinimalPopup('Berhasil', result.message || 'Pengumuman berhasil disimpan', 'success');
                     setTimeout(() => {
                         closeModal();
+                        // Reload page to get the latest data
                         window.location.reload();
                     }, 1500);
                 } else {
@@ -2073,10 +2256,36 @@ let targetType = data.target || data.target_type || 'karyawan';
             }
         }
         
+        // Delete pengumuman
+        async function deletePengumuman(id) {
+            try {
+                const response = await fetch(`/pengumuman/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMinimalPopup('Berhasil', result.message || 'Pengumuman berhasil dihapus', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showMinimalPopup('Error', result.message || 'Gagal menghapus pengumuman', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting pengumuman:', error);
+                showMinimalPopup('Error', 'Gagal menghapus pengumuman', 'error');
+            }
+        }
+        
         // Filter data
         function filterData() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             
+            // Filter all data based on search term
             if (searchTerm === '') {
                 filteredData = [...allData];
             } else {
@@ -2086,17 +2295,152 @@ let targetType = data.target || data.target_type || 'karyawan';
                 });
             }
             
+            // Update total items and pages
             totalItems = filteredData.length;
             totalPages = Math.ceil(totalItems / itemsPerPage);
             
+            // Reset to first page if current page is out of range
             if (currentPage > totalPages && totalPages > 0) {
                 currentPage = 1;
             }
             
+            // Update pagination and table
             updatePagination();
         }
         
+        // Initialize filter
+        function initializeFilter() {
+            const filterBtn = document.getElementById('filterBtn');
+            const filterDropdown = document.getElementById('filterDropdown');
+            const filterAll = document.getElementById('filterAll');
+            const applyFilterBtn = document.getElementById('applyFilter');
+            const resetFilterBtn = document.getElementById('resetFilter');
+            
+            // Return early if filter elements don't exist
+            if (!filterBtn || !filterDropdown || !filterAll || !applyFilterBtn || !resetFilterBtn) {
+                console.log('Filter elements not found, skipping filter initialization');
+                return;
+            }
+            
+            // Toggle filter dropdown
+            filterBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                filterDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                filterDropdown.classList.remove('show');
+            });
+            
+            // Handle "All" checkbox
+            filterAll.addEventListener('change', function() {
+                if (this.checked) {
+                    // Uncheck all other checkboxes
+                    document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
+                        cb.checked = false;
+                    });
+                }
+            });
+            
+            // Handle other checkboxes
+            document.querySelectorAll('.filter-option input[type="checkbox"]:not(#filterAll)').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        // Uncheck "All" checkbox
+                        filterAll.checked = false;
+                    }
+                });
+            });
+            
+            // Apply filter
+            applyFilterBtn.addEventListener('click', function() {
+                const filterAll = document.getElementById('filterAll');
+                const filterUmum = document.getElementById('filterUmum');
+                const filterPenting = document.getElementById('filterPenting');
+                const filterInternal = document.getElementById('filterInternal');
+                
+                let activeFilters = [];
+                if (filterAll.checked) {
+                    activeFilters.push('all');
+                } else {
+                    if (filterUmum.checked) activeFilters.push('umum');
+                    if (filterPenting.checked) activeFilters.push('penting');
+                    if (filterInternal.checked) activeFilters.push('internal');
+                }
+                
+                applyFilters(activeFilters);
+                filterDropdown.classList.remove('show');
+            });
+            
+            // Reset filter
+            resetFilterBtn.addEventListener('click', function() {
+                document.getElementById('filterAll').checked = true;
+                document.getElementById('filterUmum').checked = false;
+                document.getElementById('filterPenting').checked = false;
+                document.getElementById('filterInternal').checked = false;
+                applyFilters(['all']);
+                filterDropdown.classList.remove('show');
+            });
+        }
+        
+        // Apply filters
+        function applyFilters(filters) {
+            // If "all" is selected, show all data
+            if (filters.includes('all')) {
+                filteredData = [...allData];
+            } else {
+                // Filter data based on selected categories
+                // This is a placeholder - you would implement actual filtering logic here
+                filteredData = [...allData];
+            }
+            
+            // Update total items and pages
+            totalItems = filteredData.length;
+            totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            // Reset to first page
+            currentPage = 1;
+            
+            // Update pagination and table
+            updatePagination();
+        }
+        
+        // Initialize scroll detection for table
+        function initializeScrollDetection() {
+            const scrollableTable = document.getElementById('scrollableTable');
+            
+            if (scrollableTable) {
+                // Add scroll event listener
+                scrollableTable.addEventListener('scroll', function() {
+                    const scrollLeft = scrollableTable.scrollLeft;
+                    const maxScroll = scrollableTable.scrollWidth - scrollableTable.clientWidth;
+                });
+            }
+        }
+        
         // Show loading state
+        function showLoading(show, type = 'general') {
+            if (type === 'users') {
+                // Handle users loading if needed
+                return;
+            }
+            
+            const loadingState = document.getElementById('loadingState');
+            const tableContainer = document.getElementById('tableContainer');
+            const emptyState = document.getElementById('emptyState');
+            const mobileCards = document.getElementById('mobileCards');
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                if (tableContainer) tableContainer.classList.add('hidden');
+                if (mobileCards) mobileCards.classList.add('hidden');
+                if (emptyState) emptyState.classList.add('hidden');
+            } else {
+                loadingState.classList.add('hidden');
+            }
+        }
+        
         function showSubmitLoading(show) {
             const confirmBtnText = document.getElementById('confirmBtnText');
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -2113,17 +2457,21 @@ let targetType = data.target || data.target_type || 'karyawan';
             }
         }
         
-        // Notification function
+        // Modified notification function to match second file
         function showMinimalPopup(title, message, type = 'success') {
             const popup = document.getElementById('notification');
             const popupTitle = popup.querySelector('.minimal-popup-title');
             const popupMessage = popup.querySelector('.minimal-popup-message');
             const popupIcon = popup.querySelector('.minimal-popup-icon span');
 
+            // Set content
             popupTitle.textContent = title;
             popupMessage.textContent = message;
+
+            // Set type
             popup.className = 'minimal-popup show ' + type;
 
+            // Set icon
             if (type === 'success') {
                 popupIcon.textContent = 'check';
             } else if (type === 'error') {
@@ -2132,9 +2480,19 @@ let targetType = data.target || data.target_type || 'karyawan';
                 popupIcon.textContent = 'warning';
             }
 
+            // Auto hide after 3 seconds (changed from 5 seconds)
             setTimeout(() => {
                 popup.classList.remove('show');
             }, 3000);
+        }
+        
+        // Keep the old function for backward compatibility
+        function showNotification(title, message, type = 'success') {
+            showMinimalPopup(title, message, type);
+        }
+        
+        function hideNotif() {
+            document.getElementById('notification').classList.remove('show');
         }
         
         // Delete form submission handler
@@ -2144,6 +2502,8 @@ let targetType = data.target || data.target_type || 'karyawan';
                 e.preventDefault();
                 
                 const id = document.getElementById('deleteId').value;
+                
+                // Show loading state
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Menghapus...';
@@ -2171,6 +2531,7 @@ let targetType = data.target || data.target_type || 'karyawan';
                     console.error('Error deleting pengumuman:', error);
                     showMinimalPopup('Error', 'Gagal menghapus pengumuman', 'error');
                 } finally {
+                    // Reset button state
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }

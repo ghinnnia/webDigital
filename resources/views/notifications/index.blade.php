@@ -99,31 +99,6 @@
             font-size: 10px;
             font-weight: 500;
         }
-        .badge-new-task {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 500;
-        }
-        .badge-deadline {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 500;
-        }
-        
-        /* Animation for new notifications */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .notification-item-new {
-            animation: slideIn 0.5s ease-out;
-        }
     </style>
 </head>
 
@@ -131,23 +106,6 @@
 
 @php
     $userRole = Auth::user()->role;
-
-    // 🔥 PERBAIKAN LOGIKA: Menggunakan getCollection() agar aman memproses data paginator tanpa merusak object utama
-    if($userRole == 'karyawan' && isset($notifications)) {
-        $notificationCollection = $notifications->getCollection();
-        $stats['new_tasks'] = $notificationCollection->where('type', 'new_task')->count();
-        $stats['payroll'] = $notificationCollection->where('type', 'payroll')->count();
-        $stats['deadline_warning'] = $notificationCollection->where('type', 'deadline_warning')->count();
-        $stats['task_revision'] = $notificationCollection->where('type', 'task_revision')->count();
-        
-        // Memastikan total dan unread terisi dengan aman jika dari controller kosong
-        if(!isset($stats['total'])) {
-            $stats['total'] = $notifications->total();
-        }
-        if(!isset($stats['unread'])) {
-            $stats['unread'] = $unreadCount ?? $notificationCollection->where('is_read', false)->count();
-        }
-    }
 @endphp
 
 {{-- ==================== LAYOUT BERDASARKAN ROLE ==================== --}}
@@ -172,6 +130,7 @@
 
 {{-- ==================== KONTEN UTAMA ==================== --}}
 
+<!-- Header Section -->
 <div class="mb-8 fade-in">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
@@ -191,11 +150,14 @@
         </div>
         <div class="flex gap-3 mt-4 md:mt-0">
             @if($unreadCount > 0)
-                <button onclick="markAllAsRead()" 
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm">
-                    <span class="material-icons-outlined text-sm">done_all</span>
-                    Tandai Semua Dibaca
-                </button>
+                <form action="{{ route('notifications.mark-all-read') }}" method="POST" id="markAllReadForm">
+                    @csrf
+                    <button type="submit" 
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm">
+                        <span class="material-icons-outlined text-sm">done_all</span>
+                        Tandai Semua Dibaca
+                    </button>
+                </form>
             @endif
             
             @php
@@ -241,15 +203,15 @@
 
 @if($userRole == 'hr')
     {{-- STATISTIK HR --}}
-    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-8 fade-in">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 fade-in">
         <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                     <span class="material-icons-outlined text-blue-600">notifications</span>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Total</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] ?? 0 }}</p>
+                    <p class="text-gray-400 text-sm">Total Notifikasi</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $notifications->total() }}</p>
                 </div>
             </div>
         </div>
@@ -260,7 +222,7 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Belum Dibaca</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ $stats['unread'] ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ $unreadCount }}</p>
                 </div>
             </div>
         </div>
@@ -271,7 +233,7 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Sudah Dibaca</p>
-                    <p class="text-2xl font-bold text-green-600">{{ $stats['read'] ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $notifications->total() - $unreadCount }}</p>
                 </div>
             </div>
         </div>
@@ -282,18 +244,9 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Tugas Terlambat</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $stats['deadline_warning'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-emerald-50 rounded-xl shadow-sm border border-emerald-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-emerald-600">cloud_upload</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Tugas Dikirim</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $stats['task_submitted'] ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-red-600">
+                        {{ $notifications->where('type', 'deadline_warning')->count() }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -301,6 +254,44 @@
 
 @elseif($userRole == 'manager_divisi')
     {{-- STATISTIK MANAGER DIVISI --}}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-in">
+        <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="material-icons-outlined text-blue-600">notifications</span>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Total Notifikasi</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $notifications->total() }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span class="material-icons-outlined text-yellow-600">schedule</span>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Belum Dibaca</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ $unreadCount }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="material-icons-outlined text-green-600">check_circle</span>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Sudah Dibaca</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $notifications->total() - $unreadCount }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@else
+    {{-- STATISTIK KARYAWAN (TAMBAHKAN UNTUK SLIP GAJI) --}}
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 fade-in">
         <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
@@ -308,8 +299,8 @@
                     <span class="material-icons-outlined text-blue-600">notifications</span>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Total</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] ?? 0 }}</p>
+                    <p class="text-gray-400 text-sm">Total Notifikasi</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $notifications->total() }}</p>
                 </div>
             </div>
         </div>
@@ -320,78 +311,18 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Belum Dibaca</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ $stats['unread'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-emerald-50 rounded-xl shadow-sm border border-emerald-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-emerald-600">cloud_upload</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Tugas Dikirim</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $stats['task_submitted'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-orange-50 rounded-xl shadow-sm border border-orange-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-orange-600">edit_note</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Perlu Revisi</p>
-                    <p class="text-2xl font-bold text-orange-600">{{ $stats['task_revision'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-@else
-    {{-- STATISTIK KARYAWAN (CARD SUDAH DIBACA DIGANTI JADI PERLU REVISI) --}}
-    <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-8 fade-in">
-        <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-blue-600">notifications</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Total</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ $unreadCount }}</p>
                 </div>
             </div>
         </div>
         <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-yellow-600">schedule</span>
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="material-icons-outlined text-green-600">check_circle</span>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Belum Dibaca</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ $stats['unread'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-orange-50 rounded-xl shadow-sm border border-orange-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-orange-600">edit_note</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Perlu Revisi</p>
-                    <p class="text-2xl font-bold text-orange-600">{{ $stats['task_revision'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-purple-50 rounded-xl shadow-sm border border-purple-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-purple-600">assignment</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Tugas Baru</p>
-                    <p class="text-2xl font-bold text-purple-600">{{ $stats['new_tasks'] ?? 0 }}</p>
+                    <p class="text-gray-400 text-sm">Sudah Dibaca</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $notifications->total() - $unreadCount }}</p>
                 </div>
             </div>
         </div>
@@ -402,18 +333,7 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Slip Gaji</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $stats['payroll'] ?? 0 }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card bg-red-50 rounded-xl shadow-sm border border-red-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <span class="material-icons-outlined text-red-600">warning</span>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-sm">Deadline</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $stats['deadline_warning'] ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ $notifications->where('type', 'payroll')->count() }}</p>
                 </div>
             </div>
         </div>
@@ -470,9 +390,7 @@
                                 @elseif($notif->type == 'deadline_warning')
                                     <span class="material-icons-outlined text-red-500">warning</span>
                                 @elseif($notif->type == 'task_submitted')
-                                    <span class="material-icons-outlined text-emerald-500">cloud_upload</span>
-                                @elseif($notif->type == 'new_task')
-                                    <span class="material-icons-outlined text-purple-500">assignment</span>
+                                    <span class="material-icons-outlined text-green-500">cloud_upload</span>
                                 @else
                                     <span class="material-icons-outlined text-gray-500">notifications</span>
                                 @endif
@@ -508,17 +426,20 @@
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center gap-2">
                                 @if(!$notif->is_read)
-                                    <button onclick="markAsRead({{ $notif->id }})" 
-                                            class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition" 
-                                            title="Tandai dibaca">
-                                        <span class="material-icons-outlined text-sm">done</span>
-                                    </button>
+                                    <form action="{{ route('notifications.mark-read', $notif->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition" title="Tandai dibaca">
+                                            <span class="material-icons-outlined text-sm">done</span>
+                                        </button>
+                                    </form>
                                 @endif
-                                <button onclick="deleteNotification({{ $notif->id }})" 
-                                        class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition" 
-                                        title="Hapus">
-                                    <span class="material-icons-outlined text-sm">delete</span>
-                                </button>
+                                <form action="{{ route('notifications.destroy', $notif->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus notifikasi?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition" title="Hapus">
+                                        <span class="material-icons-outlined text-sm">delete</span>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -584,9 +505,7 @@
                                 @elseif($notif->type == 'task_revision')
                                     <span class="material-icons-outlined text-orange-500">edit_note</span>
                                 @elseif($notif->type == 'task_submitted')
-                                    <span class="material-icons-outlined text-emerald-500">cloud_upload</span>
-                                @elseif($notif->type == 'new_task')
-                                    <span class="material-icons-outlined text-purple-500">assignment</span>
+                                    <span class="material-icons-outlined text-green-500">cloud_upload</span>
                                 @else
                                     <span class="material-icons-outlined text-gray-500">notifications</span>
                                 @endif
@@ -608,17 +527,20 @@
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center gap-2">
                                 @if(!$notif->is_read)
-                                    <button onclick="markAsRead({{ $notif->id }})" 
-                                            class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition" 
-                                            title="Tandai dibaca">
-                                        <span class="material-icons-outlined text-sm">done</span>
-                                    </button>
+                                    <form action="{{ route('notifications.mark-read', $notif->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition" title="Tandai dibaca">
+                                            <span class="material-icons-outlined text-sm">done</span>
+                                        </button>
+                                    </form>
                                 @endif
-                                <button onclick="deleteNotification({{ $notif->id }})" 
-                                        class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition" 
-                                        title="Hapus">
-                                    <span class="material-icons-outlined text-sm">delete</span>
-                                </button>
+                                <form action="{{ route('notifications.destroy', $notif->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus notifikasi?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition" title="Hapus">
+                                        <span class="material-icons-outlined text-sm">delete</span>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -638,10 +560,10 @@
     </div>
 
 @else
-    {{-- TAMPILAN KARYAWAN: CARD VIEW PERSONAL (DENGAN SLIP GAJI & TUGAS BARU) --}}
-    <div class="space-y-4 fade-in" id="notificationContainer">
+    {{-- TAMPILAN KARYAWAN: CARD VIEW PERSONAL (DENGAN SLIP GAJI) --}}
+    <div class="space-y-4 fade-in">
         @forelse($notifications as $notif)
-        <div class="notification-item {{ !$notif->is_read ? 'unread' : '' }} bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition notification-item-{{ $loop->first && !$notif->is_read ? 'new' : 'old' }}"
+        <div class="notification-item {{ !$notif->is_read ? 'unread' : '' }} bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition"
              data-id="{{ $notif->id }}"
              onclick="markAsRead({{ $notif->id }})">
             <div class="flex justify-between items-start">
@@ -651,24 +573,16 @@
                         @if($notif->type == 'payroll')
                             <span class="material-icons-outlined text-emerald-500 text-lg">receipt</span>
                             <span class="badge-payroll">Slip Gaji</span>
-                        @elseif($notif->type == 'new_task')
-                            <span class="material-icons-outlined text-purple-500 text-lg">assignment</span>
-                            <span class="badge-new-task">Tugas Baru</span>
                         @elseif($notif->type == 'task_reminder' || $notif->type == 'deadline_reminder')
                             <span class="material-icons-outlined text-yellow-500 text-lg">schedule</span>
-                            <span class="badge-task">Pengingat</span>
                         @elseif($notif->type == 'deadline_warning')
                             <span class="material-icons-outlined text-red-500 text-lg">warning</span>
-                            <span class="badge-deadline">⚠️ Deadline</span>
                         @elseif($notif->type == 'task_submitted')
-                            <span class="material-icons-outlined text-emerald-500 text-lg">cloud_upload</span>
-                            <span class="badge-task">Terkirim</span>
+                            <span class="material-icons-outlined text-green-500 text-lg">cloud_upload</span>
                         @elseif($notif->type == 'task_approved')
                             <span class="material-icons-outlined text-blue-500 text-lg">check_circle</span>
-                            <span class="badge-task">Disetujui</span>
                         @elseif($notif->type == 'task_revision')
                             <span class="material-icons-outlined text-orange-500 text-lg">edit_note</span>
-                            <span class="badge-task">Revisi</span>
                         @else
                             <span class="material-icons-outlined text-gray-500 text-lg">notifications</span>
                         @endif
@@ -776,9 +690,6 @@
 </div>
 
 <script>
-    // ============================================
-    // TOAST FUNCTIONS
-    // ============================================
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         const toastTitle = document.getElementById('toastTitle');
@@ -797,11 +708,6 @@
             toastTitle.textContent = 'Gagal';
             toastIcon.textContent = 'error';
             toastIcon.className = 'material-icons-outlined text-red-500';
-        } else if (type === 'warning') {
-            toast.classList.add('toast-warning');
-            toastTitle.textContent = 'Peringatan';
-            toastIcon.textContent = 'warning';
-            toastIcon.className = 'material-icons-outlined text-yellow-500';
         } else {
             toast.classList.add('toast-info');
             toastTitle.textContent = 'Informasi';
@@ -822,19 +728,8 @@
         setTimeout(() => toast.classList.add('hidden'), 300);
     }
     
-    // ============================================
-    // NOTIFICATION FUNCTIONS (AJAX)
-    // ============================================
-    
     function markAsRead(id, event) {
         if (event) event.stopPropagation();
-        
-        const element = document.querySelector(`.notification-item[data-id="${id}"]`);
-        if (element) {
-            element.classList.remove('unread');
-            const badge = element.querySelector('.bg-blue-500');
-            if (badge) badge.remove();
-        }
         
         fetch(`/notifications/${id}/mark-read`, {
             method: 'POST',
@@ -847,7 +742,7 @@
         .then(data => {
             if (data.success) {
                 showToast('Notifikasi ditandai sudah dibaca', 'success');
-                updateStats();
+                setTimeout(() => location.reload(), 1000);
             }
         })
         .catch(error => {
@@ -856,158 +751,36 @@
         });
     }
     
-    function markAllAsRead() {
-        if (!confirm('Tandai semua notifikasi sebagai sudah dibaca?')) return;
-        
-        fetch('/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Semua notifikasi ditandai sudah dibaca', 'success');
-                document.querySelectorAll('.notification-item.unread').forEach(el => {
-                    el.classList.remove('unread');
-                    const badge = el.querySelector('.bg-blue-500');
-                    if (badge) badge.remove();
-                });
-                updateStats();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Gagal menandai semua notifikasi', 'error');
-        });
-    }
-    
     function deleteNotification(id, event) {
-        if (event) event.stopPropagation();
+        event.stopPropagation();
         
-        if (!confirm('Yakin ingin menghapus notifikasi ini?')) return;
-        
-        fetch(`/notifications/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Notifikasi dihapus', 'success');
-                const element = document.querySelector(`.notification-item[data-id="${id}"]`);
-                if (element) {
-                    element.style.transition = 'all 0.3s';
-                    element.style.opacity = '0';
-                    element.style.transform = 'translateX(-20px)';
-                    setTimeout(() => {
-                        element.remove();
-                        updateStats();
-                        // Refresh jika tidak ada notifikasi lagi
-                        if (document.querySelectorAll('.notification-item').length === 0) {
-                            location.reload();
-                        }
-                    }, 300);
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Gagal menghapus notifikasi', 'error');
-        });
-    }
-    
-    // ============================================
-    // UPDATE STATISTICS
-    // ============================================
-    function updateStats() {
-        fetch('/api/notifications/unread-count')
-            .then(res => res.json())
-            .then(data => {
-                // Update badge di header
-                const badge = document.getElementById('notificationBadge');
-                if (badge) {
-                    if (data.count > 0) {
-                        badge.textContent = data.count > 9 ? '9+' : data.count;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-                
-                // Update stat cards
-                const unreadEl = document.querySelector('.stat-card .text-yellow-600, .stat-card .text-yellow-400');
-                if (unreadEl) {
-                    const parentCard = unreadEl.closest('.stat-card');
-                    if (parentCard) {
-                        const valueEl = parentCard.querySelector('.text-2xl');
-                        if (valueEl) {
-                            const currentText = valueEl.textContent;
-                            // Hanya update jika ada data
-                            if (data.count !== undefined) {
-                                // Cari card yang menampilkan "Belum Dibaca"
-                                const statCards = document.querySelectorAll('.stat-card');
-                                statCards.forEach(card => {
-                                    const label = card.querySelector('.text-gray-400');
-                                    if (label && label.textContent.trim() === 'Belum Dibaca') {
-                                        const val = card.querySelector('.text-2xl');
-                                        if (val) val.textContent = data.count;
-                                    }
-                                });
-                            }
-                        }
-                    }
+        if (confirm('Yakin ingin menghapus notifikasi ini?')) {
+            fetch(`/notifications/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .catch(err => console.error('Error:', err));
-    }
-    
-    // ============================================
-    // CHECK NEW NOTIFICATIONS (AUTO REFRESH)
-    // ============================================
-    let lastNotificationCount = {{ $notifications->total() }};
-    
-    function checkNewNotifications() {
-        fetch('/api/notifications/unread-count')
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                // Update badge
-                const badge = document.getElementById('notificationBadge');
-                if (badge) {
-                    if (data.count > 0) {
-                        badge.textContent = data.count > 9 ? '9+' : data.count;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
+                if (data.success) {
+                    showToast('Notifikasi dihapus', 'success');
+                    setTimeout(() => location.reload(), 1000);
                 }
-                
-                // Cek notifikasi baru (total notifikasi berubah)
-                fetch('/api/notifications/count')
-                    .then(res => res.json())
-                    .then(totalData => {
-                        const currentCount = totalData.count || 0;
-                        if (currentCount > lastNotificationCount) {
-                            const newCount = currentCount - lastNotificationCount;
-                            showToast(`📬 ${newCount} Notifikasi Baru`, `Ada ${newCount} notifikasi baru untuk Anda`, 'info');
-                            setTimeout(() => location.reload(), 3000);
-                        }
-                        lastNotificationCount = currentCount;
-                    })
-                    .catch(err => console.error('Error:', err));
             })
-            .catch(err => console.error('Error:', err));
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Gagal menghapus notifikasi', 'error');
+            });
+        }
     }
     
-    // ============================================
-    // INIT
-    // ============================================
-    setInterval(checkNewNotifications, 30000); // Cek setiap 30 detik
+    document.getElementById('markAllReadForm')?.addEventListener('submit', function(e) {
+        if (!confirm('Tandai semua notifikasi sebagai sudah dibaca?')) {
+            e.preventDefault();
+        }
+    });
 </script>
 
 </body>

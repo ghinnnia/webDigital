@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class KinerjaPegawai extends Model
 {
-    protected $table = 'kpa';
+    // Legacy model was mapped to table `kpa`, but current schema uses KPA new structure tables.
+    // `kinerja_pegawai` UI expects fields like grade/rekomendasi; those are provided by `kinerja_pegawai` table in the new setup.
+    protected $table = 'kinerja_pegawai';
 
     protected $fillable = [
         'karyawan_id',

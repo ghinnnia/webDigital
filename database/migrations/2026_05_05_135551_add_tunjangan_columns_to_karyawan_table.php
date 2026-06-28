@@ -26,7 +26,7 @@ return new class extends Migration
         if (!Schema::hasColumn('karyawan', 'divisi_id')) {
             Schema::table('karyawan', function (Blueprint $table) {
                 $table->unsignedBigInteger('divisi_id')->nullable();
-                $table->foreign('divisi_id')->references('id')->on('divisis')->onDelete('set null');
+                $table->foreign('divisi_id')->references('id')->on('divisi')->onDelete('set null');
             });
         }
         

@@ -667,125 +667,6 @@
         .notyf__toast--warning {
             background: #f59e0b !important;
         }
-
-        /* ============================================= */
-        /* MINI POPUP NOTIFIKASI - PASTI MUNCUL */
-        /* ============================================= */
-        
-        #popupContainer {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: 100%;
-            pointer-events: none;
-        }
-
-        .popup-notif {
-            pointer-events: auto;
-            background: #1e293b;
-            color: white;
-            padding: 14px 18px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-left: 5px solid #10b981;
-            min-height: 60px;
-            transform: translateX(120%);
-            opacity: 0;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .popup-notif.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-
-        .popup-notif.hide {
-            transform: translateX(120%);
-            opacity: 0;
-            transition: all 0.4s ease;
-        }
-
-        .popup-notif.error {
-            border-left-color: #ef4444;
-        }
-
-        .popup-notif.warning {
-            border-left-color: #f59e0b;
-        }
-
-        .popup-notif.success {
-            border-left-color: #10b981;
-        }
-
-        .popup-notif .popup-icon {
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-
-        .popup-notif .popup-text {
-            flex: 1;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .popup-notif .popup-text .popup-title {
-            font-weight: 600;
-            font-size: 13px;
-            color: white;
-            margin-bottom: 2px;
-        }
-
-        .popup-notif .popup-text .popup-msg {
-            color: #94a3b8;
-            font-size: 12px;
-        }
-
-        .popup-notif .popup-close {
-            background: none;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 4px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            line-height: 1;
-            pointer-events: auto;
-        }
-
-        .popup-notif .popup-close:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        /* Deadline highlight - hanya untuk yang belum selesai */
-        .deadline-warning {
-            color: #f59e0b !important;
-            font-weight: 600;
-        }
-
-        .deadline-expired {
-            color: #ef4444 !important;
-            font-weight: 600;
-        }
-
-        .notif-badge-pulse {
-            animation: pulse-badge 2s infinite;
-        }
-
-        @keyframes pulse-badge {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
     </style>
 </head>
 
@@ -812,13 +693,13 @@
                             
                             <div id="notificationDropdown" class="notification-dropdown">
                                 <div class="notification-header">
-                                    <h4>Notifikasi Deadline Pengerjaan</h4>
+                                    <h4>Notifikasi</h4>
                                     <button class="mark-all-read" onclick="markAllNotificationsRead()">Tandai semua dibaca</button>
                                 </div>
                                 <div id="notificationList">
                                     <div class="notification-empty">
                                         <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
-                                        <p>Tidak ada notifikasi deadline</p>
+                                        <p>Tidak ada notifikasi</p>
                                     </div>
                                 </div>
                             </div>
@@ -887,25 +768,19 @@
                                         <tbody id="desktopTableBody">
                                             @foreach($projects as $index => $item)
                                                 @php
-                                                    // Cek apakah status sudah selesai
-                                                    $isSelesai = strtolower($item->status_pengerjaan) === 'selesai';
-                                                    
-                                                    // Hitung sisa hari periode pengerjaan - hanya untuk yang belum selesai
+                                                    // Hitung sisa hari periode pengerjaan
                                                     $sisaHari = null;
                                                     $statusDeadline = 'normal';
                                                     $warnaDeadline = '';
-                                                    $deadlineMessage = '';
-                                                    if($item->tanggal_selesai_pengerjaan && !$isSelesai) {
+                                                    if($item->tanggal_selesai_pengerjaan) {
                                                         $tglSelesai = \Carbon\Carbon::parse($item->tanggal_selesai_pengerjaan);
                                                         $sisaHari = floor(\Carbon\Carbon::now()->diffInDays($tglSelesai, false));
                                                         if($sisaHari < 0) {
                                                             $statusDeadline = 'expired';
-                                                            $warnaDeadline = 'deadline-expired';
-                                                            $deadlineMessage = '⚠️ Lewat ' . abs($sisaHari) . ' hari';
+                                                            $warnaDeadline = 'text-red-600 font-semibold';
                                                         } elseif($sisaHari <= 30) {
                                                             $statusDeadline = 'warning';
-                                                            $warnaDeadline = 'deadline-warning';
-                                                            $deadlineMessage = '⏰ Sisa ' . $sisaHari . ' hari';
+                                                            $warnaDeadline = 'text-orange-500 font-semibold';
                                                         }
                                                     }
                                                 @endphp
@@ -921,8 +796,10 @@
                                                             {{ $item->tanggal_mulai_pengerjaan ? $item->tanggal_mulai_pengerjaan->format('Y-m-d') : '-' }} — 
                                                             <span class="{{ $warnaDeadline }}">{{ $item->tanggal_selesai_pengerjaan ? $item->tanggal_selesai_pengerjaan->format('Y-m-d') : '-' }}</span>
                                                         </div>
-                                                        @if($deadlineMessage && !$isSelesai)
-                                                            <span class="text-xs {{ $warnaDeadline }}">{{ $deadlineMessage }}</span>
+                                                        @if($statusDeadline == 'warning' && $sisaHari >= 0)
+                                                            <span class="text-xs text-orange-500">⏰ Sisa {{ $sisaHari }} hari</span>
+                                                        @elseif($statusDeadline == 'expired')
+                                                            <span class="text-xs text-red-500">⚠️ Lewat {{ abs($sisaHari) }} hari</span>
                                                         @endif
                                                     </td>
                                                     <td style="min-width: 180px;">
@@ -1005,31 +882,14 @@
                                                         <span class="text-xs text-gray-600 dark:text-gray-400 mt-1 block">{{ $item->progres }}%</span>
                                                     </td>
                                                     <td style="min-width: 120px;">
-                                                        @php
-                                                            $isOverdue = false;
-                                                            $isSelesai = strtolower($item->status_pengerjaan) === 'selesai';
-                                                            if($item->tanggal_selesai_pengerjaan && !$isSelesai) {
-                                                                $tglSelesai = \Carbon\Carbon::parse($item->tanggal_selesai_pengerjaan);
-                                                                if(\Carbon\Carbon::now()->gt($tglSelesai)) {
-                                                                    $isOverdue = true;
-                                                                }
-                                                            }
-                                                        @endphp
-
-                                                        @if($isOverdue)
-                                                            <span class="px-2.5 py-1 rounded-xl text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 animate-pulse">
-                                                                Terlambat
-                                                            </span>
-                                                        @else
-                                                            <span class="status-badge 
-                                                                @if($item->status_pengerjaan == 'pending') status-pending 
-                                                                @elseif($item->status_pengerjaan == 'dalam_pengerjaan') status-dalam-pengerjaan 
-                                                                @elseif($item->status_pengerjaan == 'selesai') status-selesai 
-                                                                @elseif($item->status_pengerjaan == 'dibatalkan') status-dibatalkan
-                                                                @else status-todo @endif">
-                                                                {{ ucfirst(str_replace('_', ' ', $item->status_pengerjaan)) }}
-                                                            </span>
-                                                        @endif
+                                                        <span class="status-badge 
+                                                            @if($item->status_pengerjaan == 'pending') status-pending 
+                                                            @elseif($item->status_pengerjaan == 'dalam_pengerjaan') status-dalam-pengerjaan 
+                                                            @elseif($item->status_pengerjaan == 'selesai') status-selesai 
+                                                            @elseif($item->status_pengerjaan == 'dibatalkan') status-dibatalkan
+                                                            @else status-todo @endif">
+                                                            {{ ucfirst(str_replace('_', ' ', $item->status_pengerjaan)) }}
+                                                        </span>
                                                     </td>
                                                     <td style="min-width: 120px; text-align: center;">
                                                         <div class="flex justify-center gap-2">
@@ -1193,233 +1053,180 @@
         </button>
     </div>
 
-    <!-- CONTAINER POPUP NOTIFIKASI -->
-    <div id="popupContainer"></div>
-
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script>
         // ============================
-        // MINI POPUP NOTIFICATION SYSTEM - PASTI MUNCUL
+        // NOTIFICATION SYSTEM
         // ============================
         
+        // Inisialisasi Notyf untuk toast notification
+        const notyf = new Notyf({
+            duration: 6000,
+            position: { x: 'right', y: 'top' },
+            ripple: true,
+            dismissible: true,
+            types: [
+                {
+                    type: 'warning',
+                    background: '#f59e0b',
+                    icon: '<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'danger',
+                    background: '#ef4444',
+                    icon: '<i class="fas fa-circle-exclamation" style="margin-right: 8px;"></i>',
+                    duration: 7000
+                },
+                {
+                    type: 'info',
+                    background: '#3b82f6',
+                    icon: '<i class="fas fa-bell" style="margin-right: 8px;"></i>'
+                }
+            ]
+        });
+
         // Data notifikasi deadline dari server
-        var deadlineNotifications = [];
-
-        // Fungsi untuk menampilkan popup - PASTI MUNCUL
-        function showPopup(message, type, duration, title) {
-            if (type === undefined) type = 'info';
-            if (duration === undefined) duration = 4000;
-            if (title === undefined) title = '';
-            
-            var container = document.getElementById('popupContainer');
-            if (!container) {
-                console.error('Container popup tidak ditemukan!');
-                // Fallback ke notyf
-                if (type === 'error') {
-                    notyf.error(message);
-                } else if (type === 'warning') {
-                    notyf.warning(message);
-                } else {
-                    notyf.success(message);
-                }
-                return;
-            }
-
-            // Tentukan judul
-            var popupTitle = title;
-            if (!popupTitle) {
-                if (type === 'success') popupTitle = '✅ Berhasil';
-                else if (type === 'error') popupTitle = '❌ Error';
-                else if (type === 'warning') popupTitle = '⚠️ Peringatan';
-                else popupTitle = 'ℹ️ Informasi';
-            }
-
-            // Tentukan icon
-            var icon = 'ℹ️';
-            if (type === 'success') icon = '✅';
-            else if (type === 'error') icon = '❌';
-            else if (type === 'warning') icon = '⚠️';
-
-            // Buat elemen popup
-            var popup = document.createElement('div');
-            popup.className = 'popup-notif ' + type;
-            
-            popup.innerHTML = `
-                <span class="popup-icon">${icon}</span>
-                <div class="popup-text">
-                    <div class="popup-title">${popupTitle}</div>
-                    <div class="popup-msg">${message}</div>
-                </div>
-                <button class="popup-close" onclick="closePopup(this)">✕</button>
-            `;
-
-            // Tambahkan ke container
-            container.appendChild(popup);
-
-            // Trigger animasi masuk setelah 50ms
-            setTimeout(function() {
-                popup.classList.add('show');
-            }, 50);
-
-            // Auto close setelah durasi
-            var timeoutId = setTimeout(function() {
-                closePopup(popup.querySelector('.popup-close'));
-            }, duration);
-
-            // Simpan timeout
-            popup.dataset.timeoutId = timeoutId;
-
-            return popup;
-        }
-
-        // Fungsi untuk menutup popup
-        function closePopup(closeBtn) {
-            var popup = closeBtn ? closeBtn.closest('.popup-notif') : null;
-            if (!popup) return;
-
-            // Hapus timeout
-            if (popup.dataset.timeoutId) {
-                clearTimeout(parseInt(popup.dataset.timeoutId));
-            }
-
-            popup.classList.remove('show');
-            popup.classList.add('hide');
-            
-            setTimeout(function() {
-                if (popup.parentElement) {
-                    popup.remove();
-                }
-            }, 400);
-        }
-
-        // Fungsi untuk memainkan suara
-        function playSound() {
+        let deadlineNotifications = [];
+        
+        // Fungsi untuk memainkan suara notifikasi
+        function playNotificationSound() {
             try {
-                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                var oscillator = audioCtx.createOscillator();
-                var gainNode = audioCtx.createGain();
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
                 
                 oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                gainNode.connect(audioContext.destination);
                 
-                oscillator.frequency.value = 660;
-                gainNode.gain.value = 0.08;
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.2;
                 
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25);
-                oscillator.stop(audioCtx.currentTime + 0.25);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
                 
-                audioCtx.resume();
+                audioContext.resume();
             } catch(e) {
-                // Abaikan jika audio tidak support
+                console.log('Audio tidak didukung');
             }
         }
 
-        // Kumpulkan notifikasi deadline - HANYA YANG BELUM SELESAI
-        function collectDeadlineNotifs() {
-            var notifs = [];
-            var projectsData = @json($projects->items());
-            var today = new Date();
+        // Queue untuk notifikasi berurutan
+        let notifQueue = [];
+        let isPlaying = false;
+
+        function showToastNotification(message, type) {
+            if (type === 'expired' || type === 'danger') {
+                notyf.open({
+                    type: 'danger',
+                    message: message
+                });
+            } else if (type === 'warning') {
+                notyf.open({
+                    type: 'warning',
+                    message: message
+                });
+            } else {
+                notyf.success({
+                    message: message
+                });
+            }
+            playNotificationSound();
+        }
+
+        function processNotificationQueue() {
+            if (notifQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+            
+            isPlaying = true;
+            const notif = notifQueue.shift();
+            showToastNotification(notif.message, notif.type);
+            
+            setTimeout(processNotificationQueue, 2500);
+        }
+
+        function addNotificationToQueue(message, type) {
+            notifQueue.push({ message: message, type: type });
+            if (!isPlaying) {
+                processNotificationQueue();
+            }
+        }
+
+        // Kumpulkan notifikasi deadline dari data projects
+        function collectDeadlineNotifications() {
+            const notifications = [];
+            const projectsData = @json($projects->items());
+            const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            for (var i = 0; i < projectsData.length; i++) {
-                var project = projectsData[i];
-                
-                // SKIP jika status sudah selesai
-                if (project.status_pengerjaan && project.status_pengerjaan.toLowerCase() === 'selesai') {
-                    continue;
-                }
-                
+            projectsData.forEach(project => {
                 if (project.tanggal_selesai_pengerjaan) {
-                    var endDate = new Date(project.tanggal_selesai_pengerjaan);
+                    const endDate = new Date(project.tanggal_selesai_pengerjaan);
                     endDate.setHours(0, 0, 0, 0);
-                    var diffTime = endDate - today;
-                    var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const diffTime = endDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     
                     if (diffDays < 0) {
-                        notifs.push({
+                        // Sudah lewat
+                        notifications.push({
                             id: project.id,
                             nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
                             status: 'expired',
-                            title: '❌ Deadline Lewat',
-                            message: 'Proyek "' + project.nama + '" telah berakhir ' + Math.abs(diffDays) + ' hari yang lalu'
+                            message: `🔴 Periode pengerjaan proyek "${project.nama}" telah berakhir ${Math.abs(diffDays)} hari yang lalu (${project.tanggal_selesai_pengerjaan})`
                         });
                     } else if (diffDays <= 30) {
-                        notifs.push({
+                        // Akan berakhir dalam 30 hari
+                        notifications.push({
                             id: project.id,
                             nama: project.nama,
+                            sisaHari: diffDays,
+                            tanggalSelesai: project.tanggal_selesai_pengerjaan,
                             status: 'warning',
-                            title: '⚠️ Deadline Mendekat',
-                            message: 'Proyek "' + project.nama + '" akan berakhir dalam ' + diffDays + ' hari'
+                            message: `⚠️ Periode pengerjaan proyek "${project.nama}" akan berakhir dalam ${diffDays} hari (${project.tanggal_selesai_pengerjaan})`
                         });
                     }
                 }
-            }
-            
-            return notifs;
-        }
-
-        // Tampilkan notifikasi awal - HANYA SEKALI
-        function showInitialNotifs() {
-            var hasShown = sessionStorage.getItem('deadline_notifs_shown_gm');
-            if (hasShown === 'true') {
-                var notifs = collectDeadlineNotifs();
-                deadlineNotifications = notifs;
-                updateDropdown();
-                updateBadge();
-                return;
-            }
-
-            var notifs = collectDeadlineNotifs();
-            
-            if (notifs.length === 0) {
-                deadlineNotifications = [];
-                updateDropdown();
-                updateBadge();
-                return;
-            }
-
-            // Urutkan
-            notifs.sort(function(a, b) {
-                if (a.status === 'expired' && b.status !== 'expired') return 1;
-                if (a.status !== 'expired' && b.status === 'expired') return -1;
-                return 0;
             });
             
-            deadlineNotifications = notifs;
-            updateDropdown();
-            updateBadge();
+            return notifications;
+        }
 
-            // Tampilkan maksimal 3 notifikasi
-            var maxNotif = Math.min(notifs.length, 3);
-            var delay = 800;
+        // Tampilkan notifikasi awal saat halaman dibuka
+        function showInitialNotifications() {
+            const notifications = collectDeadlineNotifications();
             
-            for (var i = 0; i < maxNotif; i++) {
-                var notif = notifs[i];
-                var type = notif.status === 'expired' ? 'error' : 'warning';
-                
-                (function(n, t, d) {
-                    setTimeout(function() {
-                        showPopup(n.message, t, 4000, n.title);
-                        playSound();
-                    }, d);
-                })(notif, type, delay);
-                
-                delay += 3000;
-            }
-
-            sessionStorage.setItem('deadline_notifs_shown_gm', 'true');
+            // Urutkan berdasarkan sisa hari (terkecil/terdekat dulu)
+            notifications.sort((a, b) => {
+                if (a.status === 'expired' && b.status !== 'expired') return 1;
+                if (a.status !== 'expired' && b.status === 'expired') return -1;
+                return Math.abs(a.sisaHari) - Math.abs(b.sisaHari);
+            });
+            
+            notifications.forEach(notif => {
+                const type = notif.status === 'expired' ? 'expired' : 'warning';
+                addNotificationToQueue(notif.message, type);
+            });
+            
+            // Simpan untuk dropdown notifikasi
+            deadlineNotifications = notifications;
+            updateNotificationDropdown();
+            updateNotificationBadge();
         }
 
         // Update dropdown notifikasi
-        function updateDropdown() {
-            var listContainer = document.getElementById('notificationList');
+        function updateNotificationDropdown() {
+            const listContainer = document.getElementById('notificationList');
             if (!listContainer) return;
             
-            var allNotifs = deadlineNotifications.slice();
+            const allNotifications = [...deadlineNotifications];
             
-            if (allNotifs.length === 0) {
+            if (allNotifications.length === 0) {
                 listContainer.innerHTML = `
                     <div class="notification-empty">
                         <span class="material-icons-outlined text-gray-400 text-3xl mb-2">notifications_none</span>
@@ -1430,73 +1237,64 @@
                 return;
             }
             
-            var html = '';
-            for (var i = 0; i < allNotifs.length; i++) {
-                var notif = allNotifs[i];
-                var isExpired = notif.status === 'expired';
-                var icon = isExpired ? 'error' : 'warning';
-                var iconColor = isExpired ? 'text-red-500' : 'text-orange-500';
-                var bgClass = isExpired ? 'bg-red-50' : 'bg-orange-50';
-                var statusText = isExpired ? 'Sudah Lewat' : 'Akan Berakhir';
+            let html = '';
+            allNotifications.forEach(notif => {
+                const isExpired = notif.status === 'expired';
+                const icon = isExpired ? 'warning' : 'schedule';
+                const iconColor = isExpired ? 'text-red-500' : 'text-orange-500';
+                const bgClass = isExpired ? 'bg-red-50' : 'bg-orange-50';
+                const statusText = isExpired ? 'Sudah Lewat' : 'Akan Berakhir';
                 
                 html += `
-                    <div class="notification-item ${bgClass}" onclick="markRead(${notif.id})">
+                    <div class="notification-item ${bgClass}" onclick="markNotificationRead(${notif.id})">
                         <div class="flex gap-3">
                             <div class="notification-icon ${iconColor}">
                                 <span class="material-icons-outlined text-sm">${icon}</span>
                             </div>
                             <div class="notification-content">
-                                <div class="notification-title">${statusText} - ${escapeHtml(notif.nama)}</div>
-                                <div class="notification-message">${escapeHtml(notif.message)}</div>
+                                <div class="notification-title">${statusText} - ${notif.nama}</div>
+                                <div class="notification-message">${notif.message}</div>
+                                <div class="notification-time">Deadline: ${notif.tanggalSelesai}</div>
                             </div>
                         </div>
                     </div>
                 `;
-            }
+            });
             
             listContainer.innerHTML = html;
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Update badge
-        function updateBadge() {
-            var badge = document.getElementById('notifBadge');
+        // Update badge notifikasi
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notifBadge');
             if (!badge) return;
             
-            var count = deadlineNotifications.length;
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
+            const unreadCount = deadlineNotifications.length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
                 badge.classList.remove('hidden');
-                badge.classList.add('notif-badge-pulse');
             } else {
                 badge.classList.add('hidden');
-                badge.classList.remove('notif-badge-pulse');
             }
         }
 
-        // Tandai dibaca
-        function markRead(id) {
-            deadlineNotifications = deadlineNotifications.filter(function(n) { return n.id !== id; });
-            updateDropdown();
-            updateBadge();
+        // Tandai notifikasi dibaca
+        function markNotificationRead(id) {
+            deadlineNotifications = deadlineNotifications.filter(n => n.id !== id);
+            updateNotificationDropdown();
+            updateNotificationBadge();
         }
 
-        // Tandai semua dibaca
+        // Tandai semua notifikasi dibaca
         function markAllNotificationsRead() {
             deadlineNotifications = [];
-            updateDropdown();
-            updateBadge();
+            updateNotificationDropdown();
+            updateNotificationBadge();
         }
 
-        // Toggle dropdown
-        function toggleDropdown() {
-            var dropdown = document.getElementById('notificationDropdown');
+        // Toggle dropdown notifikasi
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
             if (dropdown) {
                 dropdown.classList.toggle('show');
             }
@@ -1508,42 +1306,42 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             // Tampilkan notifikasi awal
-            setTimeout(function() {
-                showInitialNotifs();
-            }, 800);
+            setTimeout(() => {
+                showInitialNotifications();
+            }, 500);
             
             // Notification bell click handler
-            var bell = document.getElementById('notificationBell');
+            const bell = document.getElementById('notificationBell');
             if (bell) {
                 bell.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    toggleDropdown();
+                    toggleNotificationDropdown();
                 });
             }
             
             // Close dropdown when clicking outside
             document.addEventListener('click', function(e) {
-                var dropdown = document.getElementById('notificationDropdown');
-                var bellEl = document.getElementById('notificationBell');
-                if (dropdown && bellEl && !bellEl.contains(e.target) && !dropdown.contains(e.target)) {
+                const dropdown = document.getElementById('notificationDropdown');
+                const bell = document.getElementById('notificationBell');
+                if (dropdown && bell && !bell.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.classList.remove('show');
                 }
             });
             
             // Modal elements
-            var editModal = document.getElementById('editModal');
-            var toast = document.getElementById('toast');
-            var toastMessage = document.getElementById('toastMessage');
+            const editModal = document.getElementById('editModal');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
             
             // Buttons
-            var closeModals = document.querySelectorAll('.close-modal');
-            var closeToastBtn = document.getElementById('closeToast');
+            const closeModals = document.querySelectorAll('.close-modal');
+            const closeToastBtn = document.getElementById('closeToast');
             
             // Forms
-            var editForm = document.getElementById('editForm');
+            const editForm = document.getElementById('editForm');
             
             // Close modals
-            closeModals.forEach(function(btn) {
+            closeModals.forEach(btn => {
                 btn.addEventListener('click', function() {
                     editModal.classList.add('hidden');
                 });
@@ -1561,8 +1359,8 @@
                 editForm.addEventListener('submit', function(e) {
                     e.preventDefault();
 
-                    var selectedManagerIds = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]:checked'))
-                        .map(function(input) { return input.value; })
+                    const selectedManagerIds = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]:checked'))
+                        .map(input => input.value)
                         .filter(Boolean);
 
                     if (selectedManagerIds.length === 0) {
@@ -1570,7 +1368,7 @@
                         return;
                     }
 
-                    var primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
+                    const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
                     if (primaryManagerInput) {
                         primaryManagerInput.value = selectedManagerIds[0];
                     }
@@ -1578,10 +1376,10 @@
                         window.syncPrimaryKaryawanSelection();
                     }
                     
-                    var formData = new FormData(editForm);
-                    var id = document.getElementById('editId').value;
+                    const formData = new FormData(editForm);
+                    const id = document.getElementById('editId').value;
                     
-                    fetch('/general_manajer/data_project/' + id, {
+                    fetch(`/general_manajer/data_project/${id}`, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -1589,33 +1387,33 @@
                             'X-HTTP-Method-Override': 'PUT'
                         }
                     })
-                    .then(function(response) {
+                    .then(response => {
                         if (!response.ok) {
-                            return response.json().then(function(errorData) {
-                                var error = new Error('Server responded with an error status');
+                            return response.json().then(errorData => {
+                                const error = new Error('Server responded with an error status');
                                 error.response = response;
                                 error.data = errorData;
                                 throw error;
-                            }).catch(function() {
-                                var error = new Error('Server responded with an error status');
+                            }).catch(() => {
+                                const error = new Error('Server responded with an error status');
                                 error.response = response;
                                 throw error;
                             });
                         }
                         return response.json();
                     })
-                    .then(function(data) {
+                    .then(data => {
                         if (data.success) {
                             showToastMessage('Penanggung jawab berhasil ditetapkan!', 'success');
                             editModal.classList.add('hidden');
-                            setTimeout(function() {
+                            setTimeout(() => {
                                 window.location.reload();
                             }, 1500);
                         } else {
                             showToastMessage(data.message || 'Terjadi kesalahan yang tidak diketahui.', 'error');
                         }
                     })
-                    .catch(function(error) {
+                    .catch(error => {
                         console.error('Fetch Error:', error);
                         handleFetchError(error);
                     });
@@ -1630,13 +1428,12 @@
             }
             
             // Function to show toast notification
-            function showToastMessage(message, type) {
-                if (type === undefined) type = 'success';
+            function showToastMessage(message, type = 'success') {
                 if (toast && toastMessage) {
                     toastMessage.textContent = message;
                     
                     // Change background color based on type
-                    toast.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform transition-transform duration-300 flex items-center';
+                    toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform transition-transform duration-300 flex items-center`;
                     if (type === 'error') {
                         toast.classList.add('bg-red-500', 'text-white');
                     } else {
@@ -1646,7 +1443,7 @@
                     toast.classList.remove('translate-y-20', 'opacity-0');
                     
                     // Auto hide after 5 seconds for error messages
-                    setTimeout(function() {
+                    setTimeout(() => {
                         toast.classList.add('translate-y-20', 'opacity-0');
                     }, type === 'error' ? 5000 : 3000);
                 } else {
@@ -1663,10 +1460,10 @@
             function handleFetchError(error) {
                 if (error.response) {
                     if (error.response.status === 422) {
-                        var errorMessages = '';
+                        let errorMessages = '';
                         if (error.data && error.data.errors) {
-                            var errors = error.data.errors;
-                            for (var field in errors) {
+                            const errors = error.data.errors;
+                            for (const field in errors) {
                                 errorMessages += errors[field].join(', ') + ' ';
                             }
                             showToastMessage('Validasi gagal: ' + errorMessages.trim(), 'error');
@@ -1682,7 +1479,7 @@
                     } else if (error.response.status >= 500) {
                         showToastMessage('Terjadi kesalahan pada server. Periksa konsol browser untuk detail.', 'error');
                     } else {
-                        showToastMessage('Terjadi kesalahan (Status: ' + error.response.status + ').', 'error');
+                        showToastMessage(`Terjadi kesalahan (Status: ${error.response.status}).`, 'error');
                     }
                 } else if (error.request) {
                     showToastMessage('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', 'error');
@@ -1691,20 +1488,20 @@
                 }
             }
 
-            var karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
-            var karyawanList = document.getElementById('karyawanDivisiList');
-            var managerPrimaryInput = document.getElementById('editPenanggungJawabPrimary');
-            var karyawanPrimaryInput = document.getElementById('editKaryawanPenanggungJawabPrimary');
-            var managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
-            var managerSearchInput = document.getElementById('managerSearchInput');
-            var karyawanSearchInput = document.getElementById('karyawanSearchInput');
-            var managerSearchEmpty = document.getElementById('managerSearchEmpty');
-            var karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
+            const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
+            const karyawanList = document.getElementById('karyawanDivisiList');
+            const managerPrimaryInput = document.getElementById('editPenanggungJawabPrimary');
+            const karyawanPrimaryInput = document.getElementById('editKaryawanPenanggungJawabPrimary');
+            const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
+            const managerSearchInput = document.getElementById('managerSearchInput');
+            const karyawanSearchInput = document.getElementById('karyawanSearchInput');
+            const managerSearchEmpty = document.getElementById('managerSearchEmpty');
+            const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
 
             function getCheckedValues(selector) {
                 return Array.from(document.querySelectorAll(selector))
-                    .filter(function(input) { return input.checked; })
-                    .map(function(input) { return input.value; })
+                    .filter(input => input.checked)
+                    .map(input => input.value)
                     .filter(Boolean);
             }
 
@@ -1718,23 +1515,23 @@
 
             function syncPrimaryKaryawan() {
                 if (!karyawanPrimaryInput) return;
-                var selectedKaryawanIds = getSelectedKaryawanIds();
+                const selectedKaryawanIds = getSelectedKaryawanIds();
                 karyawanPrimaryInput.value = selectedKaryawanIds.length > 0 ? selectedKaryawanIds[0] : '';
             }
 
             function applySearchFilter(itemSelector, keyword, emptyElement) {
-                var normalizedKeyword = String(keyword || '').toLowerCase().trim();
-                var items = Array.from(document.querySelectorAll(itemSelector));
+                const normalizedKeyword = String(keyword || '').toLowerCase().trim();
+                const items = Array.from(document.querySelectorAll(itemSelector));
 
                 if (items.length === 0) {
                     if (emptyElement) emptyElement.classList.add('hidden');
                     return;
                 }
 
-                var visibleCount = 0;
-                items.forEach(function(item) {
-                    var text = (item.textContent || '').toLowerCase();
-                    var isVisible = normalizedKeyword === '' || text.includes(normalizedKeyword);
+                let visibleCount = 0;
+                items.forEach(item => {
+                    const text = (item.textContent || '').toLowerCase();
+                    const isVisible = normalizedKeyword === '' || text.includes(normalizedKeyword);
                     item.classList.toggle('hidden', !isVisible);
                     if (isVisible) visibleCount++;
                 });
@@ -1750,14 +1547,13 @@
                 if (karyawanSearchEmpty) {
                     karyawanSearchEmpty.classList.add('hidden');
                 }
-                var text = document.createElement('p');
+                const text = document.createElement('p');
                 text.className = 'text-sm text-gray-500';
                 text.textContent = message;
                 karyawanList.appendChild(text);
             }
 
-            function loadKaryawanByManagers(managerIds, selectedKaryawanIds) {
-                if (selectedKaryawanIds === undefined) selectedKaryawanIds = [];
+            async function loadKaryawanByManagers(managerIds, selectedKaryawanIds = []) {
                 if (!Array.isArray(managerIds) || managerIds.length === 0) {
                     if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
                     if (karyawanList) karyawanList.innerHTML = '';
@@ -1767,76 +1563,67 @@
                 }
 
                 try {
-                    var selectedIds = Array.isArray(selectedKaryawanIds)
-                        ? selectedKaryawanIds.map(function(id) { return String(id); }).filter(Boolean)
+                    const selectedIds = Array.isArray(selectedKaryawanIds)
+                        ? selectedKaryawanIds.map(id => String(id)).filter(Boolean)
                         : [];
 
-                    Promise.all(managerIds.map(function(managerId) {
-                        return fetch('/general_manajer/data_project/karyawan-by-manager/' + managerId, {
+                    const responses = await Promise.all(managerIds.map(async (managerId) => {
+                        const response = await fetch(`/general_manajer/data_project/karyawan-by-manager/${managerId}`, {
                             headers: { 'Accept': 'application/json' }
-                        })
-                        .then(function(response) { return response.json(); })
-                        .then(function(data) {
-                            if (!data.success || !Array.isArray(data.data)) {
-                                return [];
-                            }
-                            return data.data;
                         });
-                    }))
-                    .then(function(responses) {
-                        var uniqueKaryawansMap = new Map();
-                        responses.flat().forEach(function(karyawan) {
-                            if (!karyawan || !karyawan.id) {
-                                return;
-                            }
-                            var key = String(karyawan.id);
-                            if (!uniqueKaryawansMap.has(key)) {
-                                uniqueKaryawansMap.set(key, karyawan);
-                            }
-                        });
-
-                        var uniqueKaryawans = Array.from(uniqueKaryawansMap.values());
-                        if (karyawanList) {
-                            karyawanList.innerHTML = '';
-                            if (uniqueKaryawans.length > 0) {
-                                uniqueKaryawans.forEach(function(karyawan) {
-                                    var label = document.createElement('label');
-                                    label.className = 'karyawan-item flex items-start gap-2 cursor-pointer';
-
-                                    var input = document.createElement('input');
-                                    input.type = 'checkbox';
-                                    input.name = 'karyawan_penanggung_jawab_ids[]';
-                                    input.value = String(karyawan.id);
-                                    input.className = 'karyawan-checkbox mt-1 rounded border-gray-300 text-primary focus:ring-primary';
-                                    input.checked = selectedIds.includes(String(karyawan.id));
-
-                                    var text = document.createElement('span');
-                                    text.className = 'text-sm text-gray-700';
-                                    text.textContent = karyawan.name + (karyawan.email ? ' (' + karyawan.email + ')' : '');
-
-                                    label.appendChild(input);
-                                    label.appendChild(text);
-                                    karyawanList.appendChild(label);
-                                });
-                            } else {
-                                renderKaryawanMessage('Tidak ada karyawan di divisi manager terpilih');
-                            }
+                        const data = await response.json();
+                        if (!data.success || !Array.isArray(data.data)) {
+                            return [];
                         }
+                        return data.data;
+                    }));
 
-                        if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
-                        syncPrimaryKaryawan();
-                        applySearchFilter(
-                            '#karyawanDivisiList .karyawan-item',
-                            karyawanSearchInput ? karyawanSearchInput.value : '',
-                            karyawanSearchEmpty
-                        );
-                    })
-                    .catch(function(err) {
-                        console.error('Error load karyawan:', err);
-                        if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
-                        renderKaryawanMessage('Gagal memuat karyawan');
-                        if (karyawanPrimaryInput) karyawanPrimaryInput.value = '';
+                    const uniqueKaryawansMap = new Map();
+                    responses.flat().forEach((karyawan) => {
+                        if (!karyawan || !karyawan.id) {
+                            return;
+                        }
+                        const key = String(karyawan.id);
+                        if (!uniqueKaryawansMap.has(key)) {
+                            uniqueKaryawansMap.set(key, karyawan);
+                        }
                     });
+
+                    const uniqueKaryawans = Array.from(uniqueKaryawansMap.values());
+                    if (karyawanList) {
+                        karyawanList.innerHTML = '';
+                        if (uniqueKaryawans.length > 0) {
+                            uniqueKaryawans.forEach(karyawan => {
+                                const label = document.createElement('label');
+                                label.className = 'karyawan-item flex items-start gap-2 cursor-pointer';
+
+                                const input = document.createElement('input');
+                                input.type = 'checkbox';
+                                input.name = 'karyawan_penanggung_jawab_ids[]';
+                                input.value = String(karyawan.id);
+                                input.className = 'karyawan-checkbox mt-1 rounded border-gray-300 text-primary focus:ring-primary';
+                                input.checked = selectedIds.includes(String(karyawan.id));
+
+                                const text = document.createElement('span');
+                                text.className = 'text-sm text-gray-700';
+                                text.textContent = karyawan.name + (karyawan.email ? ` (${karyawan.email})` : '');
+
+                                label.appendChild(input);
+                                label.appendChild(text);
+                                karyawanList.appendChild(label);
+                            });
+                        } else {
+                            renderKaryawanMessage('Tidak ada karyawan di divisi manager terpilih');
+                        }
+                    }
+
+                    if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
+                    syncPrimaryKaryawan();
+                    applySearchFilter(
+                        '#karyawanDivisiList .karyawan-item',
+                        karyawanSearchInput ? karyawanSearchInput.value : '',
+                        karyawanSearchEmpty
+                    );
                 } catch (err) {
                     console.error('Error load karyawan:', err);
                     if (karyawanWrapper) karyawanWrapper.classList.remove('hidden');
@@ -1845,16 +1632,15 @@
                 }
             }
 
-            function syncPrimaryManagerAndKaryawan(selectedKaryawanIds) {
-                if (selectedKaryawanIds === undefined) selectedKaryawanIds = [];
-                var selectedManagerIds = getSelectedManagerIds();
+            function syncPrimaryManagerAndKaryawan(selectedKaryawanIds = []) {
+                const selectedManagerIds = getSelectedManagerIds();
                 if (managerPrimaryInput) {
                     managerPrimaryInput.value = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
                 }
                 loadKaryawanByManagers(selectedManagerIds, selectedKaryawanIds);
             }
 
-            managerCheckboxes.forEach(function(checkbox) {
+            managerCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     syncPrimaryManagerAndKaryawan();
                 });
@@ -1893,10 +1679,7 @@
         });
 
         // Open edit modal with data - untuk menetapkan penanggung jawab
-        function openEditModal(id, nama, deskripsi, harga, tanggalMulaiPengerjaan, tanggalSelesaiPengerjaan, tanggalMulaiKerjasama, tanggalSelesaiKerjasama, statusPengerjaan, statusKerjasama, progres, penanggungJawabId, karyawanPenanggungJawabId, penanggungJawabIds, karyawanPenanggungJawabIds) {
-            if (penanggungJawabIds === undefined) penanggungJawabIds = [];
-            if (karyawanPenanggungJawabIds === undefined) karyawanPenanggungJawabIds = [];
-            
+        function openEditModal(id, nama, deskripsi, harga, tanggalMulaiPengerjaan, tanggalSelesaiPengerjaan, tanggalMulaiKerjasama, tanggalSelesaiKerjasama, statusPengerjaan, statusKerjasama, progres, penanggungJawabId, karyawanPenanggungJawabId = null, penanggungJawabIds = [], karyawanPenanggungJawabIds = []) {
             document.getElementById('editId').value = id;
             
             // Tampilkan info project (readonly)
@@ -1907,10 +1690,10 @@
             document.getElementById('editDeskripsi').value = deskripsi;
             document.getElementById('editStatusKerjasama').value = statusKerjasama || 'aktif';
 
-            var managerSearchInput = document.getElementById('managerSearchInput');
-            var karyawanSearchInput = document.getElementById('karyawanSearchInput');
-            var managerSearchEmpty = document.getElementById('managerSearchEmpty');
-            var karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
+            const managerSearchInput = document.getElementById('managerSearchInput');
+            const karyawanSearchInput = document.getElementById('karyawanSearchInput');
+            const managerSearchEmpty = document.getElementById('managerSearchEmpty');
+            const karyawanSearchEmpty = document.getElementById('karyawanSearchEmpty');
             if (managerSearchInput) {
                 managerSearchInput.value = '';
             }
@@ -1924,20 +1707,20 @@
                 karyawanSearchEmpty.classList.add('hidden');
             }
 
-            document.querySelectorAll('#editPenanggungJawabList .manager-item').forEach(function(item) {
+            document.querySelectorAll('#editPenanggungJawabList .manager-item').forEach(item => {
                 item.classList.remove('hidden');
             });
             
             // Set penanggung jawab manager (checkbox)
-            var managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
-            var managerIds = Array.isArray(penanggungJawabIds)
+            const managerCheckboxes = Array.from(document.querySelectorAll('input.manager-checkbox[name="penanggung_jawab_ids[]"]'));
+            const managerIds = Array.isArray(penanggungJawabIds)
                 ? penanggungJawabIds.map(String).filter(Boolean)
                 : [];
             if (managerIds.length === 0 && penanggungJawabId && penanggungJawabId !== 'null') {
                 managerIds.push(String(penanggungJawabId));
             }
 
-            var karyawanIds = Array.isArray(karyawanPenanggungJawabIds)
+            const karyawanIds = Array.isArray(karyawanPenanggungJawabIds)
                 ? karyawanPenanggungJawabIds.map(String).filter(Boolean)
                 : [];
             if (karyawanIds.length === 0 && karyawanPenanggungJawabId && karyawanPenanggungJawabId !== 'null') {
@@ -1945,16 +1728,16 @@
             }
 
             if (managerCheckboxes.length > 0) {
-                managerCheckboxes.forEach(function(checkbox) {
+                managerCheckboxes.forEach(checkbox => {
                     checkbox.checked = managerIds.includes(String(checkbox.value));
                 });
 
-                var selectedManagerIds = managerCheckboxes
-                    .filter(function(checkbox) { return checkbox.checked; })
-                    .map(function(checkbox) { return checkbox.value; })
+                const selectedManagerIds = managerCheckboxes
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value)
                     .filter(Boolean);
-                var primaryManagerId = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
-                var primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
+                const primaryManagerId = selectedManagerIds.length > 0 ? selectedManagerIds[0] : '';
+                const primaryManagerInput = document.getElementById('editPenanggungJawabPrimary');
                 if (primaryManagerInput) {
                     primaryManagerInput.value = primaryManagerId;
                 }
@@ -1962,33 +1745,26 @@
                 if (typeof window.loadKaryawanBySelectedManagers === 'function') {
                     window.loadKaryawanBySelectedManagers(selectedManagerIds, karyawanIds);
                 } else {
-                    var karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
-                    var karyawanList = document.getElementById('karyawanDivisiList');
+                    const karyawanWrapper = document.getElementById('karyawanDivisiWrapper');
+                    const karyawanList = document.getElementById('karyawanDivisiList');
                     if (karyawanWrapper) karyawanWrapper.classList.add('hidden');
                     if (karyawanList) karyawanList.innerHTML = '';
                 }
             }
             
             // Update form action
-            var editForm = document.getElementById('editForm');
-            editForm.action = '/general_manajer/data_project/' + id;
+            const editForm = document.getElementById('editForm');
+            editForm.action = `/general_manajer/data_project/${id}`;
             
             // Focus ke checkbox pertama saat modal terbuka
             document.getElementById('editModal').classList.remove('hidden');
-            setTimeout(function() {
-                var firstManagerCheckbox = document.querySelector('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
+            setTimeout(() => {
+                const firstManagerCheckbox = document.querySelector('input.manager-checkbox[name="penanggung_jawab_ids[]"]');
                 if (firstManagerCheckbox) {
                     firstManagerCheckbox.focus();
                 }
             }, 100);
         }
-
-        // Make functions global
-        window.markRead = markRead;
-        window.markAllNotificationsRead = markAllNotificationsRead;
-        window.closePopup = closePopup;
-        window.showPopup = showPopup;
-        window.openEditModal = openEditModal;
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Global Routes Object -->
@@ -44,7 +44,6 @@
 
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
@@ -66,32 +65,9 @@
         };
     </script>
     <style>
-        /* Dark mode CSS variables */
-        :root {
-            --bg-page: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-secondary: #f9fafb;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-            --header-bg: #ffffff;
-        }
-
-        .dark {
-            --bg-page: #0f172a;
-            --bg-card: #1e293b;
-            --bg-secondary: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --header-bg: #1e293b;
-        }
-
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
+            background-color: #f8fafc;
         }
 
         .material-icons-outlined {
@@ -100,6 +76,8 @@
         }
 
         /* --- ANIMATIONS --- */
+        
+        /* Fade In Up Animation */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -111,12 +89,14 @@
             }
         }
 
+        /* Pulse Animation for Pending Status */
         @keyframes subtlePulse {
             0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
             70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
             100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
 
+        /* Slide In Right with Bounce for Toast */
         @keyframes slideInRightBounce {
             0% { transform: translateX(120%); opacity: 0; }
             60% { transform: translateX(-10%); opacity: 1; }
@@ -124,9 +104,10 @@
             100% { transform: translateX(0); }
         }
 
+        /* Apply Animations */
         .animate-fade-in-up {
             animation: fadeInUp 0.5s ease-out forwards;
-            opacity: 0;
+            opacity: 0; /* Start hidden */
         }
 
         .animate-pulse-subtle {
@@ -137,6 +118,7 @@
             animation: slideInRightBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
+        /* Button Click Feedback */
         .btn-active:active {
             transform: scale(0.95);
         }
@@ -156,19 +138,14 @@
             color: #065f46;
         }
 
-        .dark .status-disetujui {
-            background-color: rgba(16, 185, 129, 0.25);
-            color: #34d399;
-        }
-
         .status-menunggu {
             background-color: rgba(245, 158, 11, 0.15);
             color: #92400e;
         }
 
-        .dark .status-menunggu {
+        /* Add subtle pulse to waiting status specifically */
+        .status-menunggu.animate-pulse-subtle {
             background-color: rgba(245, 158, 11, 0.25);
-            color: #fbbf24;
         }
 
         .status-ditolak {
@@ -176,19 +153,9 @@
             color: #991b1b;
         }
 
-        .dark .status-ditolak {
-            background-color: rgba(239, 68, 68, 0.25);
-            color: #fca5a5;
-        }
-
         .status-dibatalkan {
             background-color: rgba(107, 114, 128, 0.15);
             color: #374151;
-        }
-
-        .dark .status-dibatalkan {
-            background-color: rgba(107, 114, 128, 0.25);
-            color: #9ca3af;
         }
 
         /* Stats Card */
@@ -200,11 +167,10 @@
         }
 
         .stat-card {
-            background: var(--bg-card);
+            background: white;
             padding: 1rem;
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -227,9 +193,17 @@
             height: 100%;
         }
 
-        .stat-card.blue::before { background: linear-gradient(180deg, #3b82f6, #2563eb); }
-        .stat-card.red::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
-        .stat-card.green::before { background: linear-gradient(180deg, #10b981, #059669); }
+        .stat-card.blue::before {
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+        }
+
+        .stat-card.red::before {
+            background: linear-gradient(180deg, #ef4444, #dc2626);
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(180deg, #10b981, #059669);
+        }
 
         .stat-icon {
             width: 2.5rem;
@@ -251,26 +225,14 @@
             color: #3b82f6;
         }
 
-        .dark .stat-icon.blue {
-            background-color: rgba(59, 130, 246, 0.2);
-        }
-
         .stat-icon.red {
             background-color: rgba(239, 68, 68, 0.1);
             color: #ef4444;
         }
 
-        .dark .stat-icon.red {
-            background-color: rgba(239, 68, 68, 0.2);
-        }
-
         .stat-icon.green {
             background-color: rgba(16, 185, 129, 0.1);
             color: #10b981;
-        }
-
-        .dark .stat-icon.green {
-            background-color: rgba(16, 185, 129, 0.2);
         }
 
         .stat-content {
@@ -279,7 +241,7 @@
 
         .stat-label {
             font-size: 0.75rem;
-            color: var(--text-secondary);
+            color: #64748b;
             margin-bottom: 0.25rem;
             font-weight: 500;
         }
@@ -287,7 +249,7 @@
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #1e293b;
             line-height: 1.2;
         }
 
@@ -302,38 +264,37 @@
         .data-table td {
             padding: 12px 16px;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e2e8f0;
             white-space: nowrap;
-            color: var(--text-primary);
         }
 
         .data-table th {
-            background: var(--bg-secondary);
+            background: #f8fafc;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: #374151;
             font-size: 0.875rem;
             text-transform: uppercase;
         }
 
-        .data-table tbody tr:nth-child(even) {
-            background: rgba(0, 0, 0, 0.02);
+        .data-table tbody tr {
+            transition: background-color 0.2s ease;
         }
 
-        .dark .data-table tbody tr:nth-child(even) {
-            background: rgba(255, 255, 255, 0.02);
+        .data-table tbody tr:nth-child(even) {
+            background: #f9fafb;
         }
 
         .data-table tbody tr:hover {
-            background: rgba(59, 130, 246, 0.05);
+            background: #f3f4f6;
         }
 
         .scrollable-table-container {
             width: 100%;
             overflow-x: auto;
             overflow-y: hidden;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
-            background: var(--bg-card);
+            background: white;
         }
 
         /* Mobile Responsive */
@@ -341,9 +302,11 @@
             .desktop-table {
                 display: none !important;
             }
+
             .mobile-cards {
                 display: block !important;
             }
+
             .desktop-pagination {
                 display: none !important;
             }
@@ -353,9 +316,11 @@
             .desktop-table {
                 display: block !important;
             }
+
             .mobile-cards {
                 display: none !important;
             }
+
             .desktop-pagination {
                 display: flex !important;
             }
@@ -366,8 +331,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             padding: 16px 20px;
@@ -382,7 +346,7 @@
         }
 
         .minimal-popup.show {
-            transform: translateX(0);
+            /* Overridden by JS to use specific animation class */
         }
 
         .minimal-popup.error {
@@ -425,14 +389,14 @@
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
+        /* Add backdrop fade-in */
         .edit-popup.show {
             opacity: 1;
             visibility: visible;
         }
 
         .edit-popup-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: white;
             border-radius: 0.75rem;
             width: 90%;
             max-width: 500px;
@@ -441,16 +405,6 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .detail-modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
         }
 
         .edit-popup.show .edit-popup-content {
@@ -470,36 +424,24 @@
         }
 
         .btn-secondary {
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
+            background-color: #f1f5f9;
+            color: #64748b;
             transition: all 0.2s ease;
         }
 
         .btn-secondary:hover {
-            background-color: rgba(0, 0, 0, 0.05);
+            background-color: #e2e8f0;
             cursor: pointer;
         }
 
         .form-input {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
         }
 
         .form-input:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            outline: none;
-        }
-
-        .form-input:read-only {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .dark .form-input:read-only {
-            background-color: rgba(255, 255, 255, 0.05);
         }
 
         /* Pagination */
@@ -522,19 +464,20 @@
             font-weight: 500;
             transition: all 0.2s ease;
             cursor: pointer;
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
         }
 
         .desktop-page-btn.active {
             background-color: #3b82f6;
             color: white;
-            border-color: #3b82f6;
+        }
+
+        .desktop-page-btn:not(.active) {
+            background-color: #f1f5f9;
+            color: #64748b;
         }
 
         .desktop-page-btn:not(.active):hover {
-            background-color: rgba(59, 130, 246, 0.1);
+            background-color: #e2e8f0;
         }
 
         .desktop-nav-btn {
@@ -544,46 +487,49 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
+            background-color: #f1f5f9;
+            color: #64748b;
             transition: all 0.2s ease;
             cursor: pointer;
         }
 
         .desktop-nav-btn:hover:not(:disabled) {
-            background-color: rgba(59, 130, 246, 0.1);
+            background-color: #e2e8f0;
         }
 
-        .desktop-nav-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        /* Modal Detail Cuti */
+        .detail-modal-content {
+            background: white;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        /* Detail Modal */
         .detail-item {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e5e7eb;
             opacity: 0;
             animation: fadeInUp 0.4s ease-out forwards;
         }
 
         .detail-label {
             font-weight: 500;
-            color: var(--text-secondary);
+            color: #6b7280;
         }
 
         .detail-value {
             font-weight: 400;
-            color: var(--text-primary);
+            color: #111827;
             text-align: right;
         }
 
         /* Filter Section */
         .filter-container {
-            background: var(--bg-secondary);
+            background: #f8fafc;
             border-radius: 0.5rem;
             padding: 1rem;
             margin-bottom: 1.5rem;
@@ -593,18 +539,16 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: white;
+            border: 1px solid #e2e8f0;
             padding: 0.5rem 1rem;
             border-radius: 2rem;
             font-size: 0.875rem;
-            color: var(--text-secondary);
             transition: all 0.2s ease;
-            cursor: pointer;
         }
         
         .filter-badge:hover {
-            background-color: rgba(59, 130, 246, 0.1);
+            background-color: #f8fafc;
         }
 
         .filter-badge.active {
@@ -612,52 +556,20 @@
             color: white;
             border-color: #3b82f6;
         }
-
-        /* Mobile Cards */
-        .mobile-cards .bg-white {
-            background-color: var(--bg-card) !important;
-            border-color: var(--border-color) !important;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--border-color);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-
-        .dark ::-webkit-scrollbar-track {
-            background: #334155;
-        }
-
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
     </style>
 </head>
 
-<body class="font-display">
+<body class="font-display bg-gray-50 text-gray-800">
     <div class="main-content">
+        {{-- Ganti dengan header sesuai struktur template Anda --}}
         @include('karyawan.templet.header')
         
         <main class="flex-1 flex flex-col">
             <div class="flex-1 p-3 sm:p-8">
                 <!-- Header -->
                 <div class="page-header mb-6 animate-fade-in-up">
-                    <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Cuti</h1>
+                    <h1 class="text-2xl font-bold text-gray-800">Cuti</h1>
+                   
                 </div>
 
                 <!-- Stats Cards -->
@@ -704,6 +616,7 @@
                         </button>
                     </div>
                     <div class="flex gap-2">
+                        
                         <button id="tambahCutiBtn"
                             class="btn-primary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 btn-active">
                             <span class="material-icons-outlined text-sm">add</span>
@@ -713,14 +626,14 @@
                 </div>
 
                 <!-- Data Cuti Panel -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden animate-fade-in-up" style="animation-delay: 500ms;">
-                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-                        <h3 class="font-semibold text-lg text-gray-800 dark:text-white flex items-center gap-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in-up" style="animation-delay: 500ms;">
+                    <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2">
                             <span class="material-icons-outlined text-primary">event_note</span>
                             Riwayat Pengajuan Cuti
                         </h3>
                         <div class="flex items-center gap-4">
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Total: <span class="font-bold text-gray-800 dark:text-white"
+                            <span class="text-sm text-gray-500">Total: <span class="font-bold text-gray-800"
                                     id="cutiCount">0</span> data</span>
                         </div>
                     </div>
@@ -729,7 +642,7 @@
                         <!-- Loading -->
                         <div id="cutiLoading" class="text-center py-10">
                             <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                            <p class="mt-2 text-gray-500 dark:text-gray-400 text-sm">Memuat data cuti...</p>
+                            <p class="mt-2 text-gray-500 text-sm">Memuat data cuti...</p>
                         </div>
 
                         <!-- Desktop Table -->
@@ -756,13 +669,15 @@
                         </div>
 
                         <!-- Mobile Cards -->
-                        <div id="cuti-mobile-cards" class="mobile-cards space-y-4 hidden"></div>
+                        <div id="cuti-mobile-cards" class="mobile-cards space-y-4 hidden">
+                            <!-- Cards injected by JS -->
+                        </div>
 
                         <!-- No Data State -->
                         <div id="noCutiData" class="text-center py-12 hidden">
-                            <span class="material-icons-outlined text-gray-300 dark:text-gray-600 text-6xl mb-4">event_busy</span>
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Belum ada pengajuan cuti</h3>
-                            <p class="text-gray-500 dark:text-gray-400">Mulai dengan mengajukan cuti baru</p>
+                            <span class="material-icons-outlined text-gray-300 text-6xl mb-4">event_busy</span>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada pengajuan cuti</h3>
+                            <p class="text-gray-500">Mulai dengan mengajukan cuti baru</p>
                         </div>
 
                         <!-- Pagination -->
@@ -776,8 +691,8 @@
                     </div>
                 </div>
 
-                <footer class="text-center p-6 mt-8 border-t border-gray-200 dark:border-gray-700">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Copyright ©{{ date('Y') }} by digicity.id</p>
+                <footer class="text-center p-6 mt-8 border-t border-gray-200">
+                    <p class="text-sm text-gray-500">Copyright ©{{ date('Y') }} by digicity.id</p>
                 </footer>
             </div>
         </main>
@@ -786,9 +701,9 @@
     <!-- Modal Tambah Cuti -->
     <div id="tambahCutiModal" class="edit-popup">
         <div class="edit-popup-content">
-            <div class="edit-popup-header p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="edit-popup-title text-xl font-bold text-gray-800 dark:text-white">Ajukan Cuti Baru</h3>
-                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 btn-active" onclick="closeModal('tambahCutiModal')"><span
+            <div class="edit-popup-header p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="edit-popup-title text-xl font-bold text-gray-800">Ajukan Cuti Baru</h3>
+                <button class="text-gray-400 hover:text-gray-600 btn-active" onclick="closeModal('tambahCutiModal')"><span
                         class="material-icons-outlined">close</span></button>
             </div>
             <div class="edit-popup-body p-6">
@@ -796,25 +711,25 @@
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Mulai <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai <span
                                     class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_mulai" required id="inputTanggalMulai"
                                 min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Selesai <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai <span
                                     class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_selesai" required id="inputTanggalSelesai"
                                 min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Durasi (Hari)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
                             <input type="number" name="durasi" id="inputDurasi" required
-                                class="form-input w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
+                                class="form-input w-full px-3 py-2 rounded-lg bg-gray-50" readonly>
+                            <p class="text-xs text-gray-500 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis Cuti <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti <span
                                     class="text-red-500">*</span></label>
                             <select name="jenis_cuti" required class="form-input w-full px-3 py-2 rounded-lg"
                                 id="jenisCutiSelect">
@@ -828,20 +743,20 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan/Alasan <span
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan/Alasan <span
                                 class="text-red-500">*</span></label>
                         <textarea name="keterangan" rows="3" required placeholder="Masukkan alasan pengajuan cuti..."
                             class="form-input w-full px-3 py-2 rounded-lg"></textarea>
                     </div>
-                    <div id="sisaCutiWarning" class="hidden p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                        <p class="text-sm text-yellow-700 dark:text-yellow-400"><span
+                    <div id="sisaCutiWarning" class="hidden p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-700"><span
                                 class="material-icons-outlined text-sm mr-1">warning</span>
                             Sisa cuti tahunan Anda: <span id="sisaCutiCount" class="font-bold">0</span> hari
                         </p>
                     </div>
                 </form>
             </div>
-            <div class="edit-popup-footer p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div class="edit-popup-footer p-6 border-t border-gray-100 flex justify-end gap-3">
                 <button type="button" onclick="closeModal('tambahCutiModal')"
                     class="btn-secondary px-4 py-2 rounded-lg font-medium btn-active">Batal</button>
                 <button type="button" onclick="handleAddCuti()" id="submitCutiBtn"
@@ -855,15 +770,15 @@
     <!-- Modal Detail Cuti -->
     <div id="detailCutiModal" class="edit-popup">
         <div class="detail-modal-content">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">Detail Pengajuan Cuti</h3>
-                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 btn-active" onclick="closeModal('detailCutiModal')"><span
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Detail Pengajuan Cuti</h3>
+                <button class="text-gray-400 hover:text-gray-600 btn-active" onclick="closeModal('detailCutiModal')"><span
                         class="material-icons-outlined">close</span></button>
             </div>
             <div class="p-6 space-y-4" id="detailContent">
                 <!-- Detail items injected by JS with animation -->
             </div>
-            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <div class="p-6 border-t border-gray-100 flex justify-end">
                 <button onclick="closeModal('detailCutiModal')"
                     class="btn-secondary px-4 py-2 rounded-lg font-medium btn-active">Tutup</button>
             </div>
@@ -873,9 +788,9 @@
     <!-- Modal Edit Cuti -->
     <div id="editCutiModal" class="edit-popup">
         <div class="edit-popup-content">
-            <div class="edit-popup-header p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="edit-popup-title text-xl font-bold text-gray-800 dark:text-white">Edit Pengajuan Cuti</h3>
-                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 btn-active" onclick="closeModal('editCutiModal')"><span
+            <div class="edit-popup-header p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="edit-popup-title text-xl font-bold text-gray-800">Edit Pengajuan Cuti</h3>
+                <button class="text-gray-400 hover:text-gray-600 btn-active" onclick="closeModal('editCutiModal')"><span
                         class="material-icons-outlined">close</span></button>
             </div>
             <div class="edit-popup-body p-6">
@@ -885,25 +800,25 @@
                     <input type="hidden" name="cuti_id" id="editCutiId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Mulai <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai <span
                                     class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_mulai" required id="editTanggalMulai"
                                 min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Selesai <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai <span
                                     class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_selesai" required id="editTanggalSelesai"
                                 min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Durasi (Hari)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
                             <input type="number" name="durasi" id="editDurasi" required
-                                class="form-input w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
+                                class="form-input w-full px-3 py-2 rounded-lg bg-gray-50" readonly>
+                            <p class="text-xs text-gray-500 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis Cuti <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti <span
                                     class="text-red-500">*</span></label>
                             <select name="jenis_cuti" required class="form-input w-full px-3 py-2 rounded-lg"
                                 id="editJenisCuti">
@@ -917,20 +832,20 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan/Alasan <span
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan/Alasan <span
                                 class="text-red-500">*</span></label>
                         <textarea name="keterangan" rows="3" required placeholder="Masukkan alasan pengajuan cuti..."
                             id="editKeterangan" class="form-input w-full px-3 py-2 rounded-lg"></textarea>
                     </div>
-                    <div id="editSisaCutiWarning" class="hidden p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                        <p class="text-sm text-yellow-700 dark:text-yellow-400"><span
+                    <div id="editSisaCutiWarning" class="hidden p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-700"><span
                                 class="material-icons-outlined text-sm mr-1">warning</span>
                             Sisa cuti tahunan Anda: <span id="editSisaCutiCount" class="font-bold">0</span> hari
                         </p>
                     </div>
                 </form>
             </div>
-            <div class="edit-popup-footer p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div class="edit-popup-footer p-6 border-t border-gray-100 flex justify-end gap-3">
                 <button type="button" onclick="closeModal('editCutiModal')"
                     class="btn-secondary px-4 py-2 rounded-lg font-medium btn-active">Batal</button>
                 <button type="button" onclick="handleUpdateCuti()" id="updateCutiBtn"
@@ -944,60 +859,60 @@
     <!-- Modal Quota Info -->
     <div id="quotaInfoModal" class="edit-popup">
         <div class="edit-popup-content">
-            <div class="edit-popup-header p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="edit-popup-title text-xl font-bold text-gray-800 dark:text-white">Informasi Quota Cuti</h3>
-                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 btn-active" onclick="closeModal('quotaInfoModal')"><span
+            <div class="edit-popup-header p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="edit-popup-title text-xl font-bold text-gray-800">Informasi Quota Cuti</h3>
+                <button class="text-gray-400 hover:text-gray-600 btn-active" onclick="closeModal('quotaInfoModal')"><span
                         class="material-icons-outlined">close</span></button>
             </div>
             <div class="edit-popup-body p-6">
                 <div id="quotaLoading" class="text-center py-10">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p class="mt-2 text-gray-500 dark:text-gray-400 text-sm">Memuat informasi quota...</p>
+                    <p class="mt-2 text-gray-500 text-sm">Memuat informasi quota...</p>
                 </div>
                 <div id="quotaContent" class="space-y-4 hidden">
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 rounded-lg p-4">
                         <div class="flex items-center gap-3 mb-3">
                             <span class="material-icons-outlined text-blue-500">calendar_today</span>
-                            <h4 class="font-medium text-gray-800 dark:text-white">Informasi Quota Tahun <span id="quotaTahun"></span></h4>
+                            <h4 class="font-medium text-gray-800">Informasi Quota Tahun <span id="quotaTahun"></span></h4>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cuti Tahunan</p>
-                                <p class="text-lg font-bold text-gray-800 dark:text-white" id="quotaTotal">-</p>
+                            <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                <p class="text-xs text-gray-500 mb-1">Total Cuti Tahunan</p>
+                                <p class="text-lg font-bold text-gray-800" id="quotaTotal">-</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cuti Terpakai</p>
+                            <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                <p class="text-xs text-gray-500 mb-1">Cuti Terpakai</p>
                                 <p class="text-lg font-bold text-red-500" id="quotaTerpakai">-</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cuti Sakit Terpakai</p>
+                            <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                <p class="text-xs text-gray-500 mb-1">Cuti Sakit Terpakai</p>
                                 <p class="text-lg font-bold text-orange-500" id="statCutiSakit">0 hari</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Sisa Cuti</p>
+                            <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                <p class="text-xs text-gray-500 mb-1">Sisa Cuti</p>
                                 <p class="text-lg font-bold text-green-500" id="quotaSisa">-</p>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div class="bg-blue-50 rounded-lg p-4">
                         <div class="flex items-center gap-3 mb-3">
                             <span class="material-icons-outlined text-blue-500">info</span>
-                            <h4 class="font-medium text-blue-800 dark:text-blue-300">Statistik</h4>
+                            <h4 class="font-medium text-blue-800">Statistik</h4>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cuti Tahunan Disetujui</p>
-                                <p class="text-lg font-bold text-blue-600 dark:text-blue-400" id="statCutiTahunan">0 hari</p>
+                            <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                <p class="text-xs text-gray-500 mb-1">Cuti Tahunan Disetujui</p>
+                                <p class="text-lg font-bold text-blue-600" id="statCutiTahunan">0 hari</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pengajuan Menunggu</p>
-                                <p class="text-lg font-bold text-yellow-600 dark:text-yellow-400" id="statCutiMenunggu">0</p>
+                            <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                <p class="text-xs text-gray-500 mb-1">Pengajuan Menunggu</p>
+                                <p class="text-lg font-bold text-yellow-600" id="statCutiMenunggu">0</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="edit-popup-footer p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <div class="edit-popup-footer p-6 border-t border-gray-100 flex justify-end">
                 <button onclick="closeModal('quotaInfoModal')"
                     class="btn-secondary px-4 py-2 rounded-lg font-medium btn-active">Tutup</button>
             </div>
@@ -1016,7 +931,6 @@
     </div>
 
     <script>
-        // [SAME JAVASCRIPT AS BEFORE - NO CHANGES NEEDED]
         const CSRF_TOKEN = '{{ csrf_token() }}';
         
         // Routes Object
@@ -1047,11 +961,13 @@
         });
 
         function setupEventListeners() {
+            // Tombol Tambah Cuti
             document.getElementById('tambahCutiBtn')?.addEventListener('click', () => {
                 openModal('tambahCutiModal');
                 loadCurrentQuotaForValidation();
             });
 
+            // Tombol Pagination
             document.getElementById('cutiPrevPage')?.addEventListener('click', () => {
                 if (cutiCurrentPage > 1) goToPage(cutiCurrentPage - 1);
             });
@@ -1060,6 +976,7 @@
                 if (cutiCurrentPage < totalCutiPages) goToPage(cutiCurrentPage + 1);
             });
 
+            // Auto-calculate duration untuk tambah cuti
             const startInput = document.getElementById('inputTanggalMulai');
             const endInput = document.getElementById('inputTanggalSelesai');
 
@@ -1068,6 +985,7 @@
                 endInput.addEventListener('change', () => calculateWorkingDays('tambah'));
             }
 
+            // Auto-calculate duration untuk edit cuti
             const editStartInput = document.getElementById('editTanggalMulai');
             const editEndInput = document.getElementById('editTanggalSelesai');
 
@@ -1076,6 +994,7 @@
                 editEndInput.addEventListener('change', () => calculateWorkingDays('edit'));
             }
 
+            // Jenis cuti change untuk validasi quota
             document.getElementById('jenisCutiSelect')?.addEventListener('change', function () {
                 if (this.value === 'tahunan' && currentQuotaInfo) {
                     showSisaCutiWarning();
@@ -1084,6 +1003,7 @@
                 }
             });
 
+            // Filter buttons
             document.querySelectorAll('.filter-badge').forEach(btn => {
                 btn.addEventListener('click', function () {
                     document.querySelectorAll('.filter-badge').forEach(b => b.classList.remove('active'));
@@ -1092,6 +1012,7 @@
             });
         }
 
+        // ==================== CORE FUNCTIONS ====================
         async function initializeCuti() {
             try {
                 await Promise.all([loadCutiData(), loadCutiStats()]);
@@ -1266,6 +1187,7 @@
             }
         }
 
+        // ==================== ANIMATION HELPER: Counter ====================
         function animateValue(obj, start, end, duration) {
             if (!obj) return;
             let startTimestamp = null;
@@ -1280,6 +1202,7 @@
             window.requestAnimationFrame(step);
         }
 
+        // ==================== RENDER FUNCTIONS ====================
         function renderCutiTable(cutiData) {
             const tbody = document.getElementById('cutiTableBody');
             const mobileContainer = document.getElementById('cuti-mobile-cards');
@@ -1310,6 +1233,7 @@
                 const endDate = new Date(item.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 const periode = `${startDate} - ${endDate}`;
 
+                // Status badge
                 let badgeClass = 'status-menunggu';
                 let statusText = 'Menunggu';
 
@@ -1326,6 +1250,7 @@
 
                 const statusBadge = `<span class="status-badge ${badgeClass} ${item.status === 'menunggu' ? 'animate-pulse-subtle' : ''}">${statusText}</span>`;
 
+                // Jenis cuti text - gunakan jenis_cuti_kode untuk mapping
                 const jenisCutiMap = {
                     'tahunan': 'Cuti Tahunan',
                     'melahirkan': 'Cuti Melahirkan',
@@ -1336,31 +1261,38 @@
                     'penting': 'Cuti Penting',
                     'lainnya': 'Cuti Lainnya'
                 };
+                // Gunakan jenis_cuti_kode (kode) untuk mapping, bukan jenis_cuti (text)
                 const jenisCutiText = item.jenis_cuti || jenisCutiMap[item.jenis_cuti_kode] || 'Cuti Lainnya';
 
+                // Action buttons
                 let actions = `<div class="flex justify-center gap-1">`;
-                actions += `<button class="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded transition-colors btn-active" title="Lihat Detail" onclick="showDetailCuti(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+
+                // Lihat detail
+                actions += `<button class="text-blue-500 hover:bg-blue-50 p-1 rounded transition-colors btn-active" title="Lihat Detail" onclick="showDetailCuti(${JSON.stringify(item).replace(/"/g, '&quot;')})">
                               <span class="material-icons-outlined text-sm">visibility</span>
                             </button>`;
 
+                // Edit hanya untuk status menunggu
                 if (item.status === 'menunggu' && item.dapat_diubah) {
-                    actions += `<button class="text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 p-1 rounded transition-colors btn-active" title="Edit" onclick="showEditCutiModal(${item.id})">
+                    actions += `<button class="text-green-500 hover:bg-green-50 p-1 rounded transition-colors btn-active" title="Edit" onclick="showEditCutiModal(${item.id})">
                                   <span class="material-icons-outlined text-sm">edit</span>
                                 </button>`;
                 }
 
+                // Hapus/batal
                 if (item.status === 'menunggu' && item.dapat_dihapus) {
-                    actions += `<button class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded transition-colors btn-active" title="Hapus" onclick="deleteCuti(${item.id})">
+                    actions += `<button class="text-red-500 hover:bg-red-50 p-1 rounded transition-colors btn-active" title="Hapus" onclick="deleteCuti(${item.id})">
                                   <span class="material-icons-outlined text-sm">delete</span>
                                 </button>`;
                 } else if (item.status === 'disetujui' && item.dapat_batalkan) {
-                    actions += `<button class="text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/30 p-1 rounded transition-colors btn-active" title="Batalkan" onclick="cancelCuti(${item.id})">
+                    actions += `<button class="text-orange-500 hover:bg-orange-50 p-1 rounded transition-colors btn-active" title="Batalkan" onclick="cancelCuti(${item.id})">
                                   <span class="material-icons-outlined text-sm">cancel</span>
                                 </button>`;
                 }
 
                 actions += `</div>`;
 
+                // Desktop Row - Add animation class with delay
                 const tr = document.createElement('tr');
                 tr.className = 'animate-fade-in-up';
                 tr.style.animationDelay = `${index * 50}ms`;
@@ -1372,23 +1304,24 @@
                     <td>${jenisCutiText}</td>
                     <td class="max-w-xs truncate" title="${item.keterangan}">${item.keterangan}</td>
                     <td>${statusBadge}</td>
-                    <td class="text-center">${actions}</td>
+                    <td>${actions}</td>
                 `;
                 tbody.appendChild(tr);
 
+                // Mobile Card - Add animation class with delay
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm animate-fade-in-up";
+                card.className = "bg-white border border-gray-200 rounded-lg p-4 shadow-sm animate-fade-in-up";
                 card.style.animationDelay = `${index * 50}ms`;
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <span class="font-semibold text-gray-800 dark:text-white">${periode}</span>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${formattedDate}</p>
+                            <span class="font-semibold text-gray-800">${periode}</span>
+                            <p class="text-xs text-gray-500 mt-1">${formattedDate}</p>
                         </div>
                         ${statusBadge}
                     </div>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm mb-2 truncate" title="${item.keterangan}">${item.keterangan}</p>
-                    <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-gray-600 text-sm mb-2 truncate" title="${item.keterangan}">${item.keterangan}</p>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
                         <span>${item.durasi} hari • ${jenisCutiText}</span>
                         <div class="flex gap-1">${actions}</div>
                     </div>
@@ -1459,6 +1392,7 @@
             }
         }
 
+        // ==================== UI HELPER FUNCTIONS ====================
         function showLoading() {
             document.getElementById('cutiLoading').classList.remove('hidden');
             document.getElementById('cutiDesktopTable').classList.add('hidden');
@@ -1494,15 +1428,18 @@
             const terpakai = stats?.quota_info?.terpakai ?? stats.cuti_terpakai ?? 0;
             const sisa = stats?.quota_info?.sisa ?? stats.sisa_cuti ?? (total - terpakai);
 
+            // Get current values to animate from
             const currentTotal = parseInt(document.getElementById('stat-total-cuti').textContent) || 0;
             const currentTerpakai = parseInt(document.getElementById('stat-cuti-terpakai').textContent) || 0;
             const currentSisa = parseInt(document.getElementById('stat-cuti-tersisa').textContent) || 0;
 
+            // Animate numbers
             animateValue(document.getElementById('stat-total-cuti'), currentTotal, total, 1000);
             animateValue(document.getElementById('stat-cuti-terpakai'), currentTerpakai, terpakai, 1000);
             animateValue(document.getElementById('stat-cuti-tersisa'), currentSisa, sisa, 1000);
 
             if (stats.quota_info) {
+                // Normalisasi bentuk data agar konsisten dengan response getQuotaInfo (data.quota)
                 currentQuotaInfo = { quota: stats.quota_info };
             }
         }
@@ -1550,8 +1487,9 @@
             titleEl.textContent = title;
             messageEl.textContent = message;
 
+            // Reset animation
             popup.classList.remove('animate-slide-in-bounce');
-            void popup.offsetWidth;
+            void popup.offsetWidth; // Trigger reflow
             popup.classList.add('animate-slide-in-bounce');
 
             popup.className = `minimal-popup show animate-slide-in-bounce ${type}`;
@@ -1581,6 +1519,7 @@
             loadCutiData();
         }
 
+        // ==================== CRUD OPERATIONS ====================
         async function calculateWorkingDays(type = 'tambah') {
             const prefix = type === 'tambah' ? 'input' : 'edit';
             const startInput = document.getElementById(`${prefix}TanggalMulai`);
@@ -1608,7 +1547,7 @@
 
                 while (current <= endDate) {
                     const day = current.getDay();
-                    if (day !== 0 && day !== 6) {
+                    if (day !== 0 && day !== 6) { // 0 = Sunday, 6 = Saturday
                         count++;
                     }
                     current.setDate(current.getDate() + 1);
@@ -1616,6 +1555,7 @@
 
                 durasiInput.value = count;
 
+                // Validasi kuota jika perlu
                 const jenisCutiSelect = document.getElementById(`${prefix}JenisCuti`);
                 if (jenisCutiSelect && jenisCutiSelect.value === 'tahunan' && currentQuotaInfo?.quota?.sisa !== undefined) {
                     const sisaCuti = currentQuotaInfo.quota.sisa;
@@ -1643,6 +1583,7 @@
             const jenisCuti = document.getElementById('jenisCutiSelect').value;
             const durasi = parseInt(formData.get('durasi'));
 
+            // Validasi cuti tahunan
             if (jenisCuti === 'tahunan' && currentQuotaInfo?.quota?.sisa !== undefined) {
                 if (durasi > currentQuotaInfo.quota.sisa) {
                     showPopup('Error', `Sisa cuti tidak mencukupi. Sisa: ${currentQuotaInfo.quota.sisa} hari, dibutuhkan: ${durasi} hari`, 'error');
@@ -1650,6 +1591,7 @@
                 }
             }
 
+            // Disable button
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<span class="material-icons-outlined text-sm animate-spin">sync</span> Mengirim...';
             submitBtn.disabled = true;
@@ -1671,6 +1613,7 @@
                     closeModal('tambahCutiModal');
                     showPopup('Berhasil', data.message, 'success');
 
+                    // Reload data
                     await Promise.all([
                         loadCutiData(),
                         loadCutiStats()
@@ -1699,7 +1642,7 @@
                 loading.className = 'text-center py-10';
                 loading.innerHTML = `
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p class="mt-2 text-gray-500 dark:text-gray-400 text-sm">Memuat data cuti...</p>
+                    <p class="mt-2 text-gray-500 text-sm">Memuat data cuti...</p>
                 `;
                 
                 const editCutiForm = document.getElementById('editCutiForm');
@@ -1731,6 +1674,7 @@
         }
 
         function populateEditForm(cutiData) {
+            // Map untuk old values yang tidak valid lagi ke nilai baru
             const valueMapping = {
                 'sakit': 'duka',           
                 'penting': 'izin-khusus', 
@@ -1751,20 +1695,20 @@
                 <input type="hidden" name="cuti_id" id="editCutiId" value="${cutiData.id}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
                         <input type="date" name="tanggal_mulai" required id="editTanggalMulai" value="${cutiData.tanggal_mulai}" min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Selesai <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai <span class="text-red-500">*</span></label>
                         <input type="date" name="tanggal_selesai" required id="editTanggalSelesai" value="${cutiData.tanggal_selesai}" min="{{ date('Y-m-d') }}" class="form-input w-full px-3 py-2 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Durasi (Hari)</label>
-                        <input type="number" name="durasi" id="editDurasi" required value="${cutiData.durasi}" class="form-input w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
+                        <input type="number" name="durasi" id="editDurasi" required value="${cutiData.durasi}" class="form-input w-full px-3 py-2 rounded-lg bg-gray-50" readonly>
+                        <p class="text-xs text-gray-500 mt-1">*Durasi dihitung otomatis (Senin-Jumat)</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis Cuti <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti <span class="text-red-500">*</span></label>
                         <select name="jenis_cuti" required class="form-input w-full px-3 py-2 rounded-lg" id="editJenisCuti">
                             <option value="">Pilih Jenis Cuti</option>
                             <option value="tahunan" ${selectedValue === 'tahunan' ? 'selected' : ''}>Cuti Tahunan</option>
@@ -1776,11 +1720,11 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan/Alasan <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan/Alasan <span class="text-red-500">*</span></label>
                     <textarea name="keterangan" rows="3" required placeholder="Masukkan alasan pengajuan cuti..." id="editKeterangan" class="form-input w-full px-3 py-2 rounded-lg">${cutiData.keterangan || ''}</textarea>
                 </div>
-                <div id="editSisaCutiWarning" class="hidden p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <p class="text-sm text-yellow-700 dark:text-yellow-400"><span class="material-icons-outlined text-sm mr-1">warning</span>
+                <div id="editSisaCutiWarning" class="hidden p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm text-yellow-700"><span class="material-icons-outlined text-sm mr-1">warning</span>
                         Sisa cuti tahunan Anda: <span id="editSisaCutiCount" class="font-bold">${cutiData.sisa_cuti_karyawan || 0}</span> hari
                     </p>
                 </div>
@@ -1828,6 +1772,7 @@
             const jenisCuti = document.getElementById('editJenisCuti').value;
             const durasi = parseInt(formData.get('durasi'));
 
+            // Validasi cuti tahunan
             if (jenisCuti === 'tahunan' && currentQuotaInfo?.quota?.sisa !== undefined) {
                 const oldDurasi = currentEditingCuti.durasi;
                 const selisihHari = durasi - oldDurasi;
@@ -1882,7 +1827,7 @@
 
         function showDetailCuti(item) {
             const detailContent = document.getElementById('detailContent');
-            detailContent.innerHTML = '';
+            detailContent.innerHTML = ''; // Clear previous content
 
             const createdDate = new Date(item.created_at).toLocaleDateString('id-ID', {
                 day: 'numeric',
@@ -1932,6 +1877,7 @@
                 statusText = 'Dibatalkan';
             }
 
+            // Create detail items dynamically with animation delays
             const details = [
                 { label: 'Tanggal Pengajuan', value: createdDate },
                 { label: 'Periode', value: periode },
@@ -1941,6 +1887,7 @@
                 { label: 'Status', value: `<span class="status-badge ${badgeClass}">${statusText}</span>`, isHtml: true }
             ];
 
+            // Add conditional fields
             if (item.status === 'disetujui' || item.status === 'ditolak') {
                 details.push({ label: 'Disetujui Oleh', value: item.disetujui_oleh || '-' });
                 details.push({ 
@@ -1960,6 +1907,7 @@
                 details.push({ label: 'Catatan Penolakan', value: item.catatan_penolakan });
             }
 
+            // Render with staggered animation
             details.forEach((d, index) => {
                 const div = document.createElement('div');
                 div.className = 'detail-item';
@@ -2034,10 +1982,12 @@
             }
         }
 
+        // ==================== RESPONSIVE HANDLING ====================
         window.addEventListener('resize', () => {
             hideLoading();
         });
 
+        // ==================== GLOBAL FUNCTIONS ====================
         window.openCutiModal = () => openModal('tambahCutiModal');
         window.closeCutiModal = () => closeModal('tambahCutiModal');
         window.loadCutiData = loadCutiData;

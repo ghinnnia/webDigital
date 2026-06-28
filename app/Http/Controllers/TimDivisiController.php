@@ -7,6 +7,7 @@ use App\Models\Divisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class TimDivisiController extends Controller
 {
     /**
@@ -21,12 +22,12 @@ class TimDivisiController extends Controller
         // Untuk tim aktif, asumsikan semua tim aktif
         $timAktif = $totalTim;
         
-        // Hitung total anggota
-        $totalAnggota = Tim::sum('jumlah_anggota');
+        // Hitung total anggota (konversi string ke integer)
+        $totalAnggota = Tim::sum(DB::raw('CAST(jumlah_anggota AS SIGNED)'));
         
         // Ambil data dengan pagination
-        $tims = Tim::with('divisi')->orderBy('created_at', 'desc')->paginate(10);
-        $divisis = Divisi::orderBy('created_at', 'desc')->paginate(10);
+        $tims = Tim::latest()->paginate(5);
+        $divisis = Divisi::latest()->paginate(5);
         
         return view('general_manajer.tim_dan_divisi', compact(
             'totalTim', 'totalDivisi', 'timAktif', 'totalAnggota', 'tims', 'divisis'
@@ -36,112 +37,102 @@ class TimDivisiController extends Controller
     /**
      * Store a newly created tim.
      */
-    public function storeTim(Request $request)
-    {
-        try {
-            \Log::info('Store Tim Request:', $request->all());
-            
-            $validated = $request->validate([
-                'tim' => 'required|string|max:255|unique:tim,tim',
-                'divisi' => 'required|string|max:255',
-                'jumlah_anggota' => 'nullable|integer|min:0'
-            ]);
+/**
+ * Store a newly created tim.
+ */
+public function storeTim(Request $request)
+{
+    try {
+        \Log::info('Store Tim Request:', $request->all());
+        
+        // VALIDASI TANPA exists rule yang berat
+        $validated = $request->validate([
+            'tim' => 'required|string|max:255',
+            'divisi' => 'required|string|max:255',
+            'jumlah_anggota' => 'nullable|integer|min:0'
+        ]);
 
-            // Cek apakah divisi ada
-            $divisi = Divisi::where('divisi', $validated['divisi'])->first();
+        \Log::info('Validated data:', $validated);
 
-            if (!$divisi) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Divisi tidak ditemukan. Silakan pilih divisi yang tersedia.'
-                ], 422);
-            }
-            
-            // Buat tim langsung menggunakan string nama divisi (tanpa kolom divisi_id yang tidak ada di database)
-            $tim = Tim::create([
-                'tim' => $validated['tim'],
-                'divisi' => $validated['divisi'],
-                'jumlah_anggota' => $validated['jumlah_anggota'] ?? 0,
-            ]);
+        // Cek divisi dengan query langsung yang ringan
+        $divisiExists = DB::table('divisi')
+            ->where('divisi', $validated['divisi'])
+            ->exists();
 
-            \Log::info('Tim created successfully:', ['id' => $tim->id]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Tim berhasil ditambahkan',
-                'data' => $tim
-            ], 201);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        if (!$divisiExists) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'message' => 'Divisi tidak ditemukan. Silakan pilih divisi yang tersedia.'
             ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Store tim error:', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
         }
+
+        // Buat tim dengan query langsung untuk menghindari Eloquent events
+        $timId = DB::table('tim')->insertGetId([
+            'tim' => $validated['tim'],
+            'divisi' => $validated['divisi'],
+            'jumlah_anggota' => $validated['jumlah_anggota'] ?? 0,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        // Update jumlah_tim di divisi (tanpa trigger boot)
+        $timCount = DB::table('tim')
+            ->where('divisi', $validated['divisi'])
+            ->count();
+            
+        DB::table('divisi')
+            ->where('divisi', $validated['divisi'])
+            ->update(['jumlah_tim' => $timCount]);
+
+        \Log::info('Tim created successfully:', ['id' => $timId]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tim berhasil ditambahkan',
+            'data' => ['id' => $timId]
+        ], 201);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Validation error:', $e->errors());
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        \Log::error('Store tim error:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Update the specified tim.
      */
     public function updateTim(Request $request, $id)
     {
-        try {
-            \Log::info('Update Tim Request:', $request->all());
-            
-            $validated = $request->validate([
-                'tim' => 'required|string|max:255|unique:tim,tim,' . $id,
-                'divisi' => 'required|string|max:255',
-                'jumlah_anggota' => 'nullable|integer|min:0'
-            ]);
+        $validated = $request->validate([
+            'tim' => 'required|string|max:255',
+            'divisi' => 'required|string|max:255',
+            'jumlah_anggota' => 'nullable|integer|min:0'
+        ]);
 
-            $tim = Tim::findOrFail($id);
-            
-            // Cek apakah divisi baru ada
-            $newDivisi = Divisi::where('divisi', $validated['divisi'])->first();
-            if (!$newDivisi) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Divisi tidak ditemukan'
-                ], 422);
-            }
-            
-            // Update data tim tanpa mengisi kolom divisi_id (karena tidak ada di DB)
-            $tim->tim = $validated['tim'];
-            $tim->divisi = $validated['divisi'];
-            if (isset($validated['jumlah_anggota'])) {
-                $tim->jumlah_anggota = $validated['jumlah_anggota'];
-            }
-            $tim->save();
-            
-            // Update jumlah tim di divisi
-            $newDivisi->updateJumlahTim();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Tim berhasil diperbarui',
-                'data' => $tim
-            ]);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Update tim error:', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+        $tim = Tim::findOrFail($id);
+        // Only update jumlah_anggota if provided and not null
+        $tim->tim = $validated['tim'];
+        $tim->divisi = $validated['divisi'];
+        if (array_key_exists('jumlah_anggota', $validated) && $validated['jumlah_anggota'] !== null) {
+            $tim->jumlah_anggota = $validated['jumlah_anggota'];
         }
+        $tim->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tim berhasil diperbarui',
+            'data' => $tim
+        ]);
     }
 
     /**
@@ -149,32 +140,13 @@ class TimDivisiController extends Controller
      */
     public function destroyTim($id)
     {
-        try {
-            $tim = Tim::findOrFail($id);
-            
-            // Simpan nama divisi untuk update jumlah
-            $divisiName = $tim->divisi;
-            
-            $tim->delete();
-            
-            // Update jumlah tim di divisi berdasarkan nama divisi
-            if ($divisiName) {
-                $divisi = Divisi::where('divisi', $divisiName)->first();
-                if ($divisi) {
-                    $divisi->updateJumlahTim();
-                }
-            }
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Tim berhasil dihapus'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
+        $tim = Tim::findOrFail($id);
+        $tim->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tim berhasil dihapus'
+        ]);
     }
 
     /**
@@ -182,27 +154,18 @@ class TimDivisiController extends Controller
      */
     public function storeDivisi(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'divisi' => 'required|string|max:255|unique:divisi,divisi'
-            ]);
+        $validated = $request->validate([
+            'divisi' => 'required|string|max:255|unique:divisi'
+        ]);
 
-            $divisi = Divisi::create([
-                'divisi' => $validated['divisi'],
-                'jumlah_tim' => 0
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Divisi berhasil ditambahkan',
-                'data' => $divisi
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
+        // Jumlah tim akan di-set otomatis oleh model boot method
+        $divisi = Divisi::create($validated);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Divisi berhasil ditambahkan',
+            'data' => $divisi
+        ]);
     }
 
     /**
@@ -210,32 +173,26 @@ class TimDivisiController extends Controller
      */
     public function updateDivisi(Request $request, $id)
     {
-        try {
-            $validated = $request->validate([
-                'divisi' => 'required|string|max:255|unique:divisi,divisi,' . $id
-            ]);
+        $validated = $request->validate([
+            'divisi' => 'required|string|max:255|unique:divisi,divisi,' . $id
+        ]);
 
-            $divisi = Divisi::findOrFail($id);
-            $oldNamaDivisi = $divisi->divisi;
-            
-            $divisi->update(['divisi' => $validated['divisi']]);
-            
-            // Update nama divisi di semua tim yang terkait berdasarkan nama divisi lama (bukan divisi_id)
-            if ($oldNamaDivisi != $validated['divisi']) {
-                Tim::where('divisi', $oldNamaDivisi)->update(['divisi' => $validated['divisi']]);
-            }
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Divisi berhasil diperbarui',
-                'data' => $divisi
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+        $divisi = Divisi::findOrFail($id);
+        $oldNamaDivisi = $divisi->divisi;
+        
+        $divisi->update($validated);
+        
+        // Update nama divisi di semua tim yang terkait
+        if ($oldNamaDivisi != $validated['divisi']) {
+            Tim::where('divisi', $oldNamaDivisi)
+                ->update(['divisi' => $validated['divisi']]);
         }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Divisi berhasil diperbarui',
+            'data' => $divisi
+        ]);
     }
 
     /**
@@ -243,29 +200,22 @@ class TimDivisiController extends Controller
      */
     public function destroyDivisi($id)
     {
-        try {
-            $divisi = Divisi::findOrFail($id);
-            
-            // Check if divisi has tims
-            if (Tim::where('divisi', $divisi->divisi)->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak dapat menghapus divisi yang memiliki tim'
-                ], 400);
-            }
-            
-            $divisi->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Divisi berhasil dihapus'
-            ]);
-        } catch (\Exception $e) {
+        $divisi = Divisi::findOrFail($id);
+        
+        // Check if divisi has tims
+        if (Tim::where('divisi', $divisi->divisi)->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Tidak dapat menghapus divisi yang memiliki tim'
+            ], 400);
         }
+        
+        $divisi->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Divisi berhasil dihapus'
+        ]);
     }
 
     /**
@@ -278,7 +228,7 @@ class TimDivisiController extends Controller
         $tims = Tim::where('tim', 'like', "%{$search}%")
             ->orWhere('divisi', 'like', "%{$search}%")
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
             
         return response()->json([
             'success' => true,
@@ -295,7 +245,7 @@ class TimDivisiController extends Controller
         
         $divisis = Divisi::where('divisi', 'like', "%{$search}%")
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
             
         return response()->json([
             'success' => true,
@@ -318,6 +268,7 @@ class TimDivisiController extends Controller
 
     /**
      * Get tims by divisi id for dropdowns.
+     * Route: /tims/by-divisi/{id}
      */
     public function getTimsByDivisi($id)
     {

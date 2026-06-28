@@ -9,13 +9,17 @@ use Illuminate\Http\Request;
 
 class DataKaryawanController extends Controller
 {
-    public function index()
+        public function index()
     {
         // The view expects a collection of users (with related karyawan and divisi).
         $users = User::with(['karyawan', 'divisi'])->orderBy('id', 'desc')->get();
 
         // Provide list of divisi for the add/edit form dropdown
         $divisis = Divisi::orderBy('divisi', 'asc')->get();
+
+        // 1. BUAT MAPPING DIVISI (BARU DITAMBAHKAN)
+        // Ini akan mengubah ID divisi menjadi nama divisi (contoh: 1 => 'programmer')
+        $divisiMap = $divisis->pluck('divisi', 'id'); 
 
         // Build a case-insensitive name -> id map for quick lookup
         $divisiNameToId = [];
@@ -59,7 +63,12 @@ class DataKaryawanController extends Controller
             }
         }
 
-        return view('admin.data_karyawan', ['karyawan' => $users, 'divisis' => $divisis]);
+        // 2. KIRIM $divisiMap KE VIEW (DIUBAH BAGIAN INI)
+        return view('hr.data_karyawan', [
+            'karyawan' => $users, 
+            'divisis' => $divisis,
+            'divisiMap' => $divisiMap // <--- Ini kunci perbaikannya!
+        ]);
     }
 
     public function store(Request $request)

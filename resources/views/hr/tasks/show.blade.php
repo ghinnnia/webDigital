@@ -57,7 +57,7 @@
             <div>
                 <p class="text-gray-400 text-sm">Target Karyawan</p>
                 <p class="font-medium">{{ $task->assignedKaryawan->nama ?? '-' }}</p>
-                <p class="text-xs text-gray-400">{{ $task->assignedKaryawan->divisi ?? '-' }}</p>
+                <!-- <p class="text-xs text-gray-400">{{ $task->assignedKaryawan->divisi ?? '-' }}</p> -->
             </div>
             <div>
                 <p class="text-gray-400 text-sm">Priority</p>

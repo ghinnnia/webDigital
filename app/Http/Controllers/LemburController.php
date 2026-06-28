@@ -134,11 +134,43 @@ public function hrIndex(Request $request)
         
         $totalPerKaryawan = Lembur::where('status', 'approved')
             ->where('is_paid', false)
-            ->selectRaw('user_id, SUM(durasi) as total_jam, COUNT(*) as total_hari')
+            ->selectRaw('user_id, SUM(durasi) as total_jam, COUNT(*) as total_hari, SUM(total_upah) as total_upah')
             ->groupBy('user_id')
+            ->with('user')
             ->get();
         
-        return view('finance.lembur.index', compact('lemburs', 'totalPerKaryawan'));
+        // Tarif lembur default (Rp per jam) jika belum di-set
+        $defaultUpahPerJam = 50000;
+        
+        return view('finance.lembur.index', compact('lemburs', 'totalPerKaryawan', 'defaultUpahPerJam'));
+    }
+
+    /**
+     * Set custom upah lembur per jam untuk satu atau banyak record
+     */
+    public function setUpahLembur(Request $request)
+    {
+        $request->validate([
+            'lembur_id'    => 'required_without:bulk_ids|exists:lemburs,id',
+            'bulk_ids'     => 'required_without:lembur_id|array',
+            'bulk_ids.*'   => 'exists:lemburs,id',
+            'upah_per_jam' => 'required|numeric|min:0',
+        ]);
+
+        $ids = $request->filled('bulk_ids') ? $request->bulk_ids : [$request->lembur_id];
+        $upahPerJam = $request->upah_per_jam;
+
+        foreach ($ids as $id) {
+            $lembur = Lembur::find($id);
+            if ($lembur) {
+                $lembur->update([
+                    'upah_per_jam' => $upahPerJam,
+                    'total_upah'   => $lembur->durasi * $upahPerJam,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Upah lembur berhasil diperbarui!');
     }
 
     public function markAsPaid(Request $request)
@@ -154,4 +186,77 @@ public function hrIndex(Request $request)
 
         return redirect()->back()->with('success', 'Data lembur telah ditandai dibayar!');
     }
+
+    // ========== UNTUK MANAGER DIVISI ==========
+
+    public function managerDivisiIndex(Request $request)
+    {
+        $user = Auth::user();
+        $divisiId = $user->divisi_id;
+
+        $query = Lembur::with(['user', 'approver'])
+            ->whereHas('user', function ($q) use ($divisiId) {
+                $q->where('divisi_id', $divisiId);
+            })
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        $lemburs = $query->paginate(15);
+
+        $karyawan = User::where('role', 'karyawan')
+            ->where('divisi_id', $divisiId)
+            ->get();
+
+        return view('manager_divisi.lembur.index', compact('lemburs', 'karyawan'));
+    }
+
+    public function approveByManager($id)
+    {
+        $user = Auth::user();
+        $lembur = Lembur::with('user')->findOrFail($id);
+
+        // Pastikan karyawan ini adalah anggota divisi manager
+        if ($lembur->user->divisi_id !== $user->divisi_id) {
+            return redirect()->back()->with('error', 'Anda tidak berwenang menyetujui lembur ini.');
+        }
+
+        $lembur->update([
+            'status'      => 'approved',
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Pengajuan lembur berhasil disetujui!');
+    }
+
+    public function rejectByManager(Request $request, $id)
+    {
+        $request->validate([
+            'alasan_penolakan' => 'required|string|max:500',
+        ]);
+
+        $user = Auth::user();
+        $lembur = Lembur::with('user')->findOrFail($id);
+
+        if ($lembur->user->divisi_id !== $user->divisi_id) {
+            return redirect()->back()->with('error', 'Anda tidak berwenang menolak lembur ini.');
+        }
+
+        $lembur->update([
+            'status'           => 'rejected',
+            'approved_by'      => Auth::id(),
+            'approved_at'      => now(),
+            'alasan_penolakan' => $request->alasan_penolakan,
+        ]);
+
+        return redirect()->back()->with('success', 'Pengajuan lembur ditolak.');
+    }
+
 }

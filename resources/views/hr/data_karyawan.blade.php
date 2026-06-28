@@ -836,6 +836,14 @@
             background-color: #fef3c7;
             color: #92400e;
         }
+
+                /* Perbaiki jarak antar field di modal */
+        #karyawanModal .grid > div {
+            margin-bottom: 0.25rem;
+        }
+        #karyawanModal label {
+            font-weight: 500;
+        }
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -919,12 +927,12 @@
                                             <th style="min-width: 200px;">Nama</th>
                                             <th style="min-width: 200px;">Email</th>
                                             <th style="min-width: 150px;">Role</th>
-                                            <th style="min-width: 150px;">Divisi</th>
                                             <th style="min-width: 150px;">Tim</th>
                                             <th style="min-width: 250px;">Alamat</th>
                                             <th style="min-width: 150px;">Kontak</th>
                                             <th style="min-width: 150px;">Gaji</th>
-                                            <th style="min-width: 180px;">Kontrak</th>
+                                            <th style="min-width: 150px;">Kontrak Mulai</th>
+                                            <th style="min-width: 150px;">Kontrak Selesai</th>
                                             <th style="min-width: 120px;">Status Kerja</th>
                                             <th style="min-width: 150px;">Status Karyawan</th>
                                             <th style="min-width: 200px;">Tunjangan Tetap</th>
@@ -972,7 +980,7 @@
                                                     </td>
                                                     <td style="min-width: 200px;">
                                                         <div class="text-sm">{{ $item->email }}</div>
-                                                        <div class="text-xs text-gray-500">Role: {{ $item->role }}</div>
+                                                        <div class="text-xs text-gray-400 mt-1">{{ $item->divisi ?? 'No Division' }}</div>
                                                     </td>
                                                     <td style="min-width: 150px;">
                                                         <span class="status-badge 
@@ -983,8 +991,42 @@
                                                             {{ $item->role }}
                                                         </span>
                                                     </td>
-                                                    <td style="min-width: 150px;">{{ $item->divisi ?? '-' }}</td>
-                                                    <td style="min-width: 150px;">{{ $item->tim ? $item->tim->tim : '-' }}</td>
+                                                    <!-- <td style="min-width: 150px;">
+                                                        @if(isset($divisiMap[$item->divisi_id]))
+                                                            @php
+                                                                $divisiName = strtolower(trim($divisiMap[$item->divisi_id]));
+                                                                $divisiClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                                if ($divisiName === 'hr' || $divisiName === 'human resources') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                                elseif ($divisiName === 'finance') $divisiClass = 'bg-green-50 text-green-700 border border-green-200';
+                                                                elseif ($divisiName === 'marketing') $divisiClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                                                                elseif ($divisiName === 'it' || $divisiName === 'programmer' || $divisiName === 'pengembangan') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                            @endphp
+
+                                                            <span class="status-badge {{ $divisiClass }}">
+                                                                {{ $divisiMap[$item->divisi_id] }}
+                                                            </span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td> -->
+                                                    <td style="min-width: 150px;">
+                                                        @php
+                                                            $timBadgeClass = 'bg-gray-100 text-gray-800';
+                                                            $timName = $item->tim ? strtolower(trim($item->tim->tim)) : '';
+                                                            if ($timName === 'hr' || $timName === 'human resources') $timBadgeClass = 'bg-blue-100 text-blue-800';
+                                                            elseif ($timName === 'finance') $timBadgeClass = 'bg-green-100 text-green-800';
+                                                            elseif ($timName === 'marketing') $timBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                            elseif ($timName === 'it' || $timName === 'programming' || $timName === 'pengembangan') $timBadgeClass = 'bg-indigo-100 text-indigo-800';
+                                                        @endphp
+
+                                                        @if($item->tim)
+                                                            <span class="status-badge {{ $timBadgeClass }}">
+                                                                {{ $item->tim->tim }}
+                                                            </span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
                                                     <td style="min-width: 250px;">{{ $item->alamat }}</td>
                                                     <td style="min-width: 150px;">{{ $item->kontak }}</td>
                                                     <td style="min-width: 150px;">
@@ -992,16 +1034,11 @@
                                                             Rp {{ number_format($item->gaji, 0, ',', '.') }}
                                                         </div>
                                                     </td>
-                                                    <td style="min-width: 180px;">
-                                                        @php
-                                                            $kontrakText = '-';
-                                                            if (($item->status_karyawan ?? null) === 'kontrak' && (!empty($item->kontrak_mulai) || !empty($item->kontrak_selesai))) {
-                                                                $mulai = $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-';
-                                                                $selesai = $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-';
-                                                                $kontrakText = "$mulai - $selesai";
-                                                            }
-                                                        @endphp
-                                                        <div class="text-sm">{{ $kontrakText }}</div>
+                                                    <td style="min-width: 150px;">
+                                                        {{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-' }}
+                                                    </td>
+                                                    <td style="min-width: 150px;">
+                                                        {{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-' }}
                                                     </td>
                                                     <td style="min-width: 120px;">
                                                         @php
@@ -1072,8 +1109,9 @@
                                                     <td style="min-width: 100px; text-align: center;">
                                                         <div class="flex justify-center gap-2">
                                                             <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
-                                                                data-id="{{ $item->user_id }}"
+                                                                data-id="{{ $item->id }}"
                                                                 data-user_id="{{ $item->user_id }}"
+
                                                                 data-nama="{{ $item->nama }}"
                                                                 data-email="{{ $item->email }}"
                                                                 data-role="{{ $item->role }}"
@@ -1084,8 +1122,9 @@
                                                                 data-status_kerja="{{ $item->status_kerja }}"
                                                                 data-status_karyawan="{{ $item->status_karyawan }}"
                                                                 data-gaji="{{ $item->gaji }}"
-                                                                data-kontrak_mulai="{{ $item->kontrak_mulai ?? '' }}"
-                                                                data-kontrak_selesai="{{ $item->kontrak_selesai ?? '' }}"
+data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
+                                                                data-kontrak_selesai="{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('Y-m-d') : '' }}"
+
                                                                 data-foto="{{ $item->foto ?? '' }}">
                                                                 <span class="material-icons-outlined">edit</span>
                                                             </button>
@@ -1157,6 +1196,8 @@
                                                     data-status_kerja="{{ $item->status_kerja }}"
                                                     data-status_karyawan="{{ $item->status_karyawan }}"
                                                     data-gaji="{{ $item->gaji }}"
+                                                    data-kontrak_mulai="{{ $item->kontrak_mulai ?? '' }}"
+                                                    data-kontrak_selesai="{{ $item->kontrak_selesai ?? '' }}"
                                                     data-foto="{{ $item->foto ?? '' }}">
                                                     <span class="material-icons-outlined">edit</span>
                                                 </button>
@@ -1166,11 +1207,52 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div class="grid grid-cols-2 gap-2 text-sm">
                                             <div><p class="text-text-muted-light">No</p><p class="font-medium">{{ $no++ }}</p></div>
                                             <div><p class="text-text-muted-light">Role</p><p><span class="status-badge">{{ $item->role }}</span></p></div>
                                             <div><p class="text-text-muted-light">Status Kerja</p><p>{{ ucfirst($item->status_kerja) }}</p></div>
-                                            <div><p class="text-text-muted-light">Divisi</p><p class="font-medium">{{ $item->divisi ?? '-' }}</p></div>
+                                            <div>
+                                                <p class="text-text-muted-light">Divisi</p>
+                                                <p class="font-medium">
+                                                    @if(isset($divisiMap[$item->divisi_id]))
+                                                        @php
+                                                            $divisiName = strtolower(trim($divisiMap[$item->divisi_id]));
+                                                            $divisiClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                            if ($divisiName === 'hr' || $divisiName === 'human resources') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                            elseif ($divisiName === 'finance') $divisiClass = 'bg-green-50 text-green-700 border border-green-200';
+                                                            elseif ($divisiName === 'marketing') $divisiClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                                                            elseif ($divisiName === 'it' || $divisiName === 'programmer' || $divisiName === 'pengembangan') $divisiClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                        @endphp
+
+                                                        <span class="status-badge {{ $divisiClass }}">
+                                                            {{ $divisiMap[$item->divisi_id] }}
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p class="text-text-muted-light">Tim</p>
+                                                <p class="font-medium">
+                                                    @if($item->tim)
+                                                        @php
+                                                            $timNameMobile = strtolower(trim($item->tim->tim));
+                                                            $timBadgeClassMobile = 'bg-gray-100 text-gray-800';
+                                                            if ($timNameMobile === 'hr' || $timNameMobile === 'human resources') $timBadgeClassMobile = 'bg-blue-100 text-blue-800';
+                                                            elseif ($timNameMobile === 'finance') $timBadgeClassMobile = 'bg-green-100 text-green-800';
+                                                            elseif ($timNameMobile === 'marketing') $timBadgeClassMobile = 'bg-yellow-100 text-yellow-800';
+                                                            elseif ($timNameMobile === 'it' || $timNameMobile === 'programming' || $timNameMobile === 'pengembangan') $timBadgeClassMobile = 'bg-indigo-100 text-indigo-800';
+                                                        @endphp
+
+                                                        <span class="status-badge {{ $timBadgeClassMobile }}">
+                                                            {{ $item->tim->tim }}
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </p>
+                                            </div>
                                             <div><p class="text-text-muted-light">Alamat</p><p class="font-medium truncate">{{ $item->alamat }}</p></div>
                                             <div><p class="text-text-muted-light">Gaji</p><p class="font-medium text-green-600">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p></div>
                                             <div><p class="text-text-muted-light">Tunjangan Tetap</p>
@@ -1196,11 +1278,23 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        @if($item->gaji)
-                                            <div class="mt-3 pt-3 border-t border-gray-100">
+                                        @if($item->gaji || $item->kontrak_mulai || $item->kontrak_selesai)
+                                        <div class="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-sm">
+                                            @if($item->gaji)
+                                            <div>
                                                 <p class="text-text-muted-light">Gaji</p>
                                                 <p class="font-medium">Rp {{ number_format($item->gaji, 0, ',', '.') }}</p>
                                             </div>
+                                            @endif
+                                            <div>
+                                                <p class="text-text-muted-light">Kontrak Mulai</p>
+                                                <p class="font-medium">{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('d M Y') : '-' }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-text-muted-light">Kontrak Selesai</p>
+                                                <p class="font-medium">{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('d M Y') : '-' }}</p>
+                                            </div>
+                                        </div>
                                         @endif
                                     </div>
                                 @endforeach
@@ -1253,180 +1347,205 @@
                     </button>
                 </div>
                 <form id="karyawanForm" class="space-y-4" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" id="formId" name="id">
-                    <input type="hidden" id="formUserId" name="user_id">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama *</label>
-                            <input type="text" name="name" id="formNama" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" name="email" id="formEmail" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" name="password" id="formPassword"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Kosongkan jika tidak diubah">
-                            <p class="text-xs text-gray-500 mt-1">Minimal 6 karakter (isi hanya jika ingin mengubah)</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                            <select name="role" id="formRole" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Role</option>
-                                <option value="general_manager">General Manager</option>
-                                <option value="manager_divisi">Manager Divisi</option>
-                                <option value="karyawan">Karyawan</option>
-                                <option value="finance">Finance</option>
-                                <option value="hr">HR</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
-                            <select name="divisi_id" id="formDivisi"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Divisi</option>
-                                @if (isset($divisis) && count($divisis) > 0)
-                                    @foreach ($divisis as $divisi)
-                                        <option value="{{ $divisi->id }}">{{ $divisi->divisi }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tim</label>
-                            <select name="tim_id" id="formTim"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="">Pilih Tim (opsional)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
-                            <input type="number" name="gaji" id="formGaji"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                placeholder="Masukkan gaji (angka tanpa titik/koma)">
-                            <p class="text-xs text-gray-500 mt-1">Isi dengan angka, contoh: 5000000</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
-                            <input type="text" name="kontak" id="formKontak"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Kerja</label>
-                            <select name="status_kerja" id="formStatusKerja"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="aktif">Aktif</option>
-                                <option value="resign">Resign</option>
-                                <option value="phk">PHK</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Karyawan</label>
-                            <select name="status_karyawan" id="formStatusKaryawan"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                                <option value="tetap">Tetap</option>
-                                <option value="kontrak">Kontrak</option>
-                                <option value="freelance">Freelance</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-                            <textarea name="alamat" id="formAlamat" rows="2"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
-                        </div>
-                    </div>
+    @csrf
+    <input type="hidden" id="formId" name="id">
+    <input type="hidden" id="formUserId" name="user_id">
 
-                    <!-- Tunjangan Tetap Section -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Tunjangan Tetap (Bulanan)</label>
-                            <button type="button" id="addFixedAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
-                                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
-                            </button>
-                        </div>
-                        <div id="fixedAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            @foreach($tunjanganMaster->where('tipe', 'bulanan') as $tunjangan)
-                            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="fixed" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1">
-                                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
-                                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" class="fixed-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
-                                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="bulanan" data-nominal="{{ $tunjangan->nominal }}">
-                                            <span class="material-icons-outlined text-sm">edit</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @if($tunjanganMaster->where('tipe', 'bulanan')->count() == 0)
-                            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
-                        @endif
-                    </div>
+    <!-- ===== BAGIAN 1: DATA DIRI (2 KOLOM) ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama <span class="text-red-500">*</span></label>
+            <input type="text" name="name" id="formNama" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+            <input type="email" name="email" id="formEmail" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" id="formPassword"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                   placeholder="Kosongkan jika tidak diubah">
+            <p class="text-xs text-gray-500 mt-1">Minimal 6 karakter (isi hanya jika ingin mengubah)</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Role <span class="text-red-500">*</span></label>
+            <select name="role" id="formRole" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Pilih Role</option>
+                <option value="general_manager">General Manager</option>
+                <option value="manager_divisi">Manager Divisi</option>
+                <option value="karyawan">Karyawan</option>
+                <option value="finance">Finance</option>
+                <option value="hr">HR</option>
+            </select>
+        </div>
+    </div>
 
-                    <!-- Tunjangan Tidak Tetap Section -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Tunjangan Tidak Tetap (Bonus/Insentif)</label>
-                            <button type="button" id="addVariableAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
-                                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
-                            </button>
-                        </div>
-                        <div id="variableAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            @foreach($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif']) as $tunjangan)
-                            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="variable" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1">
-                                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
-                                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" class="variable-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
-                                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="{{ $tunjangan->tipe }}" data-nominal="{{ $tunjangan->nominal }}">
-                                            <span class="material-icons-outlined text-sm">edit</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @if($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif'])->count() == 0)
-                            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tidak tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
-                        @endif
-                    </div>
+    <!-- ===== BAGIAN 2: DIVISI & TIM (DIBUNGKUS) ===== -->
+    <div id="divisiTimWrapper">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
+                <select name="divisi_id" id="formDivisi"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="">Pilih Divisi</option>
+                    @if (isset($divisis) && count($divisis) > 0)
+                        @foreach ($divisis as $divisi)
+                            <option value="{{ $divisi->id }}">{{ $divisi->divisi }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tim</label>
+                <select name="tim_id" id="formTim"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="">Pilih Tim (opsional)</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Foto -->
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
-                        <div class="flex items-center space-x-4">
-                            <div id="fotoPreview" class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span class="material-icons-outlined text-gray-500 text-2xl">person</span>
-                            </div>
-                            <div>
-                                <input type="file" name="foto" id="fotoInput" class="hidden" accept="image/*">
-                                <button type="button" id="pilihFotoBtn" class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                                    Pilih Foto
-                                </button>
-                                <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG maks. 2MB</p>
-                            </div>
-                        </div>
-                    </div>
+    <!-- ===== BAGIAN 3: GAJI, KONTAK, STATUS, KONTRAK ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gaji</label>
+            <input type="text" name="gaji" id="formGaji"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                   placeholder="Rp 0,00">
+            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
+            <input type="text" name="kontak" id="formKontak"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status Kerja</label>
+            <select name="status_kerja" id="formStatusKerja"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="aktif">Aktif</option>
+                <option value="resign">Resign</option>
+                <option value="phk">PHK</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status Karyawan</label>
+            <select name="status_karyawan" id="formStatusKaryawan"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="tetap">Tetap</option>
+                <option value="kontrak">Kontrak</option>
+                <option value="freelance">Freelance</option>
+            </select>
+        </div>
+        <!-- BAGIAN 3.5: KONTRAK -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontrak Mulai</label>
+            <input type="date" name="kontrak_mulai" id="formKontrakMulai"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kontrak Selesai</label>
+            <input type="date" name="kontrak_selesai" id="formKontrakSelesai"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+    </div>
 
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" id="cancelModalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">Simpan Karyawan</button>
+    <!-- ===== BAGIAN 4: ALAMAT ===== -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+        <textarea name="alamat" id="formAlamat" rows="2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+    </div>
+
+    <!-- ===== BAGIAN 5: TUNJANGAN TETAP ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <div class="flex justify-between items-center mb-3">
+            <label class="block text-sm font-medium text-gray-700">Tunjangan Tetap (Bulanan)</label>
+            <button type="button" id="addFixedAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
+                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
+            </button>
+        </div>
+        <div id="fixedAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            @foreach($tunjanganMaster->where('tipe', 'bulanan') as $tunjangan)
+            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="fixed" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
+                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
                     </div>
-                </form>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="fixed-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
+                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="bulanan" data-nominal="{{ $tunjangan->nominal }}">
+                            <span class="material-icons-outlined text-sm">edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @if($tunjanganMaster->where('tipe', 'bulanan')->count() == 0)
+            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
+        @endif
+    </div>
+
+    <!-- ===== BAGIAN 6: TUNJANGAN TIDAK TETAP ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <div class="flex justify-between items-center mb-3">
+            <label class="block text-sm font-medium text-gray-700">Tunjangan Tidak Tetap (Bonus/Insentif)</label>
+            <button type="button" id="addVariableAllowanceBtn" class="text-xs text-primary hover:underline flex items-center gap-1">
+                <span class="material-icons-outlined text-sm">add_circle</span> Tambah Tunjangan Baru
+            </button>
+        </div>
+        <div id="variableAllowanceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            @foreach($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif']) as $tunjangan)
+            <div class="allowance-card" data-id="{{ $tunjangan->id }}" data-tipe="variable" data-nama="{{ $tunjangan->nama }}" data-nominal="{{ $tunjangan->nominal }}">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">{{ $tunjangan->nama }}</div>
+                        <div class="allowance-nominal text-xs">Rp {{ number_format($tunjangan->nominal, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="variable-allowance-checkbox w-5 h-5 rounded border-gray-300" value="{{ $tunjangan->id }}">
+                        <button type="button" class="btn-allowance-edit" data-id="{{ $tunjangan->id }}" data-nama="{{ $tunjangan->nama }}" data-tipe="{{ $tunjangan->tipe }}" data-nominal="{{ $tunjangan->nominal }}">
+                            <span class="material-icons-outlined text-sm">edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @if($tunjanganMaster->whereIn('tipe', ['bonus', 'insentif'])->count() == 0)
+            <p class="text-sm text-gray-400 text-center py-4">Belum ada tunjangan tidak tetap. Klik tombol "Tambah Tunjangan Baru" untuk menambahkan.</p>
+        @endif
+    </div>
+
+    <!-- ===== BAGIAN 7: FOTO ===== -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+        <div class="flex items-center space-x-4">
+            <div id="fotoPreview" class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
+                <span class="material-icons-outlined text-gray-500 text-2xl">person</span>
+            </div>
+            <div>
+                <input type="file" name="foto" id="fotoInput" class="hidden" accept="image/*">
+                <button type="button" id="pilihFotoBtn" class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                    Pilih Foto
+                </button>
+                <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG maks. 2MB</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BAGIAN 8: TOMBOL AKSI ===== -->
+    <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelModalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">Simpan Karyawan</button>
+    </div>
+</form>
             </div>
         </div>
     </div>
@@ -2009,55 +2128,83 @@
 
         // MODAL KARYAWAN
         function openKaryawanModal(mode = 'create', data = null) {
-            currentModalMode = mode;
-            const modal = document.getElementById('karyawanModal');
-            const form = document.getElementById('karyawanForm');
-            form.reset();
-            document.getElementById('formId').value = '';
-            document.getElementById('formUserId').value = '';
-            document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
-            initAllowanceSelections([], []);
-            
-            if (mode === 'edit' && data) {
-                document.getElementById('modalTitle').textContent = 'Edit Karyawan';
-                document.getElementById('formId').value = data.id;
-                document.getElementById('formUserId').value = data.user_id || '';
-                document.getElementById('formNama').value = data.nama || '';
-                document.getElementById('formEmail').value = data.email || '';
-                document.getElementById('formRole').value = data.role || '';
-                document.getElementById('formDivisi').value = data.divisi_id || '';
-                document.getElementById('formGaji').value = data.gaji || '';
-                document.getElementById('formKontak').value = data.kontak || '';
-                document.getElementById('formAlamat').value = data.alamat || '';
-                document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
-                document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
-                
-                if (data.divisi_id) loadTims('formTim', data.divisi_id, data.tim_id);
-                
-                // Load tunjangan karyawan saat edit
-                if (data.id) {
-                    fetch(`/api/karyawan/${data.id}/tunjangan`)
-                        .then(res => res.json())
-                        .then(result => {
-                            if (result.success) {
-                                initAllowanceSelections(
-                                    result.data.tetap.map(t => t.id),
-                                    result.data.tidak_tetap.map(t => t.id)
-                                );
-                            }
-                        })
-                        .catch(err => console.error('Error loading allowances:', err));
-                }
-            } else {
-                document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
-                document.getElementById('formGaji').value = '';
-            }
-            modal.classList.remove('hidden');
+    currentModalMode = mode;
+    const modal = document.getElementById('karyawanModal');
+    const form = document.getElementById('karyawanForm');
+    form.reset();
+    document.getElementById('formId').value = '';
+    document.getElementById('formUserId').value = '';
+    document.getElementById('fotoPreview').innerHTML = '<span class="material-icons-outlined text-gray-500 text-2xl">person</span>';
+    initAllowanceSelections([], []);
+
+    // Reset field kontrak (biarkan kosong)
+    document.getElementById('formKontrakMulai').value = '';
+    document.getElementById('formKontrakSelesai').value = '';
+
+    if (mode === 'edit' && data) {
+        document.getElementById('modalTitle').textContent = 'Edit Karyawan';
+        document.getElementById('formId').value = data.id;
+        document.getElementById('formUserId').value = data.user_id || '';
+        document.getElementById('formNama').value = data.nama || '';
+        document.getElementById('formEmail').value = data.email || '';
+        document.getElementById('formRole').value = data.role || '';
+        document.getElementById('formDivisi').value = data.divisi_id || '';
+        document.getElementById('formGaji').value = data.gaji || '';
+        document.getElementById('formKontak').value = data.kontak || '';
+        document.getElementById('formAlamat').value = data.alamat || '';
+        document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
+        document.getElementById('formStatusKaryawan').value = data.status_karyawan || 'tetap';
+// Pastikan value input[type="date"] selalu format YYYY-MM-DD
+        document.getElementById('formKontrakMulai').value = (data.kontrak_mulai && String(data.kontrak_mulai).length)
+            ? String(data.kontrak_mulai).slice(0,10)
+            : '';
+        document.getElementById('formKontrakSelesai').value = (data.kontrak_selesai && String(data.kontrak_selesai).length)
+            ? String(data.kontrak_selesai).slice(0,10)
+            : '';
+
+
+        // Sembunyikan divisi/tim jika role = general_manager
+        toggleDivisiTim(data.role);
+
+        if (data.divisi_id) {
+            loadTims('formTim', data.divisi_id, data.tim_id);
         }
+
+        // Load tunjangan karyawan saat edit
+        if (data.id) {
+            fetch(`/admin/karyawan/${data.id}/tunjangan`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        initAllowanceSelections(
+                            result.data.tetap.map(t => t.id),
+                            result.data.tidak_tetap.map(t => t.id)
+                        );
+                    }
+                })
+                .catch(err => console.error('Error loading allowances:', err));
+        }
+    } else {
+        document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
+        document.getElementById('formGaji').value = '';
+        // Saat create, sembunyikan/tampilkan berdasarkan role yang dipilih saat itu
+        const currentRole = document.getElementById('formRole').value;
+        toggleDivisiTim(currentRole);
+    }
+
+    modal.classList.remove('hidden');
+}   
 
         function closeKaryawanModal() {
             document.getElementById('karyawanModal').classList.add('hidden');
         }
+
+        function toggleDivisiTim(role) {
+    const wrapper = document.getElementById('divisiTimWrapper');
+    if (wrapper) {
+        wrapper.style.display = (role === 'general_manager') ? 'none' : 'block';
+    }
+}
 
         // MODAL ALLOWANCE MASTER
         const allowanceModal = document.getElementById('allowanceMasterModal');
@@ -2222,6 +2369,9 @@
                 const id = document.getElementById('deleteId').value;
                 if (id) handleDeleteKaryawan(id);
             });
+            document.getElementById('formRole').addEventListener('change', function() {
+                toggleDivisiTim(this.value);
+            });
             
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.edit-btn')) {
@@ -2237,7 +2387,9 @@
                         kontak: button.dataset.kontak,
                         gaji: button.dataset.gaji,
                         status_kerja: button.dataset.status_kerja,
-                        status_karyawan: button.dataset.status_karyawan
+                        status_karyawan: button.dataset.status_karyawan,
+                        kontrak_mulai: button.dataset.kontrak_mulai || '',
+                        kontrak_selesai: button.dataset.kontrak_selesai || ''
                     };
                     openKaryawanModal('edit', data);
                 }
@@ -2318,6 +2470,33 @@
             loadDivisis('formDivisi');
             setupAllowanceCheckboxListeners();
         });
+
+       const inputGaji = document.getElementById('formGaji');
+
+    // KETIKA DIKETIK: Hanya muncul ribuan (Rp 5.000.000) agar mengetik terasa normal
+    inputGaji.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value === "") { e.target.value = ""; return; }
+        
+        let formattedValue = new Intl.NumberFormat('id-ID').format(value);
+        e.target.value = 'Rp ' + formattedValue;
+    });
+
+    // KETIKA SELESAI MENGETIK (Pindah Kolom): Otomatis tambahkan desimal (,00)
+    inputGaji.addEventListener('blur', function (e) {
+        let value = e.target.value;
+        if (value && !value.includes(',00')) {
+            e.target.value = value + ',00';
+        }
+    });
+
+    // KETIKA DIKLIK KEMBALI UNTUK EDIT: Hapus desimal sementara agar mudah diedit lagi
+    inputGaji.addEventListener('focus', function (e) {
+        let value = e.target.value;
+        if (value.endsWith(',00')) {
+            e.target.value = value.slice(0, -3);
+        }
+    });
     </script>
 </body>
 </html>

@@ -63,8 +63,9 @@ public function indexPegawai(Request $request)
         
         // Format data untuk view (tanpa eager loading yang bermasalah)
         $karyawan = $karyawanCollection->map(function ($userItem) {
-            // Ambil data tunjangan via relasi karyawan
-            $karyawanData = Karyawan::where('user_id', $userItem->id)->first();
+            // dd($userItem->toArray()); // Debugging: Periksa struktur data userItem
+            // Ambil data karyawan beserta tim (tim_id ada di karyawan, bukan users)
+            $karyawanData = Karyawan::with('tim')->where('user_id', $userItem->id)->first();
             
             $tetapList = collect();
             $tidakTetapList = collect();
@@ -72,50 +73,39 @@ public function indexPegawai(Request $request)
             $tidakTetapIds = [];
             
             if ($karyawanData) {
-                $currentMonth = Carbon::now()->month;
-                $currentYear = Carbon::now()->year;
-                
-                // Ambil tunjangan dari tabel tunjangan_karyawan
-                $tetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
-                    ->where('bulan', $currentMonth)
-                    ->where('tahun', $currentYear)
-                    ->where('diberikan', 1)
-                    ->with('tunjanganMaster')
-                    ->get()
-                    ->filter(function($item) {
-                        return $item->tunjanganMaster && $item->tunjanganMaster->tipe == 'bulanan';
-                    });
-                
-                $tidakTetapList = TunjanganKaryawan::where('karyawan_id', $karyawanData->id)
-                    ->where('bulan', $currentMonth)
-                    ->where('tahun', $currentYear)
-                    ->where('diberikan', 1)
-                    ->with('tunjanganMaster')
-                    ->get()
-                    ->filter(function($item) {
-                        return $item->tunjanganMaster && in_array($item->tunjanganMaster->tipe, ['bonus', 'insentif']);
-                    });
-                
-                $tetapIds = $tetapList->pluck('tunjangan_id')->toArray();
-                $tidakTetapIds = $tidakTetapList->pluck('tunjangan_id')->toArray();
+                // Ambil tunjangan dari tabel karyawan_tunjangan (pivot default, tanpa bulan/tahun)
+                $semuaTunjangan = $karyawanData->tunjanganDefault()->get();
+
+                $tetapList = $semuaTunjangan->filter(fn($t) => $t->tipe === 'bulanan');
+                $tidakTetapList = $semuaTunjangan->filter(fn($t) => in_array($t->tipe, ['bonus', 'insentif']));
+
+                $tetapIds = $tetapList->pluck('id')->toArray();
+                $tidakTetapIds = $tidakTetapList->pluck('id')->toArray();
             }
             
+            // Tim diambil dari tabel karyawan (bukan users, karena tim_id ada di karyawan)
+            $timObject = $karyawanData ? $karyawanData->tim : null;
+
+            // dd($userItem); // Debugging: Periksa struktur data divisi)
+
             return (object) [
+                'id' => $karyawanData ? $karyawanData->id : null, // karyawan.id untuk delete/edit
                 'user_id' => $userItem->id,
                 'nama' => $userItem->name,
                 'email' => $userItem->email,
                 'role' => $userItem->role,
                 'divisi' => $userItem->divisi ? $userItem->divisi->divisi : '-',
                 'divisi_id' => $userItem->divisi_id,
-                'tim' => $userItem->tim,
+                'tim' => $timObject,
+                'tim_id' => $karyawanData ? $karyawanData->tim_id : null,
                 'alamat' => $userItem->alamat,
                 'kontak' => $userItem->kontak,
-                'foto' => $userItem->foto,
+                'foto' => $karyawanData ? $karyawanData->foto : $userItem->foto,
                 'gaji' => $userItem->gaji,
                 'kontrak_mulai' => $userItem->kontrak_mulai,
                 'kontrak_selesai' => $userItem->kontrak_selesai,
-                'status_kerja' => $userItem->status_kerja ?? 'aktif',
-                'status_karyawan' => $userItem->status_karyawan ?? 'tetap',
+                'status_kerja' => $karyawanData ? $karyawanData->status_kerja : ($userItem->status_kerja ?? 'aktif'),
+                'status_karyawan' => $karyawanData ? $karyawanData->status_karyawan : ($userItem->status_karyawan ?? 'tetap'),
                 'tunjanganTetapBulanIni' => $tetapList,
                 'tunjanganTidakTetapBulanIni' => $tidakTetapList,
                 'tunjangan_tetap_ids' => $tetapIds,
@@ -201,7 +191,15 @@ public function storePegawai(Request $request)
 {
     try {
         DB::beginTransaction();
+        Log::info('storePegawai endpoint hit');
+
         
+Log::info('storePegawai kontrak (raw)', [
+            'kontrak_mulai' => $request->input('kontrak_mulai'),
+            'kontrak_selesai' => $request->input('kontrak_selesai'),
+        ]);
+        Log::info('storePegawai kontrak (validated? akan dihitung setelah validate)');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -210,6 +208,8 @@ public function storePegawai(Request $request)
             'divisi_id' => 'nullable|exists:divisis,id',
             'tim_id' => 'nullable|exists:tims,id',
             'gaji' => 'nullable|numeric',
+            'kontrak_mulai' => 'nullable|date',
+            'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
             'kontak' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'status_kerja' => 'required|in:aktif,resign,phk',
@@ -219,7 +219,12 @@ public function storePegawai(Request $request)
             'tunjangan_tidak_tetap_ids' => 'nullable|string'
         ]);
         
-        // Create user
+// Create user
+        Log::info('storePegawai kontrak payload', [
+            'kontrak_mulai' => $validated['kontrak_mulai'] ?? null,
+            'kontrak_selesai' => $validated['kontrak_selesai'] ?? null,
+        ]);
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -231,8 +236,28 @@ public function storePegawai(Request $request)
             'kontak' => $validated['kontak'] ?? '',
             'alamat' => $validated['alamat'] ?? '',
             'status_kerja' => $validated['status_kerja'],
-            'status_karyawan' => $validated['status_karyawan']
+            'status_karyawan' => $validated['status_karyawan'],
+            'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
+            'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
         ]);
+
+        // Reload untuk pastikan value benar-benar tersimpan di tabel users
+        $user->refresh();
+        Log::info('storePegawai users saved kontrak', [
+            'user_id' => $user->id,
+            'kontrak_mulai' => $user->kontrak_mulai,
+            'kontrak_selesai' => $user->kontrak_selesai,
+        ]);
+
+        // Debug: cek nilai di DB paling akhir
+        $userDb = User::select('kontrak_mulai','kontrak_selesai')->find($user->id);
+        Log::info('storePegawai users DB kontrak', [
+            'user_id' => $user->id,
+            'kontrak_mulai' => $userDb?->kontrak_mulai,
+            'kontrak_selesai' => $userDb?->kontrak_selesai,
+        ]);
+
+
         
         // Handle foto
         if ($request->hasFile('foto')) {
@@ -304,8 +329,10 @@ public function updatePegawai(Request $request, $id)
 {
     try {
         DB::beginTransaction();
-        
+        Log::info('updatePegawai endpoint hit', ['id' => $id]);
+
         $user = User::findOrFail($id);
+
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -315,6 +342,8 @@ public function updatePegawai(Request $request, $id)
             'divisi_id' => 'nullable|exists:divisis,id',
             'tim_id' => 'nullable|exists:tims,id',
             'gaji' => 'nullable|numeric',
+            'kontrak_mulai' => 'nullable|date',
+            'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
             'kontak' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'status_kerja' => 'required|in:aktif,resign,phk',
@@ -331,6 +360,10 @@ public function updatePegawai(Request $request, $id)
         $user->divisi_id = $validated['divisi_id'] ?? null;
         $user->tim_id = $validated['tim_id'] ?? null;
         $user->gaji = $validated['gaji'] ?? 0;
+// Normalisasi agar tetap tersimpan sebagai date (YYYY-MM-DD) meski format dari frontend beragam
+        $user->kontrak_mulai = !empty($validated['kontrak_mulai']) ? Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null;
+        $user->kontrak_selesai = !empty($validated['kontrak_selesai']) ? Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null;
+
         $user->kontak = $validated['kontak'] ?? '';
         $user->alamat = $validated['alamat'] ?? '';
         $user->status_kerja = $validated['status_kerja'];
@@ -350,8 +383,25 @@ public function updatePegawai(Request $request, $id)
         }
         
         $user->save();
-        
+
+        // Debug: cek nilai setelah save di DB
+        $userDb = User::select('kontrak_mulai','kontrak_selesai')->find($user->id);
+        Log::info('updatePegawai users DB kontrak', [
+            'user_id' => $user->id,
+            'kontrak_mulai' => $userDb?->kontrak_mulai,
+            'kontrak_selesai' => $userDb?->kontrak_selesai,
+        ]);
+
+        // Debug: cek nilai di tabel karyawan juga
+        $karyawanDb = Karyawan::where('user_id', $user->id)->first();
+        Log::info('updatePegawai karyawan DB kontrak', [
+            'user_id' => $user->id,
+            'karyawan_kontrak_mulai' => $karyawanDb?->kontrak_mulai,
+            'karyawan_kontrak_selesai' => $karyawanDb?->kontrak_selesai,
+        ]);
+
         // Sync tunjangan - Cari atau buat karyawan
+
         $karyawan = Karyawan::where('user_id', $user->id)->first();
         
         if (!$karyawan) {
@@ -847,7 +897,10 @@ private function syncTunjanganKaryawan($karyawanId, Request $request, $deleteOld
             ->whereNotIn('status', ['selesai', 'dibatalkan'])
             ->count();
 
-        return view('karyawan.home', [
+            // NOTE: KPA tables may be split into new structure tables.
+            // Avoid hard-failing when legacy table `kpa` is referenced elsewhere.
+            return view('karyawan.home', [
+
             'attendance_status' => $attendanceStatus,
             'ketidakhadiran_count' => $ketidakhadiranCount,
             'total_hadir' => $totalHadir,

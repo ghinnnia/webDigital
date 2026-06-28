@@ -120,7 +120,7 @@
                                         </div>
                                         <div>
                                             <div class="font-medium text-gray-700 leading-none">{{ $task->assignedKaryawan->nama ?? '-' }}</div>
-                                            <div class="text-xs text-gray-400 mt-1">{{ $task->assignedKaryawan->divisi ?? 'No Division' }}</div>
+                                            <!-- <div class="text-xs text-gray-400 mt-1">{{ $task->assignedKaryawan->divisi ?? 'No Division' }}</div> -->
                                         </div>
                                     </div>
                                 </td>

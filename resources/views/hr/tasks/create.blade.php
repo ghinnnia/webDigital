@@ -42,7 +42,7 @@
                 <option value="">-- Pilih Karyawan --</option>
                 @foreach($karyawan as $k)
                     <option value="{{ $k->id }}" {{ old('karyawan_id') == $k->id ? 'selected' : '' }}>
-                        {{ $k->nama }} - {{ $k->divisi ?? 'Tanpa Divisi' }}
+                        {{ $k->nama }} {{ $k->divisi ?? '' }}
                     </option>
                 @endforeach
             </select>
