@@ -334,7 +334,27 @@
         if (!value) {
             return 0;
         }
-        return parseFloat(value.toString().replace(/[^0-9\-\.]/g, '')) || 0;
+        let str = value.toString().trim();
+        if (str === '') {
+            return 0;
+        }
+
+        if (str.includes(',')) {
+            // Indonesian format: dot as thousand separator, comma as decimal
+            str = str.replace(/\./g, '').replace(/,/g, '.');
+        } else {
+            const parts = str.split('.');
+            if (parts.length > 2) {
+                // multiple dots -> assume thousand separators
+                str = str.replace(/\./g, '');
+            } else if (parts.length === 2 && parts[1].length > 2) {
+                // one dot with more than 2 digits after it -> thousand separator style
+                str = str.replace(/\./g, '');
+            }
+        }
+
+        str = str.replace(/[^0-9\-.]/g, '');
+        return parseFloat(str) || 0;
     }
 
     function formatCurrency(value) {
@@ -342,8 +362,8 @@
     }
 
     function calculateRowTotal(row) {
-        const gajiPokokInput = row.querySelector('.gaji-pokok');
-        const gajiPokok = parseNumericValue(gajiPokokInput?.value);
+        const hiddenGajiPokok = row.querySelector('.gaji-pokok-hidden');
+        const gajiPokok = hiddenGajiPokok ? parseNumericValue(hiddenGajiPokok.value) : 0;
         const tunjangan = parseNumericValue(row.querySelector('.tunjangan-value')?.value);
         
         const total = gajiPokok + tunjangan;
@@ -375,12 +395,26 @@
         input.value = rawValue > 0 ? 'Rp ' + new Intl.NumberFormat('id-ID').format(rawValue) : '';
     }
 
+    function setRawGajiPokokValue(input) {
+        const hiddenInput = input.closest('td')?.querySelector('.gaji-pokok-hidden');
+        const rawValue = parseNumericValue(hiddenInput?.value || input.value);
+        input.value = rawValue > 0 ? rawValue.toString() : '';
+    }
+
     // Event listeners untuk input
     document.querySelectorAll('.formatted-gaji-pokok').forEach(input => {
+        input.addEventListener('focus', function() {
+            setRawGajiPokokValue(this);
+        });
+
         input.addEventListener('input', function() {
             const cleaned = this.value.replace(/[^0-9]/g, '');
-            this.value = cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            setFormattedGajiPokokValue(this);
+            const rawValue = parseNumericValue(cleaned);
+            this.value = rawValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const hiddenInput = this.closest('td')?.querySelector('.gaji-pokok-hidden');
+            if (hiddenInput) {
+                hiddenInput.value = rawValue;
+            }
             calculateRowTotal(this.closest('tr'));
             calculateGrandTotal();
         });
