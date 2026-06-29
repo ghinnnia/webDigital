@@ -188,12 +188,14 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <input type="number" 
+                                        <input type="text"
+                                               value="Rp {{ number_format($gajiPokok, 0, ',', '.') }}"
+                                               class="gaji-pokok formatted-gaji-pokok w-36 text-right bg-white border border-slate-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-sm transition-all duration-150"
+                                               placeholder="0">
+                                        <input type="hidden" 
                                                name="gaji_pokok[{{ $k->id }}]" 
                                                value="{{ $gajiPokok }}"
-                                               class="gaji-pokok w-36 text-right bg-white border border-slate-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-sm transition-all duration-150"
-                                               step="50000" 
-                                               placeholder="0">
+                                               class="gaji-pokok-hidden">
                                     </td>
                                     <td class="px-4 py-3 text-right font-semibold text-emerald-600 bg-emerald-50/30">
                                         Rp {{ number_format($totalTunjangan, 0, ',', '.') }}
@@ -328,14 +330,26 @@
 
 <script>
     // Hitung total per baris
+    function parseNumericValue(value) {
+        if (!value) {
+            return 0;
+        }
+        return parseFloat(value.toString().replace(/[^0-9\-\.]/g, '')) || 0;
+    }
+
+    function formatCurrency(value) {
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+    }
+
     function calculateRowTotal(row) {
-        const gajiPokok = parseFloat(row.querySelector('.gaji-pokok')?.value) || 0;
-        const tunjangan = parseFloat(row.querySelector('.tunjangan-value')?.value) || 0;
+        const gajiPokokInput = row.querySelector('.gaji-pokok');
+        const gajiPokok = parseNumericValue(gajiPokokInput?.value);
+        const tunjangan = parseNumericValue(row.querySelector('.tunjangan-value')?.value);
         
         const total = gajiPokok + tunjangan;
         const totalCell = row.querySelector('.total-gaji');
         if (totalCell) {
-            totalCell.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
+            totalCell.textContent = formatCurrency(total);
         }
         return total;
     }
@@ -352,11 +366,27 @@
         }
     }
 
+    function setFormattedGajiPokokValue(input) {
+        const rawValue = parseNumericValue(input.value);
+        const hiddenInput = input.closest('td')?.querySelector('.gaji-pokok-hidden');
+        if (hiddenInput) {
+            hiddenInput.value = rawValue;
+        }
+        input.value = rawValue > 0 ? 'Rp ' + new Intl.NumberFormat('id-ID').format(rawValue) : '';
+    }
+
     // Event listeners untuk input
-    document.querySelectorAll('.gaji-pokok').forEach(input => {
+    document.querySelectorAll('.formatted-gaji-pokok').forEach(input => {
         input.addEventListener('input', function() {
+            const cleaned = this.value.replace(/[^0-9]/g, '');
+            this.value = cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            setFormattedGajiPokokValue(this);
             calculateRowTotal(this.closest('tr'));
             calculateGrandTotal();
+        });
+
+        input.addEventListener('blur', function() {
+            setFormattedGajiPokokValue(this);
         });
     });
 
