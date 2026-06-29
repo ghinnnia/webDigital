@@ -2260,6 +2260,11 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             const variableIds = Array.from(variableAllowanceSelections);
             formData.append('tunjangan_tetap_ids', JSON.stringify(fixedIds));
             formData.append('tunjangan_tidak_tetap_ids', JSON.stringify(variableIds));
+                        // Sebelum fetch, bersihkan titik pada gaji
+            const gajiValue = formData.get('gaji');
+            if (gajiValue) {
+                formData.set('gaji', gajiValue.replace(/\./g, ''));
+            }
             
             const id = document.getElementById('formId').value;
             let url = '/admin/karyawan/store';
@@ -2471,32 +2476,69 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             setupAllowanceCheckboxListeners();
         });
 
-       const inputGaji = document.getElementById('formGaji');
+const inputGaji = document.getElementById('formGaji');
 
-    // KETIKA DIKETIK: Hanya muncul ribuan (Rp 5.000.000) agar mengetik terasa normal
-    inputGaji.addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, "");
-        if (value === "") { e.target.value = ""; return; }
-        
-        let formattedValue = new Intl.NumberFormat('id-ID').format(value);
-        e.target.value = 'Rp ' + formattedValue;
-    });
+// Fungsi untuk memformat angka dengan titik ribuan
+function formatRibuan(angka) {
+    if (!angka) return '';
+    let raw = angka.replace(/\./g, '').replace(/\D/g, '');
+    if (raw === '') return '';
+    return new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
+}
 
-    // KETIKA SELESAI MENGETIK (Pindah Kolom): Otomatis tambahkan desimal (,00)
-    inputGaji.addEventListener('blur', function (e) {
-        let value = e.target.value;
-        if (value && !value.includes(',00')) {
-            e.target.value = value + ',00';
-        }
-    });
+// Fungsi untuk mendapatkan posisi kursor yang benar setelah formatting
+function setCursorPosition(el, pos) {
+    el.setSelectionRange(pos, pos);
+}
 
-    // KETIKA DIKLIK KEMBALI UNTUK EDIT: Hapus desimal sementara agar mudah diedit lagi
-    inputGaji.addEventListener('focus', function (e) {
-        let value = e.target.value;
-        if (value.endsWith(',00')) {
-            e.target.value = value.slice(0, -3);
-        }
-    });
+// KETIKA DIKETIK: Format dengan titik ribuan secara real-time
+inputGaji.addEventListener('input', function (e) {
+    // Simpan posisi kursor sebelum mengubah value
+    let cursorPos = this.selectionStart;
+    let raw = this.value.replace(/\./g, '').replace(/\D/g, '');
+    
+    // Jika tidak ada angka, kosongkan
+    if (raw === '') {
+        this.value = '';
+        return;
+    }
+    
+    // Format dengan titik
+    let formatted = new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
+    this.value = formatted;
+    
+    // Hitung selisih karakter yang bertambah (titik)
+    let diff = formatted.length - raw.length;
+    // Posisi kursor baru: posisi awal + jumlah titik yang ditambahkan di depan posisi kursor
+    // Cari posisi kursor dalam string raw (hanya digit)
+    let digitCountBeforeCursor = raw.slice(0, cursorPos).length;
+    // Hitung berapa titik yang ada di formatted sebelum digit ke-digitCountBeforeCursor
+    let formattedBefore = formatted.slice(0, cursorPos + diff);
+    let dotsBefore = (formattedBefore.match(/\./g) || []).length;
+    // Karena diff adalah total titik tambahan, perkiraan posisi
+    let newPos = cursorPos + dotsBefore;
+    // Pastikan tidak melebihi panjang
+    if (newPos > formatted.length) newPos = formatted.length;
+    setCursorPosition(this, newPos);
+});
+
+// KETIKA FOKUS: Hilangkan titik agar mudah diedit
+inputGaji.addEventListener('focus', function (e) {
+    let raw = this.value.replace(/\./g, '');
+    if (raw !== '') {
+        this.value = raw;
+        // Pindahkan kursor ke akhir
+        this.setSelectionRange(raw.length, raw.length);
+    }
+});
+
+// KETIKA BLUR: Tambahkan titik ribuan
+inputGaji.addEventListener('blur', function (e) {
+    let raw = this.value.replace(/\./g, '').replace(/\D/g, '');
+    if (raw !== '') {
+        this.value = new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
+    }
+});
     </script>
 </body>
 </html>
