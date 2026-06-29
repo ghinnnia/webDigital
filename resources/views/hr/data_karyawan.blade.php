@@ -1049,12 +1049,12 @@
                                                                 $statusClass = 'bg-yellow-100 text-yellow-800';
                                                             } elseif ($item->status_kerja === 'phk') {
                                                                 $statusClass = 'bg-red-100 text-red-800';
-                                                            } elseif ($item->status_kerja === 'nonaktif') {
+                                                            } elseif (in_array($item->status_kerja, ['nonaktif', 'tidak_aktif'], true)) {
                                                                 $statusClass = 'bg-gray-100 text-gray-800';
                                                             }
                                                         @endphp
                                                         <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
-                                                            {{ ucfirst($item->status_kerja) }}
+                                                            {{ $item->status_kerja === 'tidak_aktif' ? 'Tidak Aktif' : ($item->status_kerja === 'nonaktif' ? 'Nonaktif' : ucfirst($item->status_kerja)) }}
                                                         </span>
                                                     </td>
                                                     <td style="min-width: 150px;">
@@ -1210,7 +1210,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                                             <div class="grid grid-cols-2 gap-2 text-sm">
                                             <div><p class="text-text-muted-light">No</p><p class="font-medium">{{ $no++ }}</p></div>
                                             <div><p class="text-text-muted-light">Role</p><p><span class="status-badge">{{ $item->role }}</span></p></div>
-                                            <div><p class="text-text-muted-light">Status Kerja</p><p>{{ ucfirst($item->status_kerja) }}</p></div>
+                                            <div><p class="text-text-muted-light">Status Kerja</p><p>{{ $item->status_kerja === 'tidak_aktif' ? 'Tidak Aktif' : ($item->status_kerja === 'nonaktif' ? 'Nonaktif' : ucfirst($item->status_kerja)) }}</p></div>
                                             <div>
                                                 <p class="text-text-muted-light">Divisi</p>
                                                 <p class="font-medium">
@@ -1430,6 +1430,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 <option value="aktif">Aktif</option>
                 <option value="resign">Resign</option>
                 <option value="phk">PHK</option>
+                <option value="tidak_aktif">Tidak Aktif</option>
             </select>
         </div>
         <div>

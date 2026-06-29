@@ -71,6 +71,44 @@ class User extends Authenticatable
     {
         parent::boot();
 
+        static::saving(function ($user) {
+            if ($user->status_karyawan === 'kontrak' && !empty($user->kontrak_selesai)) {
+                try {
+                    $kontrakSelesai = $user->kontrak_selesai instanceof \Carbon\Carbon
+                        ? $user->kontrak_selesai
+                        : \Carbon\Carbon::parse($user->kontrak_selesai);
+
+                    if ($kontrakSelesai->isPast() && in_array($user->status_kerja, ['aktif', null], true)) {
+                        $user->status_kerja = 'tidak_aktif';
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Gagal memproses status kontrak user', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        });
+
+        static::retrieved(function ($user) {
+            if ($user->status_karyawan === 'kontrak' && !empty($user->kontrak_selesai)) {
+                try {
+                    $kontrakSelesai = $user->kontrak_selesai instanceof \Carbon\Carbon
+                        ? $user->kontrak_selesai
+                        : \Carbon\Carbon::parse($user->kontrak_selesai);
+
+                    if ($kontrakSelesai->isPast() && in_array($user->status_kerja, ['aktif', null], true)) {
+                        $user->forceFill(['status_kerja' => 'tidak_aktif'])->saveQuietly();
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Gagal mengupdate status kontrak user saat dibaca', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        });
+
         static::created(function ($user) {
             \Log::info('User.created event kontrak', [
                 'user_id' => $user->id,
@@ -91,8 +129,8 @@ class User extends Authenticatable
                 'role' => $user->role,
                 'divisi' => $divisiName,
                 'gaji' => $user->gaji,
-                'alamat' => $user->alamat,
-                'kontak' => $user->kontak,
+                'alamat' => $user->alamat ?? '',
+                'kontak' => $user->kontak ?? '',
                 'foto' => $user->foto,
                 'status_kerja' => $user->status_kerja ?? 'aktif',
                 'status_karyawan' => $user->status_karyawan ?? 'tetap',
@@ -129,8 +167,8 @@ class User extends Authenticatable
                     'role' => $user->role,
                     'divisi' => $divisiName,
                     'gaji' => $user->gaji,
-                    'alamat' => $user->alamat,
-                    'kontak' => $user->kontak,
+                    'alamat' => $user->alamat ?? '',
+                    'kontak' => $user->kontak ?? '',
                     'foto' => $user->foto,
                     'status_kerja' => $user->status_kerja,
                     'status_karyawan' => $user->status_karyawan,
