@@ -741,13 +741,13 @@
                                                 </td>
                                                 <td class="text-center flex gap-2 justify-center">
                                                     <!-- EDIT -->
-                                                    <button onclick="openEditModal({{ $karyawan->user_id ?? $karyawan->id }})"
+                                                    <button onclick="openEditModal({{ $karyawan->id }})"
                                                         class="p-1 hover:bg-blue-100 rounded-full">
                                                         <span class="material-icons-outlined">edit</span>
                                                     </button>
 
                                                     <!-- DELETE -->
-                                                    <form action="{{ route('finance.karyawan.destroy', $karyawan->user_id ?? $karyawan->id) }}"
+                                                    <form action="{{ route('finance.karyawan.destroy', $karyawan->id) }}"
                                                         method="POST" onsubmit="return confirm('Hapus data ini?')">
                                                         @csrf
                                                         @method('DELETE')

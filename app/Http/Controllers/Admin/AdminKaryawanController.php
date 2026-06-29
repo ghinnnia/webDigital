@@ -196,6 +196,8 @@ class AdminKaryawanController extends Controller
                 'alamat' => 'nullable|string',
                 'kontak' => 'nullable|string',
                 'gaji' => 'nullable|numeric',
+                'kontrak_mulai' => 'nullable|date',
+                'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
                 'status_kerja' => 'nullable|string',
                 'status_karyawan' => 'nullable|string',
                 'tunjangan_tetap_ids' => 'nullable',
@@ -367,7 +369,8 @@ class AdminKaryawanController extends Controller
                 'alamat' => $validated['alamat'] ?? null,
                 'kontak' => $validated['kontak'] ?? null,
                 'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
-                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
+                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null,
+                'status_kerja' => $validated['status_kerja'] ?? null, // tambahkan ini
             ];
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);

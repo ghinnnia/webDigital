@@ -806,8 +806,10 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/karyawan/active', function () {
             $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
-            $count = \App\Models\User::whereIn('role', $roles)->count(); 
+            $count = \App\Models\User::whereIn('role', $roles)
+            ->where('status_kerja', 'aktif')->count();
             return response()->json(['count' => $count]);
+
 
             })->name('karyawan.active');
             Route::get('/meeting-notes-dates', [CatatanRapatController::class, 'getMeetingDatesApi'])->name('meeting.notes.dates');
