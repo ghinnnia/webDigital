@@ -300,15 +300,14 @@
         </nav>
 
         <!-- Footer Sidebar -->
-        <div class="sidebar-footer border-t border-gray-200 flex-shrink-0">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-            <button type="submit" class="nav-item flex items-center gap-3 sidebar-nav-item text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <span class="material-icons sidebar-icon">logout</span>
-                <span class="sidebar-text">Log Out</span>
+        <div class="p-4 border-t">
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="nav-item w-full text-left">
+                <span class="material-icons-outlined sidebar-icon">log out</span>
             </button>
-            </form>
-        </div>
+        </form>
+    </div>
     </aside>
 
     <script>

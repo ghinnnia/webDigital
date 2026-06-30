@@ -1117,6 +1117,7 @@
                                                                 data-role="{{ $item->role }}"
                                                                 data-divisi_id="{{ $item->divisi_id }}"
                                                                 data-divisi="{{ $item->divisi ?? '' }}"
+                                                                data-tim_id="{{ $item->tim_id ?? '' }}"
                                                                 data-alamat="{{ $item->alamat }}"
                                                                 data-kontak="{{ $item->kontak }}"
                                                                 data-status_kerja="{{ $item->status_kerja }}"
@@ -1185,12 +1186,13 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                                             </div>
                                             <div class="flex gap-2">
                                                 <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
-                                                    data-id="{{ $item->user_id }}"
+                                                    data-id="{{ $item->id }}"
                                                     data-user_id="{{ $item->user_id }}"
                                                     data-nama="{{ $item->nama }}"
                                                     data-email="{{ $item->email }}"
                                                     data-role="{{ $item->role }}"
                                                     data-divisi_id="{{ $item->divisi_id }}"
+                                                    data-tim_id="{{ $item->tim_id ?? '' }}"
                                                     data-alamat="{{ $item->alamat }}"
                                                     data-kontak="{{ $item->kontak }}"
                                                     data-status_kerja="{{ $item->status_kerja }}"
@@ -1416,7 +1418,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             <input type="text" name="gaji" id="formGaji"
                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                    placeholder="Rp 0,00">
-            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
+            <p class="text-xs text-gray-500 mt-1"></p>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
@@ -1639,7 +1641,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
     <script>
         // Inisialisasi variabel
         let currentPage = 1;
-        const itemsPerPage = 5;
+        const itemsPerPage = 10;
         let activeFilters = ['all'];
         let activeDivisiFilters = ['all'];
         let searchTerm = '';
@@ -2016,7 +2018,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
 
         // LOAD DATA
-        async function loadDivisis(selectElementId = 'formDivisi') {
+        async function loadDivisis(selectElementId = 'formDivisi', selectedValue = null) {
             try {
                 const response = await fetch('{{ url('/divisis/list') }}', {
                     method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' }
@@ -2025,6 +2027,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 const data = await response.json();
                 const selectElement = document.getElementById(selectElementId);
                 if (!selectElement) return;
+                const currentValue = selectedValue !== null && selectedValue !== undefined ? String(selectedValue) : (selectElement.value || '');
                 while (selectElement.options.length > 1) selectElement.remove(1);
                 const divisis = Array.isArray(data) ? data : (data.data || []);
                 divisis.forEach(divisi => {
@@ -2033,6 +2036,11 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                     option.textContent = divisi.divisi || divisi.name;
                     selectElement.appendChild(option);
                 });
+                if (currentValue) {
+                    selectElement.value = currentValue;
+                } else {
+                    selectElement.selectedIndex = 0;
+                }
             } catch (error) { console.error('Error loading divisis:', error); }
         }
 
@@ -2089,12 +2097,33 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
 
         // Auto-fill gaji
+        function sanitizeGajiValue(value) {
+            if (value === null || value === undefined) return '';
+
+            const text = String(value).trim();
+            if (!text) return '';
+
+            const digitsOnly = text.replace(/[^\d]/g, '');
+            return digitsOnly ? String(parseInt(digitsOnly, 10)) : '';
+        }
+
+        function setGajiInputValue(value) {
+            const gajiInput = document.getElementById('formGaji');
+            if (!gajiInput) return;
+            const sanitized = sanitizeGajiValue(value);
+            gajiInput.value = sanitized ? new Intl.NumberFormat('id-ID').format(parseInt(sanitized, 10)) : '';
+        }
+
         async function autoFillGaji() {
+            if (currentModalMode === 'edit') return;
+
             const role = document.getElementById('formRole').value;
             const divisiId = document.getElementById('formDivisi').value;
             const gajiInput = document.getElementById('formGaji');
             
             if (!role || !gajiInput) return;
+            const existingValue = sanitizeGajiValue(gajiInput.value);
+            if (existingValue) return;
             
             try {
                 let url = `/api/gaji-template?role=${role}`;
@@ -2107,7 +2136,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 const result = await response.json();
                 
                 if (result.success && result.data && result.data.gaji_pokok) {
-                    gajiInput.value = result.data.gaji_pokok;
+                    setGajiInputValue(result.data.gaji_pokok);
                     showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(result.data.gaji_pokok)}`, 'success');
                 } else {
                     const defaultGaji = {
@@ -2118,7 +2147,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                         'karyawan': 5000000
                     };
                     if (defaultGaji[role]) {
-                        gajiInput.value = defaultGaji[role];
+                        setGajiInputValue(defaultGaji[role]);
                         showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(defaultGaji[role])}`, 'success');
                     }
                 }
@@ -2149,8 +2178,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         document.getElementById('formNama').value = data.nama || '';
         document.getElementById('formEmail').value = data.email || '';
         document.getElementById('formRole').value = data.role || '';
-        document.getElementById('formDivisi').value = data.divisi_id || '';
-        document.getElementById('formGaji').value = data.gaji || '';
+        setGajiInputValue(data.gaji || '');
         document.getElementById('formKontak').value = data.kontak || '';
         document.getElementById('formAlamat').value = data.alamat || '';
         document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
@@ -2164,12 +2192,24 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             : '';
 
 
-        // Sembunyikan divisi/tim jika role = general_manager
+        // Sembunyinkan divisi/tim jika role = general_manager
         toggleDivisiTim(data.role);
 
-        if (data.divisi_id) {
-            loadTims('formTim', data.divisi_id, data.tim_id);
-        }
+        const selectedDivisiId = data.divisi_id || '';
+        loadDivisis('formDivisi', selectedDivisiId).then(() => {
+            const divisiSelect = document.getElementById('formDivisi');
+            if (divisiSelect) {
+                divisiSelect.value = selectedDivisiId || '';
+            }
+            if (selectedDivisiId) {
+                loadTims('formTim', selectedDivisiId, data.tim_id || null);
+            } else {
+                const timSelect = document.getElementById('formTim');
+                if (timSelect) {
+                    while (timSelect.options.length > 1) timSelect.remove(1);
+                }
+            }
+        });
 
         // Load tunjangan karyawan saat edit
         if (data.id) {
@@ -2187,7 +2227,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
     } else {
         document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
-        document.getElementById('formGaji').value = '';
+        setGajiInputValue('');
         // Saat create, sembunyikan/tampilkan berdasarkan role yang dipilih saat itu
         const currentRole = document.getElementById('formRole').value;
         toggleDivisiTim(currentRole);
@@ -2264,7 +2304,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                         // Sebelum fetch, bersihkan titik pada gaji
             const gajiValue = formData.get('gaji');
             if (gajiValue) {
-                formData.set('gaji', gajiValue.replace(/\./g, ''));
+                formData.set('gaji', sanitizeGajiValue(gajiValue));
             }
             
             const id = document.getElementById('formId').value;
@@ -2377,6 +2417,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             });
             document.getElementById('formRole').addEventListener('change', function() {
                 toggleDivisiTim(this.value);
+                if (currentModalMode !== 'edit') autoFillGaji();
             });
             
             document.addEventListener('click', function(e) {
@@ -2389,6 +2430,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                         email: button.dataset.email,
                         role: button.dataset.role,
                         divisi_id: button.dataset.divisi_id,
+                        tim_id: button.dataset.tim_id || '',
                         alamat: button.dataset.alamat,
                         kontak: button.dataset.kontak,
                         gaji: button.dataset.gaji,
@@ -2407,9 +2449,8 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             
             document.getElementById('formDivisi').addEventListener('change', function() {
                 loadTims('formTim', this.value);
+                if (currentModalMode !== 'edit') autoFillGaji();
             });
-            document.getElementById('formRole').addEventListener('change', autoFillGaji);
-            document.getElementById('formDivisi').addEventListener('change', autoFillGaji);
             
             const fotoInput = document.getElementById('fotoInput');
             const pilihFotoBtn = document.getElementById('pilihFotoBtn');
@@ -2479,67 +2520,25 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
 
 const inputGaji = document.getElementById('formGaji');
 
-// Fungsi untuk memformat angka dengan titik ribuan
-function formatRibuan(angka) {
-    if (!angka) return '';
-    let raw = angka.replace(/\./g, '').replace(/\D/g, '');
-    if (raw === '') return '';
-    return new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
-}
-
-// Fungsi untuk mendapatkan posisi kursor yang benar setelah formatting
-function setCursorPosition(el, pos) {
-    el.setSelectionRange(pos, pos);
-}
-
-// KETIKA DIKETIK: Format dengan titik ribuan secara real-time
-inputGaji.addEventListener('input', function (e) {
-    // Simpan posisi kursor sebelum mengubah value
-    let cursorPos = this.selectionStart;
-    let raw = this.value.replace(/\./g, '').replace(/\D/g, '');
-    
-    // Jika tidak ada angka, kosongkan
-    if (raw === '') {
-        this.value = '';
-        return;
-    }
-    
-    // Format dengan titik
-    let formatted = new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
-    this.value = formatted;
-    
-    // Hitung selisih karakter yang bertambah (titik)
-    let diff = formatted.length - raw.length;
-    // Posisi kursor baru: posisi awal + jumlah titik yang ditambahkan di depan posisi kursor
-    // Cari posisi kursor dalam string raw (hanya digit)
-    let digitCountBeforeCursor = raw.slice(0, cursorPos).length;
-    // Hitung berapa titik yang ada di formatted sebelum digit ke-digitCountBeforeCursor
-    let formattedBefore = formatted.slice(0, cursorPos + diff);
-    let dotsBefore = (formattedBefore.match(/\./g) || []).length;
-    // Karena diff adalah total titik tambahan, perkiraan posisi
-    let newPos = cursorPos + dotsBefore;
-    // Pastikan tidak melebihi panjang
-    if (newPos > formatted.length) newPos = formatted.length;
-    setCursorPosition(this, newPos);
-});
-
-// KETIKA FOKUS: Hilangkan titik agar mudah diedit
-inputGaji.addEventListener('focus', function (e) {
-    let raw = this.value.replace(/\./g, '');
-    if (raw !== '') {
+if (inputGaji) {
+    inputGaji.addEventListener('input', function () {
+        const raw = sanitizeGajiValue(this.value);
         this.value = raw;
-        // Pindahkan kursor ke akhir
-        this.setSelectionRange(raw.length, raw.length);
-    }
-});
+    });
 
-// KETIKA BLUR: Tambahkan titik ribuan
-inputGaji.addEventListener('blur', function (e) {
-    let raw = this.value.replace(/\./g, '').replace(/\D/g, '');
-    if (raw !== '') {
-        this.value = new Intl.NumberFormat('id-ID').format(parseInt(raw, 10));
-    }
-});
+    inputGaji.addEventListener('focus', function () {
+        const raw = sanitizeGajiValue(this.value);
+        if (raw !== '') {
+            this.value = raw;
+            this.setSelectionRange(raw.length, raw.length);
+        }
+    });
+
+    inputGaji.addEventListener('blur', function () {
+        const raw = sanitizeGajiValue(this.value);
+        this.value = raw ? new Intl.NumberFormat('id-ID').format(parseInt(raw, 10)) : '';
+    });
+}
     </script>
 </body>
 </html>

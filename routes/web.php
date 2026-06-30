@@ -799,13 +799,13 @@ Route::middleware('auth')->group(function () {
         // HR Specific APIs
         Route::prefix('hr')->middleware(['role:hr'])->name('hr.')->group(function () {
             Route::get('/karyawan/count', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager', 'admin'];
             $count = \App\Models\User::whereIn('role', $roles)->count();
             return response()->json(['count' => $count]);
             })->name('karyawan.count');
 
             Route::get('/karyawan/active', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager', 'admin'];
             $count = \App\Models\User::whereIn('role', $roles)
             ->where('status_kerja', 'aktif')->count();
             return response()->json(['count' => $count]);
