@@ -956,7 +956,7 @@
                                                     data-divisi-id="{{ $item->divisi_id ?? '' }}"
                                                     data-alamat="{{ $item->alamat }}" data-kontak="{{ $item->kontak }}"
                                                     data-foto="{{ $item->foto ?? '' }}"
-                                                    data-gaji="{{ $item->gaji }}"
+                                                    data-gaji="{{ intval($item->gaji) }}"
                                                     data-status_kerja="{{ $item->status_kerja }}"
                                                     data-status_karyawan="{{ $item->status_karyawan }}">
                                                     <td style="min-width: 60px;">{{ $no++ }}</td>
@@ -1122,8 +1122,8 @@
                                                                 data-kontak="{{ $item->kontak }}"
                                                                 data-status_kerja="{{ $item->status_kerja }}"
                                                                 data-status_karyawan="{{ $item->status_karyawan }}"
-                                                                data-gaji="{{ $item->gaji }}"
-data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
+                                                                data-gaji="{{ intval($item->gaji) }}"
+                                                                data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
                                                                 data-kontrak_selesai="{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('Y-m-d') : '' }}"
 
                                                                 data-foto="{{ $item->foto ?? '' }}">
@@ -1378,6 +1378,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                 <option value="">Pilih Role</option>
                 <option value="general_manager">General Manager</option>
+                <option value="admin">Admin</option>
                 <option value="manager_divisi">Manager Divisi</option>
                 <option value="karyawan">Karyawan</option>
                 <option value="finance">Finance</option>
@@ -2141,6 +2142,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 } else {
                     const defaultGaji = {
                         'general_manager': 15000000,
+                        'admin': 9000000,
                         'manager_divisi': 10000000,
                         'finance': 8000000,
                         'hr': 7000000,

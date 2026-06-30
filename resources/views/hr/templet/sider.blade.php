@@ -177,11 +177,11 @@
         </a>
 
         <!-- Menu Kelola Lembur -->
-<a href="{{ route('hr.lembur.index') }}" 
+<!-- <a href="{{ route('hr.lembur.index') }}" 
    class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
     <span class="material-icons-outlined">schedule</span>
     <span>Kelola Lembur</span>
-</a>
+</a> -->
 
         <!--PENGUMUMAN -->
       <a href="{{ route('pengumuman.index') }}" class="nav-item {{ request()->routeIs('pengumuman*') ? 'active' : '' }}">
