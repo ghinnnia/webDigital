@@ -470,19 +470,51 @@ class PayrollController extends Controller
     {
         $period = PayrollPeriod::with(['details', 'details.user.divisi'])->findOrFail($id);
         
-        $totalGaji = $period->details->sum('gaji_pokok');
-        $totalTunjangan = $period->details->sum('tunjangan_tetap') + $period->details->sum('tunjangan_kinerja');
+        $totalGajiPokok = $period->details->sum('gaji_pokok');
+        $totalTunjanganTetap = $period->details->sum('tunjangan_tetap');
+        $totalTunjanganKinerja = $period->details->sum('tunjangan_kinerja');
+        $totalTunjanganLain = $period->details->sum('tunjangan_lain');
+        $totalBonus = $period->details->sum('bonus');
         $totalLembur = $period->details->sum('upah_lembur');
         $totalPotonganHadir = $period->details->sum('potongan_tidak_hadir');
         $totalPotonganBPJS = $period->details->sum('potongan_bpjs');
+        $totalPotonganLain = $period->details->sum('potongan_lain');
+        
+        $totalKotor = $period->details->sum(function ($detail) {
+            return ($detail->gaji_pokok ?? 0)
+                + ($detail->tunjangan_tetap ?? 0)
+                + ($detail->tunjangan_kinerja ?? 0)
+                + ($detail->tunjangan_lain ?? 0)
+                + ($detail->bonus ?? 0)
+                + ($detail->upah_lembur ?? 0);
+        });
+        
+        $totalBersih = $period->details->sum(function ($detail) {
+            $totalKotor = ($detail->gaji_pokok ?? 0)
+                + ($detail->tunjangan_tetap ?? 0)
+                + ($detail->tunjangan_kinerja ?? 0)
+                + ($detail->tunjangan_lain ?? 0)
+                + ($detail->bonus ?? 0)
+                + ($detail->upah_lembur ?? 0);
+            return $totalKotor
+                - ($detail->potongan_tidak_hadir ?? 0)
+                - ($detail->potongan_bpjs ?? 0)
+                - ($detail->potongan_lain ?? 0);
+        });
         
         $statistik = [
             'total_karyawan' => $period->details->count(),
-            'total_gaji' => $totalGaji,
-            'total_tunjangan' => $totalTunjangan,
+            'total_gaji_pokok' => $totalGajiPokok,
+            'total_tunjangan_tetap' => $totalTunjanganTetap,
+            'total_tunjangan_kinerja' => $totalTunjanganKinerja,
+            'total_tunjangan_lain' => $totalTunjanganLain,
+            'total_bonus' => $totalBonus,
             'total_lembur' => $totalLembur,
             'total_potongan_hadir' => $totalPotonganHadir,
             'total_potongan_bpjs' => $totalPotonganBPJS,
+            'total_potongan_lain' => $totalPotonganLain,
+            'total_kotor' => $totalKotor,
+            'total_bersih' => $totalBersih,
         ];
         
         return view('finance.payroll.show', compact('period', 'statistik'));

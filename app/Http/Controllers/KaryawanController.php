@@ -41,7 +41,7 @@ public function indexPegawai(Request $request)
     if ($user->role === 'hr') {
         // Ambil data user langsung tanpa eager loading yang bermasalah
         $query = User::with(['divisi', 'tim'])
-            ->whereIn('role', ['general_manager', 'manager_divisi', 'karyawan', 'finance', 'hr']);
+                ->whereIn('role', ['general_manager', 'manager_divisi', 'karyawan', 'finance', 'hr' , 'admin' , 'owner']);
         
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -212,7 +212,7 @@ Log::info('storePegawai kontrak (raw)', [
             'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
             'kontak' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'status_kerja' => 'required|in:aktif,resign,phk',
+            'status_kerja' => 'required|in:aktif,resign,phk,tidak_aktif',
             'status_karyawan' => 'required|in:tetap,kontrak,freelance',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'tunjangan_tetap_ids' => 'nullable|string',
@@ -346,7 +346,7 @@ public function updatePegawai(Request $request, $id)
             'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
             'kontak' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'status_kerja' => 'required|in:aktif,resign,phk',
+            'status_kerja' => 'required|in:aktif,resign,phk,tidak_aktif',
             'status_karyawan' => 'required|in:tetap,kontrak,freelance',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'tunjangan_tetap_ids' => 'nullable|string',

@@ -180,7 +180,7 @@
 
         <!-- Footer -->
         <footer class="mt-12 text-center text-gray-400 text-sm">
-            <p>Copyright ©2025 by digicity.id</p>
+            <p>Copyright ©2025 by digital kolaborasi.id</p>
         </footer>
     </div>
 
@@ -200,3 +200,4 @@
 </script>
 </body>
 </html>
+

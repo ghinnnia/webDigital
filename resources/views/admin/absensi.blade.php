@@ -511,7 +511,7 @@
         </main>
         <footer class="w-full max-w-7xl mx-auto mt-8 text-center text-xs sm:text-sm py-4"
             style="color: var(--text-secondary);">
-            <p>Copyright ©2025 by digicity.id | <span id="current-timezone">Timezone: Loading...</span></p>
+            <p>Copyright ©2025 by Digital Kolaborasi.id | <span id="current-timezone">Timezone: Loading...</span></p>
         </footer>
     </div>
 

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Layanan;
 use App\Models\Cashflow;
 use App\Models\KategoriCashflow;
+use App\Models\PayrollPeriod;
 
 class BerandaFinanceController extends Controller
 {
@@ -18,18 +19,43 @@ class BerandaFinanceController extends Controller
         $totalPemasukan = Cashflow::where('tipe_transaksi', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = Cashflow::where('tipe_transaksi', 'pengeluaran')->sum('jumlah');
         
-        // Tambahkan total gaji dari payroll_details sebagai pengeluaran
-        $totalGaji = \Illuminate\Support\Facades\DB::table('payroll_details')->sum('total_gaji_bersih') ?? 0;
+        // Tambahkan total gaji dari Daftar Periode Penggajian di finance/payroll
+        $totalGaji = PayrollPeriod::getTotalPayrollGajiBersih() ?? 0;
         $totalPengeluaran += $totalGaji;
         
         $totalKeuangan = $totalPemasukan - $totalPengeluaran;
         $jumlahLayanan = Layanan::count();
 
         // Ambil data keuangan (pemasukan dan pengeluaran)
-        $financeData = Cashflow::orderBy('tanggal_transaksi', 'desc')->get()->map(function($item) {
+        $cashflows = Cashflow::orderBy('tanggal_transaksi', 'desc')->get()->map(function($item) {
             $item->tanggal_transaksi = $item->tanggal_transaksi->format('Y-m-d H:i:s');
             return $item;
         });
+
+        // Ambil data payroll per periode dan buat entri pengeluaran supaya grafik ikut memperhitungkan gaji
+        $payrollData = PayrollPeriod::with('details')->get()->map(function($p) {
+            $amount = $p->details->sum('total_gaji_bersih');
+            if (empty($amount) || $amount == 0) return null;
+
+            $date = $p->tanggal_pembayaran?->format('Y-m-d H:i:s')
+                ?? $p->tanggal_selesai?->format('Y-m-d H:i:s')
+                ?? $p->tanggal_mulai?->format('Y-m-d H:i:s')
+                ?? now()->format('Y-m-d H:i:s');
+
+            return (object)[
+                'id' => 'payroll_'.$p->id,
+                'tipe_transaksi' => 'pengeluaran',
+                'jumlah' => (float) $amount,
+                'tanggal_transaksi' => $date,
+                'keterangan' => 'Payroll '.$p->nama_periode
+            ];
+        })->filter()->values();
+
+        // Gabungkan cashflow + payroll dan urutkan berdasarkan tanggal (desc)
+        $financeData = $cashflows->concat($payrollData)
+            ->sortByDesc(function($item) {
+                return $item->tanggal_transaksi;
+            })->values();
 
         // Ambil semua kategori cashflow
         $allKategori = KategoriCashflow::all();

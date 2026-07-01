@@ -242,7 +242,7 @@
                 </div>
 
                 <footer class="mt-8 text-center text-gray-400 text-sm py-4">
-                    &copy; {{ date('Y') }} digicity.id
+                    &copy; {{ date('Y') }} digital kolaborasi.id
                 </footer>
             </div>
         </div>

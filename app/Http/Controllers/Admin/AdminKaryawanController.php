@@ -196,6 +196,8 @@ class AdminKaryawanController extends Controller
                 'alamat' => 'nullable|string',
                 'kontak' => 'nullable|string',
                 'gaji' => 'nullable|numeric',
+                'kontrak_mulai' => 'nullable|date',
+                'kontrak_selesai' => 'nullable|date|after_or_equal:kontrak_mulai',
                 'status_kerja' => 'nullable|string',
                 'status_karyawan' => 'nullable|string',
                 'tunjangan_tetap_ids' => 'nullable',
@@ -362,13 +364,28 @@ class AdminKaryawanController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'role' => $validated['role'],
-                'divisi_id' => $validated['divisi_id'] ?? null,
-                'gaji' => $validated['gaji'] ?? null,
-                'alamat' => $validated['alamat'] ?? null,
-                'kontak' => $validated['kontak'] ?? null,
-                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
-                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
             ];
+            if ($request->has('divisi_id')) {
+                $userData['divisi_id'] = $validated['divisi_id'] ?? null;
+            }
+            if ($request->has('gaji')) {
+                $userData['gaji'] = $validated['gaji'] ?? null;
+            }
+            if ($request->has('alamat')) {
+                $userData['alamat'] = $validated['alamat'] ?? null;
+            }
+            if ($request->has('kontak')) {
+                $userData['kontak'] = $validated['kontak'] ?? null;
+            }
+            if ($request->has('kontrak_mulai')) {
+                $userData['kontrak_mulai'] = isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null;
+            }
+            if ($request->has('kontrak_selesai')) {
+                $userData['kontrak_selesai'] = isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null;
+            }
+            if (array_key_exists('status_kerja', $validated)) {
+                $userData['status_kerja'] = $validated['status_kerja'];
+            }
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
             }
@@ -401,21 +418,42 @@ class AdminKaryawanController extends Controller
             ]);
 
             // Update karyawan
-            $karyawan->update([
+            $karyawanData = [
                 'nama' => $validated['name'],
                 'email' => $validated['email'],
                 'role' => $validated['role'],
-                'divisi_id' => $validated['divisi_id'] ?? null,
-                'tim_id' => $validated['tim_id'] ?? null,
-                'alamat' => $validated['alamat'] ?? '',
-                'kontak' => $validated['kontak'] ?? '',
-                'gaji' => $validated['gaji'] ?? null,
-                'status_kerja' => $validated['status_kerja'] ?? 'aktif',
-                'status_karyawan' => $validated['status_karyawan'] ?? 'tetap',
-                'foto' => $fotoPath,
-                'kontrak_mulai' => isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null,
-                'kontrak_selesai' => isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null
-            ]);
+            ];
+            if ($request->has('divisi_id')) {
+                $karyawanData['divisi_id'] = $validated['divisi_id'] ?? null;
+            }
+            if ($request->has('tim_id')) {
+                $karyawanData['tim_id'] = $validated['tim_id'] ?? null;
+            }
+            if ($request->has('alamat')) {
+                $karyawanData['alamat'] = $validated['alamat'] ?? null;
+            }
+            if ($request->has('kontak')) {
+                $karyawanData['kontak'] = $validated['kontak'] ?? null;
+            }
+            if ($request->has('gaji')) {
+                $karyawanData['gaji'] = $validated['gaji'] ?? null;
+            }
+            if ($request->has('status_kerja')) {
+                $karyawanData['status_kerja'] = $validated['status_kerja'];
+            }
+            if ($request->has('status_karyawan')) {
+                $karyawanData['status_karyawan'] = $validated['status_karyawan'];
+            }
+            if ($fotoPath !== $karyawan->foto) {
+                $karyawanData['foto'] = $fotoPath;
+            }
+            if ($request->has('kontrak_mulai')) {
+                $karyawanData['kontrak_mulai'] = isset($validated['kontrak_mulai']) && $validated['kontrak_mulai'] ? \Carbon\Carbon::parse($validated['kontrak_mulai'])->format('Y-m-d') : null;
+            }
+            if ($request->has('kontrak_selesai')) {
+                $karyawanData['kontrak_selesai'] = isset($validated['kontrak_selesai']) && $validated['kontrak_selesai'] ? \Carbon\Carbon::parse($validated['kontrak_selesai'])->format('Y-m-d') : null;
+            }
+            $karyawan->update($karyawanData);
 
             // Sync tunjangan ke tabel karyawan_tunjangan (pivot bersih tanpa bulan/tahun)
             $karyawan->tunjanganDefault()->sync($allTunjanganIds);

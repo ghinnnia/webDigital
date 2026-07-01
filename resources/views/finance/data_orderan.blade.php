@@ -1352,7 +1352,7 @@
                 </div>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by digital kolaborasi.id
             </footer>
         </main>
     </div>
@@ -1507,10 +1507,10 @@
                             <p class="text-xs sm:text-sm text-text-muted-light">Tanggal: <span id="invoice-date" class="font-medium text-text-light"></span></p>
                         </div>
                         <div class="text-left sm:text-right">
-                            <h4 class="text-base sm:text-lg font-semibold text-text-light mb-2">DigiCity</h4>
+                            <h4 class="text-base sm:text-lg font-semibold text-text-light mb-2">digital kolaborasi</h4>
                             <p class="text-xs sm:text-sm text-text-muted-light">Jl. Teknologi No. 123</p>
                             <p class="text-xs sm:text-sm text-text-muted-light">Jakarta, Indonesia</p>
-                            <p class="text-xs sm:text-sm text-text-muted-light">Email: info@digicity.id</p>
+                            <p class="text-xs sm:text-sm text-text-muted-light">Email: info@digital kolaborasi.id</p>
                         </div>
                     </div>
                 </div>

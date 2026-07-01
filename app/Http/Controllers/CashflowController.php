@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cashflow;
 use App\Models\KategoriCashflow;
+use App\Models\PayrollPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,15 @@ class CashflowController extends Controller
 
         // Ambil semua kategori untuk dropdown
         $allKategori = KategoriCashflow::all();
+
+        // Hitung total pemasukan dan pengeluaran cashflow
+        $totalPemasukan = Cashflow::where('tipe_transaksi', 'pemasukan')->sum('jumlah');
+        $totalCashflowPengeluaran = Cashflow::where('tipe_transaksi', 'pengeluaran')->sum('jumlah');
+
+        // Ambil total gaji dari Daftar Periode Penggajian di finance/payroll
+        $totalPayrollExpenses = PayrollPeriod::getTotalPayrollGajiBersih() ?? 0;
+        $totalPengeluaran = $totalCashflowPengeluaran + $totalPayrollExpenses;
+        $totalKeuangan = $totalPemasukan - $totalPengeluaran;
 
         // Format data untuk dikirim ke JavaScript
         $formattedData = $cashflowData->map(function ($item) {
@@ -39,7 +49,12 @@ class CashflowController extends Controller
         // Kirim data yang sudah diformat ke view
         return view('finance.pemasukan', [
             'financeData' => $formattedData,
-            'allKategori' => $allKategori
+            'allKategori' => $allKategori,
+            'totalPemasukan' => $totalPemasukan,
+            'totalCashflowPengeluaran' => $totalCashflowPengeluaran,
+            'totalPayrollExpenses' => $totalPayrollExpenses,
+            'totalPengeluaran' => $totalPengeluaran,
+            'totalKeuangan' => $totalKeuangan,
         ]);
     }
 

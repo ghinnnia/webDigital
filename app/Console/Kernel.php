@@ -12,6 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\SendTaskReminders::class,
+        \App\Console\Commands\UpdateExpiredContractStatuses::class,
     ];
 
     /**
@@ -30,6 +31,10 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Jakarta');
 
         $schedule->command('project:check-deadlines')->dailyAt('08:00');
+
+        $schedule->command('contracts:update-status')
+            ->dailyAt('00:05')
+            ->timezone('Asia/Jakarta');
 
     }
 

@@ -390,7 +390,7 @@
             </section>
 
             <footer class="text-center p-4 bg-gray-100 text-gray-600 text-sm border-t border-gray-200">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by digital kolaborasi.id
             </footer>
         </main>
     </div>
@@ -644,3 +644,4 @@
 </body>
 
 </html>
+

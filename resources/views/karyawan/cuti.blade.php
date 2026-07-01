@@ -692,7 +692,7 @@
                 </div>
 
                 <footer class="text-center p-6 mt-8 border-t border-gray-200">
-                    <p class="text-sm text-gray-500">Copyright ©{{ date('Y') }} by digicity.id</p>
+                    <p class="text-sm text-gray-500">Copyright ©{{ date('Y') }} by digital kolaborasi.id</p>
                 </footer>
             </div>
         </main>
@@ -1996,3 +1996,4 @@
     </script>
 </body>
 </html>
+

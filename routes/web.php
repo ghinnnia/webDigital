@@ -799,15 +799,17 @@ Route::middleware('auth')->group(function () {
         // HR Specific APIs
         Route::prefix('hr')->middleware(['role:hr'])->name('hr.')->group(function () {
             Route::get('/karyawan/count', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager', 'admin', 'owner'];
             $count = \App\Models\User::whereIn('role', $roles)->count();
             return response()->json(['count' => $count]);
             })->name('karyawan.count');
 
             Route::get('/karyawan/active', function () {
-            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager'];
-            $count = \App\Models\User::whereIn('role', $roles)->count(); 
+            $roles = ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager', 'admin', 'owner'];
+            $count = \App\Models\User::whereIn('role', $roles)
+            ->where('status_kerja', 'aktif')->count();
             return response()->json(['count' => $count]);
+
 
             })->name('karyawan.active');
             Route::get('/meeting-notes-dates', [CatatanRapatController::class, 'getMeetingDatesApi'])->name('meeting.notes.dates');
@@ -1404,6 +1406,8 @@ Route::middleware(['auth', 'role:finance'])
             Route::get('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
             Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
             Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
+            Route::post('/payroll/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('payroll.send-notification');
+            Route::post('/payroll/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('payroll.send-notification-mass');
             Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');
             Route::post('/{id}/approve', [PayrollController::class, 'approve'])->name('approve');
             Route::post('/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('paid');

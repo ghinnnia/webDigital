@@ -24,7 +24,7 @@ class GajiHrController extends Controller
         
         // Ambil karyawan
         $query = User::with(['divisi'])
-            ->whereNotIn('role', ['admin', 'owner']);
+            ->whereNotIn('role', [ 'owner']);
         
         if ($divisiId) {
             $query->where('divisi_id', $divisiId);

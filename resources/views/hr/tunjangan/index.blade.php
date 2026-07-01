@@ -6,7 +6,7 @@
 
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                    <h1 class="text-3xl font-   black text-slate-800 tracking-tight flex items-center gap-3">
                         <span class="p-3 bg-indigo-600 rounded-2xl text-white material-icons-outlined shadow-lg shadow-indigo-200">payments</span>
                         Master Tunjangan
                     </h1>
@@ -54,7 +54,7 @@
                                         <div class="font-bold text-slate-800 text-base">{{ $t->nama }}</div>
                                         <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Recurring Monthly</div>
                                     </td>
-                                    <td class="px-6 py-6 text-right font-black text-indigo-600 text-sm italic">
+                                    <td class="px-6 py-6 text-right text-indigo-600 text-sm">
                                         Rp {{ number_format($t->nominal, 0, ',', '.') }}
                                     </td>
                                     <td class="px-6 py-6 text-center">
@@ -107,7 +107,7 @@
                                         <div class="font-bold text-slate-800 text-base">{{ $t->nama }}</div>
                                         <div class="text-[10px] text-amber-500 font-bold uppercase mt-0.5 tracking-tighter">{{ $t->tipe }} Based</div>
                                     </td>
-                                    <td class="px-6 py-6 text-right font-black text-slate-900 text-sm">
+                                    <td class="px-6 py-6 text-right text-slate-900 text-sm">
                                         Rp {{ number_format($t->nominal, 0, ',', '.') }}
                                     </td>
                                     <td class="px-6 py-6 text-center">

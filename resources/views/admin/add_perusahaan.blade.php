@@ -894,7 +894,7 @@
                 </div>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by digital kolaborasi.id
             </footer>
         </div>
     </div>
@@ -1509,3 +1509,4 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
 </body>
 
 </html>
+

@@ -475,7 +475,7 @@
             </div>
         </main>
         <footer class="w-full max-w-7xl mx-auto mt-8 text-center text-xs sm:text-sm py-4" style="color: var(--text-secondary);">
-            <p>Copyright ©2025 by digicity.id</p>
+            <p>Copyright ©2025 by digital kolaborasi.id</p>
         </footer>
     </div>
 
@@ -1635,3 +1635,4 @@ if (action === 'Absen Masuk' && currentTotalMinutes < startTotalMinutes) {
 </body>
 
 </html>
+

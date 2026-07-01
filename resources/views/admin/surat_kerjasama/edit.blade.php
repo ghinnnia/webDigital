@@ -373,7 +373,7 @@
                 </form>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by Digital Kolaborasi.id
             </footer>
         </main>
     </div>

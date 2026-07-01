@@ -741,20 +741,10 @@
                                                 </td>
                                                 <td class="text-center flex gap-2 justify-center">
                                                     <!-- EDIT -->
-                                                    <button onclick="openEditModal({{ $karyawan->user_id ?? $karyawan->id }})"
+                                                    <button onclick="openEditModal({{ $karyawan->id }})"
                                                         class="p-1 hover:bg-blue-100 rounded-full">
                                                         <span class="material-icons-outlined">edit</span>
                                                     </button>
-
-                                                    <!-- DELETE -->
-                                                    <form action="{{ route('finance.karyawan.destroy', $karyawan->user_id ?? $karyawan->id) }}"
-                                                        method="POST" onsubmit="return confirm('Hapus data ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="p-1 hover:bg-red-100 rounded-full">
-                                                            <span class="material-icons-outlined">delete</span>
-                                                        </button>
-                                                    </form>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -771,7 +761,7 @@
                 </div>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by digital kolaborasi.id
             </footer>
         </main>
     </div>
@@ -794,13 +784,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                        <input type="text" id="editNama"
+                        <input type="text" id="editNama" name="name"
                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
                                readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                        <input type="text" id="editRole"
+                        <input type="text" id="editRole" name="role"
                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
                                readonly>
                     </div>
@@ -824,7 +814,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="editEmail"
+                        <input type="email" id="editEmail" name="email"
                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
                                readonly>
                     </div>
@@ -1293,3 +1283,4 @@
 </body>
 
 </html>
+

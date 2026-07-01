@@ -51,8 +51,8 @@ class PayrollCalculator
      */
     public function prosesGajiSemuaKaryawan()
     {
-        // Ambil karyawan aktif (role karyawan atau manager_divisi)
-        $karyawanAktif = User::whereIn('role', ['karyawan', 'manager_divisi'])
+        // Ambil karyawan aktif (semua role)
+        $karyawanAktif = User::whereIn('role', ['karyawan', 'manager_divisi', 'finance', 'hr', 'general_manager', 'admin', 'owner'])
             ->where('status_kerja', 'aktif')
             ->get();
 

@@ -227,10 +227,10 @@
         <table class="header-table">
             <tr>
                 <td>
-                    <div class="company-title">PT Digicity Indonesia</div>
+                    <div class="company-title">PT digital kolaborasi Indonesia</div>
                     <div class="company-details">
                         Jl. Teknologi No. 123, Jakarta<br>
-                        Email: finance@digicity.id
+                        Email: finance@digital kolaborasi.id
                     </div>
                 </td>
                 <td class="slip-title-container">
@@ -354,8 +354,8 @@
     </table>
     
     <div class="footer">
-        Dokumen ini dibuat, dihitung, dan diterbitkan secara otomatis oleh Sistem Payroll PT Digicity Indonesia.<br>
-        Dicetak pada berkas digital resmi karyawan. &copy; {{ date('Y') }} PT Digicity Indonesia. All Rights Reserved.
+        Dokumen ini dibuat, dihitung, dan diterbitkan secara otomatis oleh Sistem Payroll PT digital kolaborasi Indonesia.<br>
+        Dicetak pada berkas digital resmi karyawan. &copy; {{ date('Y') }} PT digital kolaborasi Indonesia. All Rights Reserved.
     </div>
 </body>
 </html>

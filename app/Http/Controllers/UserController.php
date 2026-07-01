@@ -129,7 +129,7 @@ public function store(Request $request)
             'divisi_id'         => 'nullable|exists:divisi,id',
             'alamat'            => 'nullable|string',
             'kontak'            => 'nullable|string|max:20',
-            'status_kerja'      => 'nullable|in:aktif,resign,phk',
+            'status_kerja'      => 'nullable|in:aktif,resign,phk,tidak_aktif',
             'status_karyawan'   => 'nullable|in:tetap,kontrak,freelance',
             'gaji'              => 'nullable|numeric',
         ]);
@@ -198,7 +198,7 @@ public function update(Request $request, $id)
             'password'          => 'nullable|min:5',
             'alamat'            => 'nullable|string',
             'kontak'            => 'nullable|string|max:20',
-            'status_kerja'      => 'nullable|in:aktif,resign,phk',
+            'status_kerja'      => 'nullable|in:aktif,resign,phk,tidak_aktif',
             'status_karyawan'   => 'nullable|in:tetap,kontrak,freelance',
             'gaji'              => 'nullable|numeric',
         ]);

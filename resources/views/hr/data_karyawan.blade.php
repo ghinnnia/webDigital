@@ -956,7 +956,7 @@
                                                     data-divisi-id="{{ $item->divisi_id ?? '' }}"
                                                     data-alamat="{{ $item->alamat }}" data-kontak="{{ $item->kontak }}"
                                                     data-foto="{{ $item->foto ?? '' }}"
-                                                    data-gaji="{{ $item->gaji }}"
+                                                    data-gaji="{{ intval($item->gaji) }}"
                                                     data-status_kerja="{{ $item->status_kerja }}"
                                                     data-status_karyawan="{{ $item->status_karyawan }}">
                                                     <td style="min-width: 60px;">{{ $no++ }}</td>
@@ -1049,12 +1049,12 @@
                                                                 $statusClass = 'bg-yellow-100 text-yellow-800';
                                                             } elseif ($item->status_kerja === 'phk') {
                                                                 $statusClass = 'bg-red-100 text-red-800';
-                                                            } elseif ($item->status_kerja === 'nonaktif') {
+                                                            } elseif (in_array($item->status_kerja, ['nonaktif', 'tidak_aktif'], true)) {
                                                                 $statusClass = 'bg-gray-100 text-gray-800';
                                                             }
                                                         @endphp
                                                         <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
-                                                            {{ ucfirst($item->status_kerja) }}
+                                                            {{ $item->status_kerja === 'tidak_aktif' ? 'Tidak Aktif' : ($item->status_kerja === 'nonaktif' ? 'Nonaktif' : ucfirst($item->status_kerja)) }}
                                                         </span>
                                                     </td>
                                                     <td style="min-width: 150px;">
@@ -1117,12 +1117,13 @@
                                                                 data-role="{{ $item->role }}"
                                                                 data-divisi_id="{{ $item->divisi_id }}"
                                                                 data-divisi="{{ $item->divisi ?? '' }}"
+                                                                data-tim_id="{{ $item->tim_id ?? '' }}"
                                                                 data-alamat="{{ $item->alamat }}"
                                                                 data-kontak="{{ $item->kontak }}"
                                                                 data-status_kerja="{{ $item->status_kerja }}"
                                                                 data-status_karyawan="{{ $item->status_karyawan }}"
-                                                                data-gaji="{{ $item->gaji }}"
-data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
+                                                                data-gaji="{{ intval($item->gaji) }}"
+                                                                data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontrak_mulai)->format('Y-m-d') : '' }}"
                                                                 data-kontrak_selesai="{{ $item->kontrak_selesai ? \Carbon\Carbon::parse($item->kontrak_selesai)->format('Y-m-d') : '' }}"
 
                                                                 data-foto="{{ $item->foto ?? '' }}">
@@ -1185,12 +1186,13 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                                             </div>
                                             <div class="flex gap-2">
                                                 <button class="edit-btn p-1 rounded-full hover:bg-primary/20 text-gray-700"
-                                                    data-id="{{ $item->user_id }}"
+                                                    data-id="{{ $item->id }}"
                                                     data-user_id="{{ $item->user_id }}"
                                                     data-nama="{{ $item->nama }}"
                                                     data-email="{{ $item->email }}"
                                                     data-role="{{ $item->role }}"
                                                     data-divisi_id="{{ $item->divisi_id }}"
+                                                    data-tim_id="{{ $item->tim_id ?? '' }}"
                                                     data-alamat="{{ $item->alamat }}"
                                                     data-kontak="{{ $item->kontak }}"
                                                     data-status_kerja="{{ $item->status_kerja }}"
@@ -1210,7 +1212,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                                             <div class="grid grid-cols-2 gap-2 text-sm">
                                             <div><p class="text-text-muted-light">No</p><p class="font-medium">{{ $no++ }}</p></div>
                                             <div><p class="text-text-muted-light">Role</p><p><span class="status-badge">{{ $item->role }}</span></p></div>
-                                            <div><p class="text-text-muted-light">Status Kerja</p><p>{{ ucfirst($item->status_kerja) }}</p></div>
+                                            <div><p class="text-text-muted-light">Status Kerja</p><p>{{ $item->status_kerja === 'tidak_aktif' ? 'Tidak Aktif' : ($item->status_kerja === 'nonaktif' ? 'Nonaktif' : ucfirst($item->status_kerja)) }}</p></div>
                                             <div>
                                                 <p class="text-text-muted-light">Divisi</p>
                                                 <p class="font-medium">
@@ -1331,7 +1333,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 </div>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by digital kolaborasi.id
             </footer>
         </main>
     </div>
@@ -1376,6 +1378,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                 <option value="">Pilih Role</option>
                 <option value="general_manager">General Manager</option>
+                <option value="admin">Admin</option>
                 <option value="manager_divisi">Manager Divisi</option>
                 <option value="karyawan">Karyawan</option>
                 <option value="finance">Finance</option>
@@ -1416,7 +1419,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             <input type="text" name="gaji" id="formGaji"
                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                    placeholder="Rp 0,00">
-            <p class="text-xs text-gray-500 mt-1">Desimal ,00 akan otomatis muncul setelah selesai mengetik.</p>
+            <p class="text-xs text-gray-500 mt-1"></p>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Kontak</label>
@@ -1430,6 +1433,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 <option value="aktif">Aktif</option>
                 <option value="resign">Resign</option>
                 <option value="phk">PHK</option>
+                <option value="tidak_aktif">Tidak Aktif</option>
             </select>
         </div>
         <div>
@@ -1638,7 +1642,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
     <script>
         // Inisialisasi variabel
         let currentPage = 1;
-        const itemsPerPage = 5;
+        const itemsPerPage = 10;
         let activeFilters = ['all'];
         let activeDivisiFilters = ['all'];
         let searchTerm = '';
@@ -2015,7 +2019,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
 
         // LOAD DATA
-        async function loadDivisis(selectElementId = 'formDivisi') {
+        async function loadDivisis(selectElementId = 'formDivisi', selectedValue = null) {
             try {
                 const response = await fetch('{{ url('/divisis/list') }}', {
                     method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' }
@@ -2024,6 +2028,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 const data = await response.json();
                 const selectElement = document.getElementById(selectElementId);
                 if (!selectElement) return;
+                const currentValue = selectedValue !== null && selectedValue !== undefined ? String(selectedValue) : (selectElement.value || '');
                 while (selectElement.options.length > 1) selectElement.remove(1);
                 const divisis = Array.isArray(data) ? data : (data.data || []);
                 divisis.forEach(divisi => {
@@ -2032,6 +2037,11 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                     option.textContent = divisi.divisi || divisi.name;
                     selectElement.appendChild(option);
                 });
+                if (currentValue) {
+                    selectElement.value = currentValue;
+                } else {
+                    selectElement.selectedIndex = 0;
+                }
             } catch (error) { console.error('Error loading divisis:', error); }
         }
 
@@ -2088,12 +2098,33 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
 
         // Auto-fill gaji
+        function sanitizeGajiValue(value) {
+            if (value === null || value === undefined) return '';
+
+            const text = String(value).trim();
+            if (!text) return '';
+
+            const digitsOnly = text.replace(/[^\d]/g, '');
+            return digitsOnly ? String(parseInt(digitsOnly, 10)) : '';
+        }
+
+        function setGajiInputValue(value) {
+            const gajiInput = document.getElementById('formGaji');
+            if (!gajiInput) return;
+            const sanitized = sanitizeGajiValue(value);
+            gajiInput.value = sanitized ? new Intl.NumberFormat('id-ID').format(parseInt(sanitized, 10)) : '';
+        }
+
         async function autoFillGaji() {
+            if (currentModalMode === 'edit') return;
+
             const role = document.getElementById('formRole').value;
             const divisiId = document.getElementById('formDivisi').value;
             const gajiInput = document.getElementById('formGaji');
             
             if (!role || !gajiInput) return;
+            const existingValue = sanitizeGajiValue(gajiInput.value);
+            if (existingValue) return;
             
             try {
                 let url = `/api/gaji-template?role=${role}`;
@@ -2106,18 +2137,19 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                 const result = await response.json();
                 
                 if (result.success && result.data && result.data.gaji_pokok) {
-                    gajiInput.value = result.data.gaji_pokok;
+                    setGajiInputValue(result.data.gaji_pokok);
                     showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(result.data.gaji_pokok)}`, 'success');
                 } else {
                     const defaultGaji = {
                         'general_manager': 15000000,
+                        'admin': 9000000,
                         'manager_divisi': 10000000,
                         'finance': 8000000,
                         'hr': 7000000,
                         'karyawan': 5000000
                     };
                     if (defaultGaji[role]) {
-                        gajiInput.value = defaultGaji[role];
+                        setGajiInputValue(defaultGaji[role]);
                         showMinimalPopup('Info', `Gaji default untuk ${role}: Rp ${new Intl.NumberFormat('id-ID').format(defaultGaji[role])}`, 'success');
                     }
                 }
@@ -2148,8 +2180,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         document.getElementById('formNama').value = data.nama || '';
         document.getElementById('formEmail').value = data.email || '';
         document.getElementById('formRole').value = data.role || '';
-        document.getElementById('formDivisi').value = data.divisi_id || '';
-        document.getElementById('formGaji').value = data.gaji || '';
+        setGajiInputValue(data.gaji || '');
         document.getElementById('formKontak').value = data.kontak || '';
         document.getElementById('formAlamat').value = data.alamat || '';
         document.getElementById('formStatusKerja').value = data.status_kerja || 'aktif';
@@ -2163,12 +2194,24 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             : '';
 
 
-        // Sembunyikan divisi/tim jika role = general_manager
+        // Sembunyinkan divisi/tim jika role = general_manager
         toggleDivisiTim(data.role);
 
-        if (data.divisi_id) {
-            loadTims('formTim', data.divisi_id, data.tim_id);
-        }
+        const selectedDivisiId = data.divisi_id || '';
+        loadDivisis('formDivisi', selectedDivisiId).then(() => {
+            const divisiSelect = document.getElementById('formDivisi');
+            if (divisiSelect) {
+                divisiSelect.value = selectedDivisiId || '';
+            }
+            if (selectedDivisiId) {
+                loadTims('formTim', selectedDivisiId, data.tim_id || null);
+            } else {
+                const timSelect = document.getElementById('formTim');
+                if (timSelect) {
+                    while (timSelect.options.length > 1) timSelect.remove(1);
+                }
+            }
+        });
 
         // Load tunjangan karyawan saat edit
         if (data.id) {
@@ -2186,7 +2229,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
         }
     } else {
         document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
-        document.getElementById('formGaji').value = '';
+        setGajiInputValue('');
         // Saat create, sembunyikan/tampilkan berdasarkan role yang dipilih saat itu
         const currentRole = document.getElementById('formRole').value;
         toggleDivisiTim(currentRole);
@@ -2260,6 +2303,11 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             const variableIds = Array.from(variableAllowanceSelections);
             formData.append('tunjangan_tetap_ids', JSON.stringify(fixedIds));
             formData.append('tunjangan_tidak_tetap_ids', JSON.stringify(variableIds));
+                        // Sebelum fetch, bersihkan titik pada gaji
+            const gajiValue = formData.get('gaji');
+            if (gajiValue) {
+                formData.set('gaji', sanitizeGajiValue(gajiValue));
+            }
             
             const id = document.getElementById('formId').value;
             let url = '/admin/karyawan/store';
@@ -2371,6 +2419,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             });
             document.getElementById('formRole').addEventListener('change', function() {
                 toggleDivisiTim(this.value);
+                if (currentModalMode !== 'edit') autoFillGaji();
             });
             
             document.addEventListener('click', function(e) {
@@ -2383,6 +2432,7 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
                         email: button.dataset.email,
                         role: button.dataset.role,
                         divisi_id: button.dataset.divisi_id,
+                        tim_id: button.dataset.tim_id || '',
                         alamat: button.dataset.alamat,
                         kontak: button.dataset.kontak,
                         gaji: button.dataset.gaji,
@@ -2401,9 +2451,8 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             
             document.getElementById('formDivisi').addEventListener('change', function() {
                 loadTims('formTim', this.value);
+                if (currentModalMode !== 'edit') autoFillGaji();
             });
-            document.getElementById('formRole').addEventListener('change', autoFillGaji);
-            document.getElementById('formDivisi').addEventListener('change', autoFillGaji);
             
             const fotoInput = document.getElementById('fotoInput');
             const pilihFotoBtn = document.getElementById('pilihFotoBtn');
@@ -2471,32 +2520,27 @@ data-kontrak_mulai="{{ $item->kontrak_mulai ? \Carbon\Carbon::parse($item->kontr
             setupAllowanceCheckboxListeners();
         });
 
-       const inputGaji = document.getElementById('formGaji');
+const inputGaji = document.getElementById('formGaji');
 
-    // KETIKA DIKETIK: Hanya muncul ribuan (Rp 5.000.000) agar mengetik terasa normal
-    inputGaji.addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, "");
-        if (value === "") { e.target.value = ""; return; }
-        
-        let formattedValue = new Intl.NumberFormat('id-ID').format(value);
-        e.target.value = 'Rp ' + formattedValue;
+if (inputGaji) {
+    inputGaji.addEventListener('input', function () {
+        const raw = sanitizeGajiValue(this.value);
+        this.value = raw;
     });
 
-    // KETIKA SELESAI MENGETIK (Pindah Kolom): Otomatis tambahkan desimal (,00)
-    inputGaji.addEventListener('blur', function (e) {
-        let value = e.target.value;
-        if (value && !value.includes(',00')) {
-            e.target.value = value + ',00';
+    inputGaji.addEventListener('focus', function () {
+        const raw = sanitizeGajiValue(this.value);
+        if (raw !== '') {
+            this.value = raw;
+            this.setSelectionRange(raw.length, raw.length);
         }
     });
 
-    // KETIKA DIKLIK KEMBALI UNTUK EDIT: Hapus desimal sementara agar mudah diedit lagi
-    inputGaji.addEventListener('focus', function (e) {
-        let value = e.target.value;
-        if (value.endsWith(',00')) {
-            e.target.value = value.slice(0, -3);
-        }
+    inputGaji.addEventListener('blur', function () {
+        const raw = sanitizeGajiValue(this.value);
+        this.value = raw ? new Intl.NumberFormat('id-ID').format(parseInt(raw, 10)) : '';
     });
+}
     </script>
 </body>
 </html>

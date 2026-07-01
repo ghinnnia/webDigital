@@ -52,6 +52,13 @@ class PayrollPeriod extends Model
         return $bulanIndonesia[$this->bulan] . ' ' . $this->tahun;
     }
 
+    public static function getTotalPayrollGajiBersih()
+    {
+        return static::with('details')->get()->sum(function ($period) {
+            return $period->details->sum('total_gaji_bersih');
+        });
+    }
+
     public function getStatusBadgeAttribute()
     {
         $badges = [

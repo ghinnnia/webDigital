@@ -213,17 +213,44 @@ class Karyawan extends Model
     {
         parent::boot();
 
+        static::saving(function ($model) {
+            if ($model->status_karyawan === 'kontrak' && !empty($model->kontrak_selesai)) {
+                try {
+                    $kontrakSelesai = $model->kontrak_selesai instanceof \Carbon\Carbon
+                        ? $model->kontrak_selesai
+                        : \Carbon\Carbon::parse($model->kontrak_selesai);
+
+                    if ($kontrakSelesai->isPast() && in_array($model->status_kerja, ['aktif', null], true)) {
+                        $model->status_kerja = 'tidak_aktif';
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Gagal memproses status kontrak karyawan', [
+                        'karyawan_id' => $model->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        });
+
         static::retrieved(function ($model) {
-            if (
-                $model->status_karyawan === 'kontrak' &&
-                $model->kontrak_selesai
-            ) {
-                if (
-                    $model->kontrak_selesai->isPast() &&
-                    $model->status_kerja !== 'nonaktif'
-                ) {
-                    $model->status_kerja = 'nonaktif';
-                    $model->saveQuietly();
+            if ($model->status_karyawan === 'kontrak' && !empty($model->kontrak_selesai)) {
+                try {
+                    $kontrakSelesai = $model->kontrak_selesai instanceof \Carbon\Carbon
+                        ? $model->kontrak_selesai
+                        : \Carbon\Carbon::parse($model->kontrak_selesai);
+
+                    if ($kontrakSelesai->isPast() && in_array($model->status_kerja, ['aktif', null], true)) {
+                        $model->forceFill(['status_kerja' => 'tidak_aktif'])->saveQuietly();
+
+                        if ($model->user && $model->user->status_kerja !== 'tidak_aktif') {
+                            $model->user->forceFill(['status_kerja' => 'tidak_aktif'])->saveQuietly();
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Gagal mengupdate status kontrak karyawan saat dibaca', [
+                        'karyawan_id' => $model->id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         });
