@@ -297,13 +297,13 @@
     <!-- HEADER -->
     <div class="header">
         <div class="company-logo">
-            <h1>DIGICITY</h1>
+            <h1>digital kolaborasi</h1>
             <div class="company-info">
-                <p><strong>PT. Digicity Indonesia</strong></p>
+                <p><strong>PT. digital kolaborasi Indonesia</strong></p>
                 <p>Jln. Raya Gatot Subroto No. 123</p>
                 <p>Jakarta Selatan 12930</p>
                 <p>Telp: +62 21 1234 5678</p>
-                <p>Email: invoice@digicity.id</p>
+                <p>Email: invoice@digital kolaborasi.id</p>
             </div>
         </div>
 
@@ -407,10 +407,11 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Dokumen ini adalah bukti transaksi yang sah. Terima kasih telah berbisnis dengan kami.</p>
-        <p>© 2025 PT. Digicity Indonesia. All rights reserved.</p>
+        <p>© 2025 PT. digital kolaborasi Indonesia. All rights reserved.</p>
     </div>
 
 </div>
 
 </body>
 </html>
+

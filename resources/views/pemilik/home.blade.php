@@ -450,7 +450,7 @@
         </main>
 
         <footer class="mt-8 md:mt-12 gradient-dark text-center py-3 md:py-4 rounded-lg shadow-soft">
-            <p class="text-xs md:text-sm text-gray-700">Copyright ©2025 by digicity.id</p>
+            <p class="text-xs md:text-sm text-gray-700">Copyright ©2025 by digital kolaborasi.id</p>
         </footer>
     </div>
 

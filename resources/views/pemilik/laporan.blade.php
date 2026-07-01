@@ -330,7 +330,7 @@
             </section>
         </main>
         <footer class="mt-8 sm:mt-12 bg-gray-100 dark:bg-gray-800 py-4 sm:py-6 rounded-xl">
-            <p class="text-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Copyright �2025 by digicity.id</p>
+            <p class="text-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Copyright �2025 by digital kolaborasi.id</p>
         </footer>
     </div>
 
@@ -633,4 +633,5 @@
 </body>
 
 </html>
+
 

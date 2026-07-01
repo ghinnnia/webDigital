@@ -961,7 +961,7 @@
                 </div>
             </div>
             <footer class="text-center p-4 bg-gray-100 text-text-muted-light text-sm border-t border-border-light">
-                Copyright ©2025 by digicity.id
+                Copyright ©2025 by Digital Kolaborasi.id
             </footer>
         </main>
     </div>
@@ -1400,11 +1400,11 @@
             <div class="watermark">KWITANSI</div>
             
             <div class="kwitansi-header">
-                <div class="company-name">DIGICITY.ID</div>
+                <div class="company-name">Digital Kolaborasi.ID</div>
                 <div class="company-address">
                     Jl. Contoh No. 123, Jakarta Selatan<br>
-                    Telp: (021) 12345678 | Email: info@digicity.id<br>
-                    Website: www.digicity.id
+                    Telp: (021) 12345678 | Email: info@Digital Kolaborasi.id<br>
+                    Website: www.Digital Kolaborasi.id
                 </div>
             </div>
             
@@ -1474,7 +1474,7 @@
                 <h4>Informasi Pembayaran:</h4>
                 <p>Bank: ${kwitansi.bank || 'BRI'}</p>
                 <p>No. Rekening: ${kwitansi.no_rekening || '4030-01-011093-53-6'}</p>
-                <p>a.n. DIGICITY.ID</p>
+                <p>a.n. Digital Kolaborasi.ID</p>
             </div>
             
             <div class="footer-section">
@@ -1489,7 +1489,7 @@
                     <div>Hormat Kami,</div>
                     <div class="signature-line"></div>
                     <div class="signature-name">Admin</div>
-                    <div class="signature-title">DIGICITY.ID</div>
+                    <div class="signature-title">Digital Kolaborasi.ID</div>
                 </div>
             </div>
             
@@ -2845,3 +2845,4 @@
 </body>
 
 </html>
+

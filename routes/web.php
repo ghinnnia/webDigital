@@ -1406,6 +1406,8 @@ Route::middleware(['auth', 'role:finance'])
             Route::get('/dari-hr', [PayrollController::class, 'dariHr'])->name('dari-hr');
             Route::post('/ambil-dari-hr', [PayrollController::class, 'ambilDariHR'])->name('ambil-dari-hr');
             Route::get('/{id}', [PayrollController::class, 'show'])->name('show');
+            Route::post('/payroll/{periodId}/send-notification/{detailId}', [PayrollController::class, 'sendNotificationSlip'])->name('payroll.send-notification');
+            Route::post('/payroll/{periodId}/send-notification-mass', [PayrollController::class, 'sendNotificationMass'])->name('payroll.send-notification-mass');
             Route::post('/{id}/hitung-potongan', [PayrollController::class, 'hitungPotongan'])->name('hitung-potongan');
             Route::post('/{id}/approve', [PayrollController::class, 'approve'])->name('approve');
             Route::post('/{id}/paid', [PayrollController::class, 'markAsPaid'])->name('paid');

@@ -352,7 +352,7 @@
             </div>
 
             <footer class="w-full text-center py-3 bg-slate-100 border-t border-slate-200 text-slate-400 font-medium text-[11px] tracking-wide mt-auto">
-                Copyright &copy; 2025 &bull; Developed by <a href="https://digicity.id" target="_blank" class="text-indigo-500 hover:underline font-semibold">digicity.id</a>
+                Copyright &copy; 2025 &bull; Developed by <a href="https://digital kolaborasi.id" target="_blank" class="text-indigo-500 hover:underline font-semibold">digital kolaborasi.id</a>
             </footer>
         </main>
     </div>

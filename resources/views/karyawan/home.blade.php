@@ -505,7 +505,7 @@
         </main>
         
         <footer class="max-w-7xl mx-auto w-full mt-12 text-center text-sm text-gray-400 dark:text-gray-600 pb-4">
-            <p>Copyright ©2025 by digicity.id</p>
+            <p>Copyright ©2025 by digital kolaborasi.id</p>
         </footer>
     </div>
 
@@ -879,3 +879,4 @@
 </body>
 
 </html>
+

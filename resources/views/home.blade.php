@@ -984,7 +984,7 @@
             <footer class="py-8 mt-12" data-aos="fade-up">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="gradient-dark text-center py-4 rounded-lg shadow-sm">
-                        <p class="text-sm text-gray-700">Copyright ©2025 by digicity.id</p>
+                        <p class="text-sm text-gray-700">Copyright ©2025 Digital Kolaborasi.id</p>
                     </div>
                 </div>
             </footer>

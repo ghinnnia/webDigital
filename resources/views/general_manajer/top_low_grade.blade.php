@@ -391,7 +391,7 @@
             </div>
 
             <footer class="footer">
-                Copyright © 2025 by digicity.id
+                Copyright © 2025 by digital kolaborasi.id
             </footer>
         </main>
     </div>
