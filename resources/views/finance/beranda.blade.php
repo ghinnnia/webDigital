@@ -417,8 +417,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="label-text text-xs sm:text-sm text-text-muted-light truncate">Pemasukan</p>
-                            <p class="value-text text-base sm:text-xl font-bold truncate" id="income-value">Rp
-                                20.000.000</p>
+                            <p class="value-text text-base sm:text-xl font-bold truncate" id="income-value">Rp {{ number_format($totalPemasukan ?? 0, 0, ',', '.') }}</p>
                         </div>
                     </div>
                     <div
@@ -429,8 +428,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="label-text text-xs sm:text-sm text-text-muted-light truncate">Pengeluaran</p>
-                            <p class="value-text text-base sm:text-xl font-bold truncate" id="expense-value">Rp
-                                10.000.000</p>
+                            <p class="value-text text-base sm:text-xl font-bold truncate" id="expense-value">Rp {{ number_format($totalPengeluaran ?? 0, 0, ',', '.') }}</p>
                         </div>
                     </div>
                     <div
@@ -441,8 +439,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="label-text text-xs sm:text-sm text-text-muted-light truncate">Total Keuangan</p>
-                            <p class="value-text text-base sm:text-xl font-bold truncate" id="total-finance">Rp
-                                10.000.000</p>
+                            <p class="value-text text-base sm:text-xl font-bold truncate" id="total-finance">Rp {{ number_format($totalKeuangan ?? 0, 0, ',', '.') }}</p>
                         </div>
                     </div>
                     <div
@@ -627,7 +624,7 @@
 
         if (incomeValueEl) incomeValueEl.textContent = formatter.format(totalPemasukan);
         if (expenseValueEl) expenseValueEl.textContent = formatter.format(totalPengeluaran);
-        if (totalFinanceEl) totalFinanceEl.textContent = 'Rp' + totalKeuangan.toLocaleString('id-ID');
+        if (totalFinanceEl) totalFinanceEl.textContent = formatter.format(totalKeuangan);
 
         function computeAverage(period, transactionType) {
             const now = new Date();

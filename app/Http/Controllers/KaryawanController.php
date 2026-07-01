@@ -41,7 +41,7 @@ public function indexPegawai(Request $request)
     if ($user->role === 'hr') {
         // Ambil data user langsung tanpa eager loading yang bermasalah
         $query = User::with(['divisi', 'tim'])
-                ->whereIn('role', ['general_manager', 'manager_divisi', 'karyawan', 'finance', 'hr' , 'admin']);
+                ->whereIn('role', ['general_manager', 'manager_divisi', 'karyawan', 'finance', 'hr' , 'admin' , 'owner']);
         
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {

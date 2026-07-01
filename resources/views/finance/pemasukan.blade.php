@@ -708,7 +708,7 @@
                                 <span class="material-icons-outlined text-green-600">trending_up</span>
                             </div>
                         </div>
-                        <div class="stat-card-value text-green-600" id="stat-income">Rp 0</div>
+                        <div class="stat-card-value text-green-600" id="stat-income">Rp {{ number_format($totalPemasukan ?? 0, 0, ',', '.') }}</div>
                         <div class="stat-card-change positive">
                             <span class="material-icons-outlined text-sm">arrow_upward</span>
                             <span id="stat-income-change">0% dari bulan lalu</span>
@@ -722,7 +722,7 @@
                                 <span class="material-icons-outlined text-red-600">trending_down</span>
                             </div>
                         </div>
-                        <div class="stat-card-value text-red-600" id="stat-expense">Rp 0</div>
+                        <div class="stat-card-value text-red-600" id="stat-expense">Rp {{ number_format($totalPengeluaran ?? 0, 0, ',', '.') }}</div>
                         <div class="stat-card-change negative">
                             <span class="material-icons-outlined text-sm">arrow_upward</span>
                             <span id="stat-expense-change">0% dari bulan lalu</span>
@@ -736,7 +736,7 @@
                                 <span class="material-icons-outlined text-blue-600">account_balance</span>
                             </div>
                         </div>
-                        <div class="stat-card-value text-blue-600" id="stat-balance">Rp 0</div>
+                        <div class="stat-card-value text-blue-600" id="stat-balance">Rp {{ number_format($totalKeuangan ?? 0, 0, ',', '.') }}</div>
                         <div class="stat-card-change positive">
                             <span class="material-icons-outlined text-sm">arrow_upward</span>
                             <span id="stat-balance-change">0% margin keuntungan</span>
@@ -1039,13 +1039,18 @@
         // Data keuangan dan kategori diambil dari variable yang dikirim Controller
         const allFinanceData = @json($financeData ?? []);
         const allKategori = @json($allKategori ?? []);
+        const serverTotalPemasukan = @json($totalPemasukan ?? 0);
+        const serverTotalCashflowPengeluaran = @json($totalCashflowPengeluaran ?? 0);
+        const serverTotalPayrollExpenses = @json($totalPayrollExpenses ?? 0);
+        const serverTotalPengeluaran = @json($totalPengeluaran ?? 0);
+        const serverTotalKeuangan = @json($totalKeuangan ?? 0);
 
         // Pagination variables
         let financeCurrentPage = 1;
         const financeItemsPerPage = 5;
         let financeFilteredData = [...allFinanceData];
         let activeFilters = new Set(['all']); // Gunakan Set untuk memudahkan pengecekan
-        let activeType = 'all'; // 'all', 'income', or 'expense'
+        let activeType = 'all'; // 'all', 'pemasukan', or 'pengeluaran'
         let searchTerm = '';
 
         // Inisialisasi toggle buttons
@@ -1596,17 +1601,21 @@
         }
 
         function updateStatCards() {
-            let totalIncome = 0;
-            let totalExpense = 0;
+            const useServerTotals = activeType === 'all' && !searchTerm && activeFilters.has('all') && activeFilters.size === 1;
 
-            (financeFilteredData || []).forEach(item => {
-                const amount = parseFloat(item.jumlah);
-                if (item.tipe_transaksi === 'pemasukan') {
-                    totalIncome += amount;
-                } else {
-                    totalExpense += amount;
-                }
-            });
+            let totalIncome = useServerTotals ? Number(serverTotalPemasukan) : 0;
+            let totalExpense = useServerTotals ? Number(serverTotalPengeluaran) : 0;
+
+            if (!useServerTotals) {
+                (financeFilteredData || []).forEach(item => {
+                    const amount = parseFloat(item.jumlah);
+                    if (item.tipe_transaksi === 'pemasukan') {
+                        totalIncome += amount;
+                    } else {
+                        totalExpense += amount;
+                    }
+                });
+            }
 
             const netBalance = totalIncome - totalExpense;
             const balancePercentage = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
@@ -1616,10 +1625,19 @@
             document.getElementById('stat-expense').textContent = 'Rp ' + totalExpense.toLocaleString('id-ID');
             document.getElementById('stat-balance').textContent = 'Rp ' + netBalance.toLocaleString('id-ID');
 
-            // Update percentage change displays (contoh sederhana)
-            document.getElementById('stat-income-change').textContent = `Dari ${financeFilteredData.filter(i => i.tipe_transaksi === 'pemasukan').length} transaksi`;
-            document.getElementById('stat-expense-change').textContent = `Dari ${financeFilteredData.filter(i => i.tipe_transaksi === 'pengeluaran').length} transaksi`;
-            document.getElementById('stat-balance-change').textContent = `${balancePercentage >= 0 ? '+' : ''}${balancePercentage.toFixed(1)}% margin keuntungan`;
+            if (useServerTotals) {
+                document.getElementById('stat-income-change').textContent = `Total pemasukan cashflow: Rp ${Number(serverTotalPemasukan).toLocaleString('id-ID')}`;
+                document.getElementById('stat-expense-change').textContent = `Pengeluaran cashflow: Rp ${Number(serverTotalCashflowPengeluaran).toLocaleString('id-ID')} + payroll: Rp ${Number(serverTotalPayrollExpenses).toLocaleString('id-ID')}`;
+                document.getElementById('stat-balance-change').textContent = `Saldo bersih yang sama dengan beranda: Rp ${Number(serverTotalKeuangan).toLocaleString('id-ID')}`;
+            } else {
+                document.getElementById('stat-income-change').textContent = `Dari ${financeFilteredData.filter(i => i.tipe_transaksi === 'pemasukan').length} transaksi`;
+                document.getElementById('stat-expense-change').textContent = `Dari ${financeFilteredData.filter(i => i.tipe_transaksi === 'pengeluaran').length} transaksi`;
+                document.getElementById('stat-balance-change').textContent = `${balancePercentage >= 0 ? '+' : ''}${balancePercentage.toFixed(1)}% margin keuntungan`;
+            }
+        }
+
+        function initializeStatCardsFromServer() {
+            updateStatCards();
         }
 
         function filterFinance() {
@@ -1662,6 +1680,7 @@
             renderFinancePagination();
             initializeFilter();
             initializeToggleButtons();
+            initializeStatCardsFromServer();
             updateStatCards();
             document.getElementById('finance-search').addEventListener('input', filterFinance);
 
